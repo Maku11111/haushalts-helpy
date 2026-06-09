@@ -26,174 +26,51 @@
       --shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     /* ── Login ── */
-    #login-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 1rem;
-    }
-
-    .login-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 2.5rem 2rem;
-      width: 100%;
-      max-width: 380px;
-    }
-
+    #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
+    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 2.5rem 2rem; width: 100%; max-width: 380px; }
     .login-card h1 { font-size: 1.6rem; margin-bottom: 0.3rem; color: var(--primary); }
     .login-card p  { color: var(--text-muted); margin-bottom: 1.8rem; font-size: 0.9rem; }
 
     /* ── App shell ── */
     #app { display: none; flex-direction: column; min-height: 100vh; }
 
-    header {
-      background: var(--primary);
-      color: #fff;
-      padding: 0.9rem 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
+    header { background: var(--primary); color: #fff; padding: 0.9rem 1.2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
+    .header-right { display: flex; gap: 0.5rem; align-items: center; }
 
-    .btn-logout {
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.35);
-      color: #fff;
-      padding: 0.35rem 0.85rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.82rem;
+    .btn-hdr {
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+      color: #fff; padding: 0.35rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.82rem;
     }
-    .btn-logout:hover { background: rgba(255,255,255,0.28); }
+    .btn-hdr:hover { background: rgba(255,255,255,0.28); }
 
-    /* ── QR Modal ── */
-    #qr-modal-backdrop {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 300;
-      align-items: center;
-      justify-content: center;
-    }
-    #qr-modal-backdrop.open { display: flex; }
-    #qr-modal {
-      background: #fff;
-      border-radius: 16px;
-      padding: 2rem 1.8rem 1.5rem;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-      max-width: 320px;
-      width: 90%;
-    }
-    #qr-modal h2 { font-size: 1rem; margin-bottom: 0.9rem; color: var(--primary); }
-    #qr-canvas-wrap { display: flex; justify-content: center; margin: 1rem 0; }
-    #qr-canvas-wrap canvas, #qr-canvas-wrap img { border-radius: 8px; border: 1px solid var(--border); }
-    #qr-url-input {
-      width: 100%; padding: 0.55rem 0.75rem;
-      border: 1px solid var(--border); border-radius: 7px;
-      font-size: 0.85rem; color: var(--text);
-      background: var(--bg);
-    }
-    #qr-url-input:focus { outline: none; border-color: var(--primary-light); }
-    .qr-url-row { display: flex; gap: 0.5rem; align-items: center; }
-    .qr-url-row .btn { flex-shrink: 0; }
-    .btn-qr {
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.35);
-      color: #fff;
-      padding: 0.35rem 0.7rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      line-height: 1;
-    }
-    .btn-qr:hover { background: rgba(255,255,255,0.28); }
-
-    /* ── Tab bar ── */
-    .tabs {
-      display: flex;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
+    /* ── Tabs ── */
+    .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-
-    .tab-btn {
-      flex: 1;
-      min-width: 80px;
-      padding: 0.75rem 0.5rem;
-      border: none;
-      background: none;
-      cursor: pointer;
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
-      transition: color 0.15s, border-color 0.15s;
-    }
+    .tab-btn { flex: 1; min-width: 68px; padding: 0.65rem 0.4rem; border: none; background: none; cursor: pointer; font-size: 0.75rem; color: var(--text-muted); border-bottom: 3px solid transparent; white-space: nowrap; transition: color 0.15s, border-color 0.15s; }
     .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-    .tab-btn .icon { display: block; font-size: 1.2rem; margin-bottom: 2px; }
+    .tab-btn .icon { display: block; font-size: 1.15rem; margin-bottom: 2px; }
 
     /* ── Content ── */
     main { flex: 1; padding: 1rem; max-width: 700px; margin: 0 auto; width: 100%; }
-
     .section { display: none; }
     .section.active { display: block; }
 
-    /* ── Forms & inputs ── */
+    /* ── Forms ── */
     label { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.3rem; margin-top: 0.75rem; }
     label:first-child { margin-top: 0; }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 0.6rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      font-size: 0.92rem;
-      background: var(--surface);
-      color: var(--text);
-      transition: border-color 0.15s;
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--primary-light);
-    }
+    input, select, textarea { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 7px; font-size: 0.92rem; background: var(--surface); color: var(--text); transition: border-color 0.15s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-light); }
     textarea { resize: vertical; min-height: 70px; }
-
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
     @media (max-width: 420px) { .form-row { grid-template-columns: 1fr; } }
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.6rem 1.1rem;
-      border: none;
-      border-radius: 7px;
-      cursor: pointer;
-      font-size: 0.88rem;
-      font-weight: 500;
-      transition: opacity 0.15s, transform 0.1s;
-    }
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; border: none; border-radius: 7px; cursor: pointer; font-size: 0.88rem; font-weight: 500; transition: opacity 0.15s, transform 0.1s; }
     .btn:active { transform: scale(0.97); }
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-primary:hover { opacity: 0.88; }
@@ -203,34 +80,14 @@
     .btn-ghost:hover { background: var(--bg); }
 
     /* ── Cards ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-      box-shadow: var(--shadow);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 0.5rem;
-    }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 0.75rem; box-shadow: var(--shadow); }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
     .card-title { font-weight: 600; font-size: 0.98rem; }
     .card-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
     .card-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 
-    /* ── Collapsible add-form ── */
-    .form-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem;
-      margin-bottom: 1rem;
-      display: none;
-    }
+    /* ── Form panels ── */
+    .form-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; display: none; }
     .form-panel.open { display: block; }
     .form-panel-footer { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
 
@@ -240,111 +97,104 @@
     .toolbar .btn { flex-shrink: 0; }
 
     /* ── Badges ── */
-    .badge {
-      display: inline-block;
-      padding: 0.15rem 0.55rem;
-      border-radius: 20px;
-      font-size: 0.72rem;
-      font-weight: 600;
-    }
-    .badge-warn  { background: var(--warn-dim); color: #b45309; }
-    .badge-ok    { background: var(--primary-dim); color: var(--primary); }
-    .badge-danger{ background: var(--danger-dim); color: var(--danger); }
-    .badge-muted { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+    .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+    .badge-warn   { background: var(--warn-dim); color: #b45309; }
+    .badge-ok     { background: var(--primary-dim); color: var(--primary); }
+    .badge-danger { background: var(--danger-dim); color: var(--danger); }
+    .badge-muted  { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
 
-    /* ── Inventory quantity control ── */
-    .qty-ctrl { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.4rem; }
-    .qty-btn {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      cursor: pointer;
-      font-size: 1rem;
-      display: flex; align-items: center; justify-content: center;
-      line-height: 1;
-      transition: background 0.1s;
+    /* ── Person chip (inline in cards) ── */
+    .person-chip {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      padding: 0.1rem 0.5rem; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 600;
     }
+
+    /* ── Filter chips ── */
+    .filter-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .chip {
+      padding: 0.28rem 0.75rem; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--surface); font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .chip.active { border-color: var(--primary); background: var(--primary-dim); color: var(--primary); font-weight: 600; }
+
+    /* ── Inventory qty ── */
+    .qty-ctrl { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.4rem; }
+    .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
     .qty-btn:hover { background: var(--primary-dim); }
     .qty-value { font-weight: 700; min-width: 28px; text-align: center; }
-
-    /* ── Low-stock highlight ── */
     .card.low-stock { border-color: var(--warn); background: var(--warn-dim); }
 
-    /* ── Todo done ── */
+    /* ── Todos ── */
     .card.done-card { opacity: 0.55; }
     .todo-check { cursor: pointer; width: 20px; height: 20px; accent-color: var(--primary); flex-shrink: 0; margin-top: 2px; }
 
-    /* ── Invoices summary bar ── */
-    .summary-bar {
-      background: var(--primary-dim);
-      border: 1px solid var(--primary-light);
-      border-radius: var(--radius);
-      padding: 0.8rem 1rem;
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+    /* ── Summary bar ── */
+    .summary-bar { background: var(--primary-dim); border: 1px solid var(--primary-light); border-radius: var(--radius); padding: 0.8rem 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; }
     .summary-bar .label { font-size: 0.82rem; color: var(--primary); }
     .summary-bar .amount { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
 
-    /* ── Toast ── */
-    #toast {
-      position: fixed;
-      bottom: 1.2rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(60px);
-      background: #1a1a1a;
-      color: #fff;
-      padding: 0.6rem 1.2rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-      z-index: 999;
-      pointer-events: none;
-      white-space: nowrap;
+    /* ── Persons section ── */
+    .person-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1rem 1rem 1rem 1.2rem; margin-bottom: 0.75rem; box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 1rem;
+      border-left: 5px solid var(--primary);
     }
+    .person-avatar {
+      width: 46px; height: 46px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .person-info { flex: 1; min-width: 0; }
+    .person-name { font-weight: 700; font-size: 1rem; }
+    .person-stats { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .person-stat { display: flex; align-items: center; gap: 0.2rem; }
+
+    /* ── Emoji picker ── */
+    .emoji-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 4px; margin-top: 0.5rem; }
+    .emoji-opt { font-size: 1.3rem; padding: 4px; border-radius: 6px; cursor: pointer; text-align: center; border: 2px solid transparent; }
+    .emoji-opt:hover, .emoji-opt.selected { border-color: var(--primary); background: var(--primary-dim); }
+
+    /* ── Color picker ── */
+    .color-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.5rem; }
+    .color-opt { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.1s; }
+    .color-opt:hover { transform: scale(1.15); }
+    .color-opt.selected { border-color: var(--text); transform: scale(1.15); }
+
+    /* ── Toast ── */
+    #toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 0.6rem 1.2rem; border-radius: 20px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 999; pointer-events: none; white-space: nowrap; }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ── Error msg ── */
-    .error-msg {
-      background: var(--danger-dim);
-      color: var(--danger);
-      border-radius: 7px;
-      padding: 0.6rem 0.85rem;
-      font-size: 0.85rem;
-      margin-bottom: 0.75rem;
-      display: none;
-    }
+    /* ── Error ── */
+    .error-msg { background: var(--danger-dim); color: var(--danger); border-radius: 7px; padding: 0.6rem 0.85rem; font-size: 0.85rem; margin-bottom: 0.75rem; display: none; }
     .error-msg.show { display: block; }
 
     /* ── Loading ── */
     .loading { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; }
 
     /* ── Modal ── */
-    .modal-backdrop {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
     .modal-backdrop.open { display: flex; }
-    .modal {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 1.4rem;
-      width: 100%;
-      max-width: 440px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
+    .modal { background: var(--surface); border-radius: var(--radius); padding: 1.4rem; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; }
     .modal h2 { margin-bottom: 1rem; font-size: 1.05rem; }
     .modal-footer { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.1rem; flex-wrap: wrap; }
+
+    /* ── QR Modal ── */
+    #qr-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; }
+    #qr-modal-backdrop.open { display: flex; }
+    #qr-modal { background: #fff; border-radius: 16px; padding: 2rem 1.8rem 1.5rem; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.18); max-width: 320px; width: 90%; }
+    #qr-modal h2 { font-size: 1rem; margin-bottom: 0.9rem; color: var(--primary); }
+    #qr-canvas-wrap { display: flex; justify-content: center; margin: 1rem 0; }
+    #qr-canvas-wrap canvas, #qr-canvas-wrap img { border-radius: 8px; border: 1px solid var(--border); }
+    #qr-url-input { width: 100%; padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: 7px; font-size: 0.85rem; background: var(--bg); }
+    #qr-url-input:focus { outline: none; border-color: var(--primary-light); }
+    .qr-url-row { display: flex; gap: 0.5rem; }
+    .qr-url-row .btn { flex-shrink: 0; }
+
+    /* ── Section heading ── */
+    .section-title { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 1.2rem 0 0.5rem; }
   </style>
 </head>
 <body>
@@ -367,30 +217,51 @@
 <div id="app">
   <header>
     <h1>🏠 Haushalts-Helpy</h1>
-    <div style="display:flex;gap:0.5rem;align-items:center">
-      <button class="btn-qr" onclick="openQR()" title="QR-Code anzeigen">QR</button>
-      <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+    <div class="header-right">
+      <button class="btn-hdr" onclick="openQR()">QR</button>
+      <button class="btn-hdr" onclick="doLogout()">Abmelden</button>
     </div>
   </header>
 
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="inventory" onclick="switchTab('inventory',this)">
-      <span class="icon">📦</span>Inventar
-    </button>
-    <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar',this)">
-      <span class="icon">📅</span>Kalender
-    </button>
-    <button class="tab-btn" data-tab="todos" onclick="switchTab('todos',this)">
-      <span class="icon">✅</span>To-dos
-    </button>
-    <button class="tab-btn" data-tab="invoices" onclick="switchTab('invoices',this)">
-      <span class="icon">🧾</span>Rechnungen
-    </button>
+    <button class="tab-btn active" data-tab="persons"   onclick="switchTab('persons',this)"><span class="icon">👥</span>Personen</button>
+    <button class="tab-btn"        data-tab="inventory" onclick="switchTab('inventory',this)"><span class="icon">📦</span>Inventar</button>
+    <button class="tab-btn"        data-tab="calendar"  onclick="switchTab('calendar',this)"><span class="icon">📅</span>Kalender</button>
+    <button class="tab-btn"        data-tab="todos"     onclick="switchTab('todos',this)"><span class="icon">✅</span>To-dos</button>
+    <button class="tab-btn"        data-tab="invoices"  onclick="switchTab('invoices',this)"><span class="icon">🧾</span>Rechnungen</button>
   </nav>
 
   <main>
-    <!-- ── INVENTORY ── -->
-    <section id="section-inventory" class="section active">
+
+    <!-- ══ PERSONEN ══ -->
+    <section id="section-persons" class="section active">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="toggleForm('person-form')">+ Person hinzufügen</button>
+      </div>
+
+      <div class="form-panel" id="person-form">
+        <div><label>Name *</label><input id="p-name" placeholder="z.B. Max, Anna …" /></div>
+        <div>
+          <label>Emoji / Avatar</label>
+          <div class="emoji-grid" id="emoji-grid"></div>
+          <input type="hidden" id="p-emoji" value="😊" />
+        </div>
+        <div>
+          <label>Farbe</label>
+          <div class="color-grid" id="color-grid"></div>
+          <input type="hidden" id="p-color" value="#52b788" />
+        </div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="savePerson()">Speichern</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('person-form')">Abbrechen</button>
+        </div>
+      </div>
+
+      <div id="persons-list"><div class="loading">Lade …</div></div>
+    </section>
+
+    <!-- ══ INVENTORY ══ -->
+    <section id="section-inventory" class="section">
       <div class="toolbar">
         <input type="search" id="inv-search" placeholder="Suchen …" oninput="renderInventory()" />
         <button class="btn btn-primary" onclick="toggleForm('inv-form')">+ Hinzufügen</button>
@@ -408,14 +279,14 @@
         <div><label>Mindestbestand</label><input id="inv-min_stock" type="number" min="0" placeholder="0" /></div>
         <div class="form-panel-footer">
           <button class="btn btn-primary" onclick="saveInventory()">Speichern</button>
-          <button class="btn btn-ghost" onclick="toggleForm('inv-form')">Abbrechen</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('inv-form')">Abbrechen</button>
         </div>
       </div>
 
       <div id="inv-list"><div class="loading">Lade …</div></div>
     </section>
 
-    <!-- ── CALENDAR ── -->
+    <!-- ══ KALENDER ══ -->
     <section id="section-calendar" class="section">
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('cal-form')">+ Hinzufügen</button>
@@ -425,19 +296,20 @@
         <div><label>Titel *</label><input id="cal-title" placeholder="Arzttermin …" /></div>
         <div class="form-row">
           <div><label>Datum *</label><input id="cal-date" type="datetime-local" /></div>
-          <div><label>Person</label><input id="cal-person" placeholder="Wer?" /></div>
+          <div><label>Person</label><select id="cal-person"><option value="">– Alle –</option></select></div>
         </div>
         <div><label>Notiz</label><textarea id="cal-note" rows="2" placeholder="Weitere Infos …"></textarea></div>
         <div class="form-panel-footer">
           <button class="btn btn-primary" onclick="saveCalendar()">Speichern</button>
-          <button class="btn btn-ghost" onclick="toggleForm('cal-form')">Abbrechen</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('cal-form')">Abbrechen</button>
         </div>
       </div>
 
+      <div class="filter-chips" id="cal-filter-chips"></div>
       <div id="cal-list"><div class="loading">Lade …</div></div>
     </section>
 
-    <!-- ── TODOS ── -->
+    <!-- ══ TODOS ══ -->
     <section id="section-todos" class="section">
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('todo-form')">+ Hinzufügen</button>
@@ -446,19 +318,20 @@
       <div class="form-panel" id="todo-form">
         <div><label>Aufgabe *</label><input id="todo-text" placeholder="Was ist zu tun?" /></div>
         <div class="form-row">
-          <div><label>Person</label><input id="todo-person" placeholder="Wer?" /></div>
+          <div><label>Person</label><select id="todo-person"><option value="">– Alle –</option></select></div>
           <div><label>Fällig</label><input id="todo-due" type="date" /></div>
         </div>
         <div class="form-panel-footer">
           <button class="btn btn-primary" onclick="saveTodo()">Speichern</button>
-          <button class="btn btn-ghost" onclick="toggleForm('todo-form')">Abbrechen</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('todo-form')">Abbrechen</button>
         </div>
       </div>
 
+      <div class="filter-chips" id="todo-filter-chips"></div>
       <div id="todo-list"><div class="loading">Lade …</div></div>
     </section>
 
-    <!-- ── INVOICES ── -->
+    <!-- ══ RECHNUNGEN ══ -->
     <section id="section-invoices" class="section">
       <div id="inv-summary" class="summary-bar" style="display:none">
         <span class="label">Offene Posten gesamt</span>
@@ -489,7 +362,7 @@
         <div><label>PDF-Anhang</label><input type="file" id="bill-file" accept=".pdf,application/pdf" /></div>
         <div class="form-panel-footer">
           <button class="btn btn-primary" onclick="saveInvoice()">Speichern</button>
-          <button class="btn btn-ghost" onclick="toggleForm('bill-form')">Abbrechen</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('bill-form')">Abbrechen</button>
         </div>
       </div>
 
@@ -504,8 +377,8 @@
     <h2 id="edit-modal-title">Bearbeiten</h2>
     <div id="edit-modal-body"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
-      <button class="btn btn-primary" id="edit-modal-save" onclick="submitEdit()">Speichern</button>
+      <button class="btn btn-ghost"   onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="submitEdit()">Speichern</button>
     </div>
   </div>
 </div>
@@ -516,7 +389,7 @@
     <h2>📱 App auf dem Handy öffnen</h2>
     <div class="qr-url-row">
       <input id="qr-url-input" type="url" placeholder="https://deine-url.de" />
-      <button class="btn btn-primary btn-sm" onclick="applyQRUrl()">QR erzeugen</button>
+      <button class="btn btn-primary btn-sm" onclick="applyQRUrl()">Erzeugen</button>
     </div>
     <div id="qr-canvas-wrap"></div>
     <button class="btn btn-ghost" style="width:100%;margin-top:0.5rem" onclick="closeQR()">Schließen</button>
@@ -527,22 +400,40 @@
 <div id="toast"></div>
 
 <script>
-// ── PocketBase ──
+// ══════════════════════════════════════════════
+//  CONFIG & STATE
+// ══════════════════════════════════════════════
 const pb = new PocketBase('https://pocketbase-alo1.srv1510303.hstgr.cloud');
 
-// ── State ──
-let currentTab = 'inventory';
-let editRecord = null;   // {collection, id, extra}
-let invData = [], calData = [], todoData = [], billData = [];
+let currentTab   = 'persons';
+let editRecord   = null;
+let personsData  = [];
+let invData      = [];
+let calData      = [];
+let todoData     = [];
+let billData     = [];
+let filterCalPerson  = '';
+let filterTodoPerson = '';
 
-// ── Init ──
+const EMOJIS = ['😊','😎','🧑','👩','👨','🧒','👧','👦','🧔','👩‍🦰','👩‍🦱','🧑‍🦳','🦸','🧙','🐱','🐶','🦊','🐼','🦁','🐻','🌟','💪','🎯','🏃'];
+const COLORS = ['#52b788','#e63946','#457b9d','#f4a261','#a8dadc','#9b5de5','#f15bb5','#00bbf9','#fee440','#00f5d4','#fb5607','#8338ec'];
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
 (function init() {
+  buildEmojiGrid();
+  buildColorGrid();
   if (pb.authStore.isValid) showApp();
-  // prefill today's date for invoice
   document.getElementById('bill-date').valueAsDate = new Date();
+  document.getElementById('login-password').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+  document.getElementById('qr-url-input').addEventListener('keydown',   e => { if (e.key==='Enter') applyQRUrl(); });
+  document.getElementById('edit-modal').addEventListener('click', function(e) { if (e.target===this) closeModal(); });
 })();
 
-// ── Auth ──
+// ══════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pw    = document.getElementById('login-password').value;
@@ -552,7 +443,7 @@ async function doLogin() {
     await pb.collection('users').authWithPassword(email, pw);
     showApp();
   } catch(e) {
-    errEl.textContent = 'Login fehlgeschlagen: ' + (e.message || 'Unbekannter Fehler');
+    errEl.textContent = 'Login fehlgeschlagen: ' + (e.message||'Unbekannter Fehler');
     errEl.classList.add('show');
   }
 }
@@ -569,44 +460,186 @@ function showApp() {
   loadAll();
 }
 
-// ── Enter key on login ──
-document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
-// ── Tab switch ──
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
 function switchTab(tab, btn) {
   currentTab = tab;
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('section-' + tab).classList.add('active');
+  document.getElementById('section-'+tab).classList.add('active');
   btn.classList.add('active');
 }
 
 function toggleForm(id) {
-  const panel = document.getElementById(id);
-  panel.classList.toggle('open');
-  // reset edit mode
+  document.getElementById(id).classList.toggle('open');
   editRecord = null;
 }
 
-// ── Toast ──
-function toast(msg, dur = 2200) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), dur);
-}
-
-// ── Load all ──
-function loadAll() {
+// ══════════════════════════════════════════════
+//  LOAD ALL
+// ══════════════════════════════════════════════
+async function loadAll() {
+  await loadPersons();     // persons first — others depend on it
   loadInventory();
   loadCalendar();
   loadTodos();
   loadInvoices();
 }
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  PERSONS
+// ══════════════════════════════════════════════
+function buildEmojiGrid() {
+  const grid = document.getElementById('emoji-grid');
+  grid.innerHTML = EMOJIS.map((e,i) =>
+    `<div class="emoji-opt${i===0?' selected':''}" onclick="selectEmoji(this,'${e}')">${e}</div>`
+  ).join('');
+}
+
+function buildColorGrid() {
+  const grid = document.getElementById('color-grid');
+  grid.innerHTML = COLORS.map((c,i) =>
+    `<div class="color-opt${i===0?' selected':''}" onclick="selectColor(this,'${c}')" style="background:${c}" title="${c}"></div>`
+  ).join('');
+}
+
+function selectEmoji(el, val) {
+  document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('p-emoji').value = val;
+}
+
+function selectColor(el, val) {
+  document.querySelectorAll('.color-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('p-color').value = val;
+}
+
+async function loadPersons() {
+  try {
+    const res = await pb.collection('persons').getFullList({ sort: 'name' });
+    personsData = res;
+    renderPersons();
+    populatePersonSelects();
+    renderFilterChips();
+  } catch(e) {
+    document.getElementById('persons-list').innerHTML = '<p class="loading">Fehler beim Laden (Collection "persons" anlegen!)</p>';
+  }
+}
+
+function renderPersons() {
+  const list = document.getElementById('persons-list');
+  if (!personsData.length) {
+    list.innerHTML = '<p class="loading">Noch keine Personen – füge deine Haushaltsmitglieder hinzu!</p>';
+    return;
+  }
+  list.innerHTML = personsData.map(p => {
+    const openTodos  = todoData.filter(t => t.person===p.name && !t.done).length;
+    const nextEvents = calData.filter(c => c.person===p.name && new Date(c.date) >= new Date()).length;
+    return `
+    <div class="person-card" style="border-left-color:${p.color||'var(--primary)'}">
+      <div class="person-avatar" style="background:${hexAlpha(p.color||'#52b788',0.18)}">${p.emoji||'😊'}</div>
+      <div class="person-info">
+        <div class="person-name">${esc(p.name)}</div>
+        <div class="person-stats">
+          <span class="person-stat">✅ ${openTodos} offene Aufgabe${openTodos!==1?'n':''}</span>
+          <span class="person-stat">📅 ${nextEvents} komm. Termin${nextEvents!==1?'e':''}</span>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEditPerson('${p.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRecord('persons','${p.id}',loadPersons)">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function savePerson() {
+  const name = document.getElementById('p-name').value.trim();
+  if (!name) { toast('Name ist Pflicht'); return; }
+  const data = {
+    name,
+    emoji: document.getElementById('p-emoji').value,
+    color: document.getElementById('p-color').value,
+  };
+  try {
+    await pb.collection('persons').create(data);
+    toast('✅ Person gespeichert');
+    document.getElementById('p-name').value = '';
+    toggleForm('person-form');
+    await loadPersons();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+
+function openEditPerson(id) {
+  const p = personsData.find(x => x.id===id);
+  if (!p) return;
+  editRecord = { collection:'persons', id, reload: loadPersons };
+  document.getElementById('edit-modal-title').textContent = 'Person bearbeiten';
+  document.getElementById('edit-modal-body').innerHTML = `
+    <label>Name</label><input id="em-name" value="${esc(p.name)}" />
+    <label>Emoji</label>
+    <div class="emoji-grid" id="em-emoji-grid">
+      ${EMOJIS.map(e=>`<div class="emoji-opt${e===p.emoji?' selected':''}" onclick="selectModalEmoji(this,'${e}')">${e}</div>`).join('')}
+    </div>
+    <input type="hidden" id="em-emoji" value="${esc(p.emoji||'😊')}" />
+    <label>Farbe</label>
+    <div class="color-grid" id="em-color-grid">
+      ${COLORS.map(c=>`<div class="color-opt${c===p.color?' selected':''}" onclick="selectModalColor(this,'${c}')" style="background:${c}"></div>`).join('')}
+    </div>
+    <input type="hidden" id="em-color" value="${esc(p.color||'#52b788')}" />`;
+  editRecord.getData = () => ({
+    name:  document.getElementById('em-name').value.trim(),
+    emoji: document.getElementById('em-emoji').value,
+    color: document.getElementById('em-color').value,
+  });
+  openModal();
+}
+
+function selectModalEmoji(el, val) {
+  document.querySelectorAll('#em-emoji-grid .emoji-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('em-emoji').value = val;
+}
+function selectModalColor(el, val) {
+  document.querySelectorAll('#em-color-grid .color-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('em-color').value = val;
+}
+
+// ── Person selects & filter chips ──
+function populatePersonSelects() {
+  const opts = '<option value="">– Niemand –</option>' +
+    personsData.map(p => `<option value="${esc(p.name)}">${p.emoji||''} ${esc(p.name)}</option>`).join('');
+  ['cal-person','todo-person'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.innerHTML = opts;
+  });
+}
+
+function renderFilterChips() {
+  ['cal','todo'].forEach(prefix => {
+    const wrap = document.getElementById(prefix+'-filter-chips');
+    if (!wrap) return;
+    const current = prefix==='cal' ? filterCalPerson : filterTodoPerson;
+    wrap.innerHTML =
+      `<div class="chip${current===''?' active':''}" onclick="setFilter('${prefix}','')">Alle</div>` +
+      personsData.map(p =>
+        `<div class="chip${current===p.name?' active':''}" onclick="setFilter('${prefix}','${esc(p.name)}')" style="${current===p.name?`background:${hexAlpha(p.color||'#52b788',0.2)};border-color:${p.color||'var(--primary)'};color:${p.color||'var(--primary)'}`:''}">${p.emoji||''} ${esc(p.name)}</div>`
+      ).join('');
+  });
+}
+
+function setFilter(prefix, name) {
+  if (prefix==='cal')  { filterCalPerson  = name; renderCalendar(); }
+  if (prefix==='todo') { filterTodoPerson = name; renderTodos(); }
+  renderFilterChips();
+}
+
+// ══════════════════════════════════════════════
 //  INVENTORY
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 async function loadInventory() {
   try {
     const res = await pb.collection('inventory').getFullList({ sort: 'name' });
@@ -616,7 +649,7 @@ async function loadInventory() {
 }
 
 function renderInventory() {
-  const q = document.getElementById('inv-search').value.toLowerCase();
+  const q    = document.getElementById('inv-search').value.toLowerCase();
   const list = document.getElementById('inv-list');
   const filtered = invData.filter(r =>
     (r.name||'').toLowerCase().includes(q) ||
@@ -627,20 +660,18 @@ function renderInventory() {
   list.innerHTML = filtered.map(r => {
     const low = r.quantity <= r.min_stock;
     return `
-    <div class="card ${low ? 'low-stock' : ''}">
+    <div class="card ${low?'low-stock':''}">
       <div class="card-header">
         <div>
-          <div class="card-title">${esc(r.name)}
-            ${low ? '<span class="badge badge-warn">⚠ Niedrig</span>' : ''}
-          </div>
+          <div class="card-title">${esc(r.name)} ${low?'<span class="badge badge-warn">⚠ Niedrig</span>':''}</div>
           <div class="card-meta">
-            ${r.location ? '📍 '+esc(r.location)+' &nbsp;' : ''}
-            ${r.category ? '🏷 '+esc(r.category) : ''}
+            ${r.location?'📍 '+esc(r.location)+'&nbsp;':''}
+            ${r.category?'🏷 '+esc(r.category):''}
           </div>
           <div class="qty-ctrl">
-            <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},-1)" title="Weniger">−</button>
+            <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},-1)">−</button>
             <span class="qty-value">${r.quantity}</span>
-            <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},1)" title="Mehr">+</button>
+            <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},1)">+</button>
             <span style="font-size:0.78rem;color:var(--text-muted)">Min: ${r.min_stock||0}</span>
           </div>
         </div>
@@ -654,13 +685,13 @@ function renderInventory() {
 }
 
 async function adjustQty(id, current, delta) {
-  const newQty = Math.max(0, current + delta);
+  const newQty = Math.max(0, current+delta);
   try {
     await pb.collection('inventory').update(id, { quantity: newQty });
-    const idx = invData.findIndex(r => r.id === id);
-    if (idx !== -1) invData[idx].quantity = newQty;
+    const idx = invData.findIndex(r => r.id===id);
+    if (idx!==-1) invData[idx].quantity = newQty;
     renderInventory();
-  } catch(e) { toast('Fehler: ' + e.message); }
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
 async function saveInventory() {
@@ -670,8 +701,8 @@ async function saveInventory() {
     name,
     location:  document.getElementById('inv-location').value.trim(),
     category:  document.getElementById('inv-category').value.trim(),
-    quantity:  parseFloat(document.getElementById('inv-quantity').value) || 0,
-    min_stock: parseFloat(document.getElementById('inv-min_stock').value) || 0,
+    quantity:  parseFloat(document.getElementById('inv-quantity').value)||0,
+    min_stock: parseFloat(document.getElementById('inv-min_stock').value)||0,
   };
   try {
     await pb.collection('inventory').create(data);
@@ -679,13 +710,13 @@ async function saveInventory() {
     clearForm(['inv-name','inv-location','inv-category','inv-quantity','inv-min_stock']);
     toggleForm('inv-form');
     loadInventory();
-  } catch(e) { toast('Fehler: ' + e.message); }
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditInventory(id) {
-  const r = invData.find(x => x.id === id);
+  const r = invData.find(x => x.id===id);
   if (!r) return;
-  editRecord = { collection: 'inventory', id, reload: loadInventory };
+  editRecord = { collection:'inventory', id, reload:loadInventory };
   document.getElementById('edit-modal-title').textContent = 'Inventar bearbeiten';
   document.getElementById('edit-modal-body').innerHTML = `
     <label>Name</label><input id="em-name" value="${esc(r.name)}" />
@@ -701,42 +732,41 @@ function openEditInventory(id) {
     name:      document.getElementById('em-name').value.trim(),
     location:  document.getElementById('em-location').value.trim(),
     category:  document.getElementById('em-category').value.trim(),
-    quantity:  parseFloat(document.getElementById('em-quantity').value) || 0,
-    min_stock: parseFloat(document.getElementById('em-min_stock').value) || 0,
+    quantity:  parseFloat(document.getElementById('em-quantity').value)||0,
+    min_stock: parseFloat(document.getElementById('em-min_stock').value)||0,
   });
   openModal();
 }
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  CALENDAR
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 async function loadCalendar() {
   try {
     const res = await pb.collection('calendar').getFullList({ sort: 'date' });
     calData = res;
     renderCalendar();
+    renderPersons(); // refresh stats
   } catch(e) { document.getElementById('cal-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
 }
 
 function renderCalendar() {
   const list = document.getElementById('cal-list');
-  if (!calData.length) { list.innerHTML = '<p class="loading">Keine Termine</p>'; return; }
-  const now = new Date();
-  list.innerHTML = calData.map(r => {
-    const d = new Date(r.date);
-    const past = d < now;
+  const now  = new Date();
+  const filtered = calData.filter(r => !filterCalPerson || r.person===filterCalPerson);
+  if (!filtered.length) { list.innerHTML = '<p class="loading">Keine Termine</p>'; return; }
+  list.innerHTML = filtered.map(r => {
+    const past = new Date(r.date) < now;
+    const personChip = personBadge(r.person);
     return `
     <div class="card">
       <div class="card-header">
         <div>
           <div class="card-title">${esc(r.title)}
-            <span class="badge ${past ? 'badge-muted' : 'badge-ok'}">${past ? 'Vergangen' : 'Bevorstehend'}</span>
+            <span class="badge ${past?'badge-muted':'badge-ok'}">${past?'Vergangen':'Bevorstehend'}</span>
           </div>
-          <div class="card-meta">
-            📅 ${fmtDatetime(r.date)}
-            ${r.person ? ' &nbsp;👤 '+esc(r.person) : ''}
-          </div>
-          ${r.note ? `<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>` : ''}
+          <div class="card-meta">📅 ${fmtDatetime(r.date)} ${personChip}</div>
+          ${r.note?`<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>`:''}
         </div>
         <div class="card-actions">
           <button class="btn btn-ghost btn-sm" onclick="openEditCalendar('${r.id}')">✏️</button>
@@ -750,68 +780,66 @@ function renderCalendar() {
 async function saveCalendar() {
   const title = document.getElementById('cal-title').value.trim();
   const date  = document.getElementById('cal-date').value;
-  if (!title || !date) { toast('Titel und Datum sind Pflicht'); return; }
-  const data = {
-    title,
-    date,
-    person: document.getElementById('cal-person').value.trim(),
-    note:   document.getElementById('cal-note').value.trim(),
-  };
+  if (!title||!date) { toast('Titel und Datum sind Pflicht'); return; }
+  const data = { title, date, person: document.getElementById('cal-person').value, note: document.getElementById('cal-note').value.trim() };
   try {
     await pb.collection('calendar').create(data);
     toast('✅ Termin gespeichert');
-    clearForm(['cal-title','cal-date','cal-person','cal-note']);
+    clearForm(['cal-title','cal-date','cal-note']);
+    document.getElementById('cal-person').value = '';
     toggleForm('cal-form');
     loadCalendar();
-  } catch(e) { toast('Fehler: ' + e.message); }
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditCalendar(id) {
-  const r = calData.find(x => x.id === id);
+  const r = calData.find(x => x.id===id);
   if (!r) return;
-  editRecord = { collection: 'calendar', id, reload: loadCalendar };
+  editRecord = { collection:'calendar', id, reload:loadCalendar };
   document.getElementById('edit-modal-title').textContent = 'Termin bearbeiten';
-  const dtLocal = r.date ? r.date.slice(0,16) : '';
+  const personOpts = '<option value="">– Niemand –</option>'+personsData.map(p=>`<option value="${esc(p.name)}" ${r.person===p.name?'selected':''}>${p.emoji||''} ${esc(p.name)}</option>`).join('');
   document.getElementById('edit-modal-body').innerHTML = `
     <label>Titel</label><input id="em-title" value="${esc(r.title)}" />
     <div class="form-row">
-      <div><label>Datum</label><input id="em-date" type="datetime-local" value="${dtLocal}" /></div>
-      <div><label>Person</label><input id="em-person" value="${esc(r.person||'')}" /></div>
+      <div><label>Datum</label><input id="em-date" type="datetime-local" value="${r.date?r.date.slice(0,16):''}" /></div>
+      <div><label>Person</label><select id="em-person">${personOpts}</select></div>
     </div>
     <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
   editRecord.getData = () => ({
     title:  document.getElementById('em-title').value.trim(),
     date:   document.getElementById('em-date').value,
-    person: document.getElementById('em-person').value.trim(),
+    person: document.getElementById('em-person').value,
     note:   document.getElementById('em-note').value.trim(),
   });
   openModal();
 }
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  TODOS
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 async function loadTodos() {
   try {
     const res = await pb.collection('todos').getFullList({ sort: 'done,due' });
     todoData = res;
     renderTodos();
+    renderPersons();
   } catch(e) { document.getElementById('todo-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
 }
 
 function renderTodos() {
   const list = document.getElementById('todo-list');
-  if (!todoData.length) { list.innerHTML = '<p class="loading">Keine Aufgaben</p>'; return; }
-  list.innerHTML = todoData.map(r => `
-    <div class="card ${r.done ? 'done-card' : ''}">
+  const filtered = todoData.filter(r => !filterTodoPerson || r.person===filterTodoPerson);
+  if (!filtered.length) { list.innerHTML = '<p class="loading">Keine Aufgaben</p>'; return; }
+  list.innerHTML = filtered.map(r => `
+    <div class="card ${r.done?'done-card':''}">
       <div class="card-header">
         <div style="display:flex;gap:0.6rem;align-items:flex-start;flex:1">
           <input type="checkbox" class="todo-check" ${r.done?'checked':''} onchange="toggleTodo('${r.id}',${r.done})" />
           <div style="flex:1">
             <div class="card-title" style="${r.done?'text-decoration:line-through':''}">${esc(r.text)}</div>
             <div class="card-meta">
-              ${r.person ? '👤 '+esc(r.person)+' &nbsp;' : ''}
-              ${r.due ? '📅 '+fmtDate(r.due) : ''}
+              ${personBadge(r.person)}
+              ${r.due?'&nbsp;📅 '+fmtDate(r.due):''}
             </div>
           </div>
         </div>
@@ -826,39 +854,37 @@ function renderTodos() {
 async function toggleTodo(id, currentDone) {
   try {
     await pb.collection('todos').update(id, { done: !currentDone });
-    const idx = todoData.findIndex(r => r.id === id);
-    if (idx !== -1) todoData[idx].done = !currentDone;
+    const idx = todoData.findIndex(r => r.id===id);
+    if (idx!==-1) todoData[idx].done = !currentDone;
     renderTodos();
-  } catch(e) { toast('Fehler: ' + e.message); }
+    renderPersons();
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
 async function saveTodo() {
   const text = document.getElementById('todo-text').value.trim();
   if (!text) { toast('Aufgabe ist Pflicht'); return; }
-  const data = {
-    text,
-    person: document.getElementById('todo-person').value.trim(),
-    due:    document.getElementById('todo-due').value || null,
-    done:   false,
-  };
+  const data = { text, person: document.getElementById('todo-person').value, due: document.getElementById('todo-due').value||null, done: false };
   try {
     await pb.collection('todos').create(data);
     toast('✅ Aufgabe gespeichert');
-    clearForm(['todo-text','todo-person','todo-due']);
+    clearForm(['todo-text','todo-due']);
+    document.getElementById('todo-person').value = '';
     toggleForm('todo-form');
     loadTodos();
-  } catch(e) { toast('Fehler: ' + e.message); }
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditTodo(id) {
-  const r = todoData.find(x => x.id === id);
+  const r = todoData.find(x => x.id===id);
   if (!r) return;
-  editRecord = { collection: 'todos', id, reload: loadTodos };
+  editRecord = { collection:'todos', id, reload:loadTodos };
   document.getElementById('edit-modal-title').textContent = 'Aufgabe bearbeiten';
+  const personOpts = '<option value="">– Niemand –</option>'+personsData.map(p=>`<option value="${esc(p.name)}" ${r.person===p.name?'selected':''}>${p.emoji||''} ${esc(p.name)}</option>`).join('');
   document.getElementById('edit-modal-body').innerHTML = `
     <label>Aufgabe</label><input id="em-text" value="${esc(r.text)}" />
     <div class="form-row">
-      <div><label>Person</label><input id="em-person" value="${esc(r.person||'')}" /></div>
+      <div><label>Person</label><select id="em-person">${personOpts}</select></div>
       <div><label>Fällig</label><input id="em-due" type="date" value="${r.due?r.due.slice(0,10):''}" /></div>
     </div>
     <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem">
@@ -866,16 +892,16 @@ function openEditTodo(id) {
     </label>`;
   editRecord.getData = () => ({
     text:   document.getElementById('em-text').value.trim(),
-    person: document.getElementById('em-person').value.trim(),
-    due:    document.getElementById('em-due').value || null,
+    person: document.getElementById('em-person').value,
+    due:    document.getElementById('em-due').value||null,
     done:   document.getElementById('em-done').checked,
   });
   openModal();
 }
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  INVOICES
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 async function loadInvoices() {
   try {
     const res = await pb.collection('invoices').getFullList({ sort: '-date' });
@@ -885,42 +911,29 @@ async function loadInvoices() {
 }
 
 function renderInvoices() {
-  const list = document.getElementById('bill-list');
-  const open = billData.filter(r => r.status === 'offen');
-  const total = open.reduce((s, r) => s + (parseFloat(r.amount)||0), 0);
-
-  const summaryBar = document.getElementById('inv-summary');
-  if (billData.length) {
-    summaryBar.style.display = 'flex';
-    document.getElementById('inv-open-total').textContent = fmtEuro(total);
-  } else {
-    summaryBar.style.display = 'none';
-  }
-
-  if (!billData.length) { list.innerHTML = '<p class="loading">Keine Rechnungen</p>'; return; }
-
+  const list  = document.getElementById('bill-list');
+  const open  = billData.filter(r => r.status==='offen');
+  const total = open.reduce((s,r) => s+(parseFloat(r.amount)||0), 0);
+  const bar   = document.getElementById('inv-summary');
+  if (billData.length) { bar.style.display='flex'; document.getElementById('inv-open-total').textContent=fmtEuro(total); }
+  else bar.style.display = 'none';
+  if (!billData.length) { list.innerHTML='<p class="loading">Keine Rechnungen</p>'; return; }
   list.innerHTML = billData.map(r => {
-    const paid = r.status === 'bezahlt';
-    const fileUrl = r.file
-      ? pb.files.getURL(r, r.file)
-      : null;
+    const paid    = r.status==='bezahlt';
+    const fileUrl = r.file ? pb.files.getURL(r,r.file) : null;
     return `
     <div class="card">
       <div class="card-header">
         <div style="flex:1">
           <div class="card-title">${esc(r.description)}
-            <span class="badge ${paid ? 'badge-ok' : 'badge-danger'}">${paid ? 'Bezahlt' : 'Offen'}</span>
+            <span class="badge ${paid?'badge-ok':'badge-danger'}">${paid?'Bezahlt':'Offen'}</span>
           </div>
-          <div class="card-meta">
-            💶 ${fmtEuro(r.amount)} &nbsp;
-            📅 ${fmtDate(r.date)}
-            ${r.category ? ' &nbsp;🏷 '+esc(r.category) : ''}
-          </div>
-          ${r.note ? `<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>` : ''}
-          ${fileUrl ? `<a href="${fileUrl}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary)">📎 PDF öffnen</a>` : ''}
+          <div class="card-meta">💶 ${fmtEuro(r.amount)} &nbsp;📅 ${fmtDate(r.date)}${r.category?' &nbsp;🏷 '+esc(r.category):''}</div>
+          ${r.note?`<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>`:''}
+          ${fileUrl?`<a href="${fileUrl}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary)">📎 PDF öffnen</a>`:''}
         </div>
         <div class="card-actions">
-          ${!paid ? `<button class="btn btn-ghost btn-sm" onclick="markPaid('${r.id}')">✓ Bezahlt</button>` : ''}
+          ${!paid?`<button class="btn btn-ghost btn-sm" onclick="markPaid('${r.id}')">✓</button>`:''}
           <button class="btn btn-ghost btn-sm" onclick="openEditInvoice('${r.id}')">✏️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteRecord('invoices','${r.id}',loadInvoices)">🗑</button>
         </div>
@@ -930,45 +943,38 @@ function renderInvoices() {
 }
 
 async function markPaid(id) {
-  try {
-    await pb.collection('invoices').update(id, { status: 'bezahlt' });
-    toast('✅ Als bezahlt markiert');
-    loadInvoices();
-  } catch(e) { toast('Fehler: ' + e.message); }
+  try { await pb.collection('invoices').update(id,{status:'bezahlt'}); toast('✅ Als bezahlt markiert'); loadInvoices(); }
+  catch(e) { toast('Fehler: '+e.message); }
 }
 
 async function saveInvoice() {
   const desc   = document.getElementById('bill-description').value.trim();
   const amount = document.getElementById('bill-amount').value;
   const date   = document.getElementById('bill-date').value;
-  if (!desc || !amount || !date) { toast('Beschreibung, Betrag und Datum sind Pflicht'); return; }
-
-  const formData = new FormData();
-  formData.append('description', desc);
-  formData.append('amount',      parseFloat(amount));
-  formData.append('date',        date);
-  formData.append('category',    document.getElementById('bill-category').value.trim());
-  formData.append('status',      document.getElementById('bill-status').value);
-  formData.append('note',        document.getElementById('bill-note').value.trim());
-  const fileInput = document.getElementById('bill-file');
-  if (fileInput.files[0]) formData.append('file', fileInput.files[0]);
-
+  if (!desc||!amount||!date) { toast('Beschreibung, Betrag und Datum sind Pflicht'); return; }
+  const fd = new FormData();
+  fd.append('description', desc);
+  fd.append('amount',      parseFloat(amount));
+  fd.append('date',        date);
+  fd.append('category',    document.getElementById('bill-category').value.trim());
+  fd.append('status',      document.getElementById('bill-status').value);
+  fd.append('note',        document.getElementById('bill-note').value.trim());
+  const f = document.getElementById('bill-file');
+  if (f.files[0]) fd.append('file', f.files[0]);
   try {
-    await pb.collection('invoices').create(formData);
+    await pb.collection('invoices').create(fd);
     toast('✅ Rechnung gespeichert');
     clearForm(['bill-description','bill-amount','bill-category','bill-note']);
-    document.getElementById('bill-file').value = '';
-    document.getElementById('bill-date').valueAsDate = new Date();
-    document.getElementById('bill-status').value = 'offen';
+    f.value=''; document.getElementById('bill-date').valueAsDate=new Date(); document.getElementById('bill-status').value='offen';
     toggleForm('bill-form');
     loadInvoices();
-  } catch(e) { toast('Fehler: ' + e.message); }
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditInvoice(id) {
-  const r = billData.find(x => x.id === id);
+  const r = billData.find(x => x.id===id);
   if (!r) return;
-  editRecord = { collection: 'invoices', id, reload: loadInvoices };
+  editRecord = { collection:'invoices', id, reload:loadInvoices };
   document.getElementById('edit-modal-title').textContent = 'Rechnung bearbeiten';
   document.getElementById('edit-modal-body').innerHTML = `
     <label>Beschreibung</label><input id="em-description" value="${esc(r.description)}" />
@@ -988,7 +994,7 @@ function openEditInvoice(id) {
     <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
   editRecord.getData = () => ({
     description: document.getElementById('em-description').value.trim(),
-    amount:      parseFloat(document.getElementById('em-amount').value) || 0,
+    amount:      parseFloat(document.getElementById('em-amount').value)||0,
     date:        document.getElementById('em-date').value,
     category:    document.getElementById('em-category').value.trim(),
     status:      document.getElementById('em-status').value,
@@ -997,16 +1003,11 @@ function openEditInvoice(id) {
   openModal();
 }
 
-// ═══════════════════════════════════════════
-//  MODAL helpers
-// ═══════════════════════════════════════════
-function openModal() {
-  document.getElementById('edit-modal').classList.add('open');
-}
-function closeModal() {
-  document.getElementById('edit-modal').classList.remove('open');
-  editRecord = null;
-}
+// ══════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════
+function openModal()  { document.getElementById('edit-modal').classList.add('open'); }
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); editRecord=null; }
 
 async function submitEdit() {
   if (!editRecord) return;
@@ -1016,104 +1017,81 @@ async function submitEdit() {
     toast('✅ Gespeichert');
     closeModal();
     editRecord.reload();
-  } catch(e) { toast('Fehler: ' + e.message); }
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
-// Close modal on backdrop click
-document.getElementById('edit-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-// ═══════════════════════════════════════════
-//  Generic delete
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════
 async function deleteRecord(collection, id, reloadFn) {
   if (!confirm('Wirklich löschen?')) return;
-  try {
-    await pb.collection(collection).delete(id);
-    toast('🗑 Gelöscht');
-    reloadFn();
-  } catch(e) { toast('Fehler: ' + e.message); }
+  try { await pb.collection(collection).delete(id); toast('🗑 Gelöscht'); reloadFn(); }
+  catch(e) { toast('Fehler: '+e.message); }
 }
 
-// ═══════════════════════════════════════════
-//  Utilities
-// ═══════════════════════════════════════════
-function esc(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-function fmtDate(str) {
-  if (!str) return '';
-  const d = new Date(str);
-  return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
-}
-
-function fmtDatetime(str) {
-  if (!str) return '';
-  const d = new Date(str);
-  return d.toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-}
-
-function fmtEuro(val) {
-  return parseFloat(val||0).toLocaleString('de-DE', { style:'currency', currency:'EUR' });
-}
-
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  QR CODE
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════
 function openQR() {
   const stored = localStorage.getItem('helpy_qr_url') || window.location.href.split('?')[0];
   document.getElementById('qr-url-input').value = stored;
   document.getElementById('qr-modal-backdrop').classList.add('open');
   buildQR(stored);
 }
-
 function applyQRUrl() {
   const url = document.getElementById('qr-url-input').value.trim();
   if (!url) { toast('Bitte eine URL eingeben'); return; }
   localStorage.setItem('helpy_qr_url', url);
   buildQR(url);
 }
-
 function buildQR(url) {
   const wrap = document.getElementById('qr-canvas-wrap');
   wrap.innerHTML = '';
   try {
-    new QRCode(wrap, {
-      text:         url,
-      width:        220,
-      height:       220,
-      colorDark:    '#1a1a1a',
-      colorLight:   '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  } catch(e) {
-    wrap.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Ungültige URL</p>';
-  }
+    new QRCode(wrap, { text:url, width:220, height:220, colorDark:'#1a1a1a', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.M });
+  } catch(e) { wrap.innerHTML='<p style="color:var(--danger)">Ungültige URL</p>'; }
+}
+function closeQR() { document.getElementById('qr-modal-backdrop').classList.remove('open'); }
+
+// ══════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════
+function toast(msg, dur=2200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
 }
 
-function closeQR() {
-  document.getElementById('qr-modal-backdrop').classList.remove('open');
+function personBadge(name) {
+  if (!name) return '';
+  const p = personsData.find(x => x.name===name);
+  if (!p) return `<span style="font-size:0.78rem;color:var(--text-muted)">👤 ${esc(name)}</span>`;
+  return `<span class="person-chip" style="background:${hexAlpha(p.color||'#52b788',0.18)};color:${p.color||'var(--primary)'}">${p.emoji||'👤'} ${esc(p.name)}</span>`;
 }
 
-// Enter-Taste im URL-Feld
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('qr-url-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') applyQRUrl();
-  });
-});
+function hexAlpha(hex, alpha) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(str) {
+  if (!str) return '';
+  return new Date(str).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function fmtDatetime(str) {
+  if (!str) return '';
+  return new Date(str).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function fmtEuro(val) {
+  return parseFloat(val||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+}
 function clearForm(ids) {
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
+  ids.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 }
 </script>
 </body>
