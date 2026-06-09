@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Haushalts-Helpy</title>
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f0;
+      --surface: #ffffff;
+      --border: #e0ddd7;
+      --primary: #2d6a4f;
+      --primary-light: #52b788;
+      --primary-dim: #d8f3dc;
+      --danger: #e63946;
+      --danger-dim: #fde8ea;
+      --warn: #f4a261;
+      --warn-dim: #fff3e0;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --radius: 10px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Login ── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .login-card h1 { font-size: 1.6rem; margin-bottom: 0.3rem; color: var(--primary); }
+    .login-card p  { color: var(--text-muted); margin-bottom: 1.8rem; font-size: 0.9rem; }
+
+    /* ── App shell ── */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.9rem 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
+
+    .btn-logout {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #fff;
+      padding: 0.35rem 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.28); }
+
+    /* ── QR Modal ── */
+    #qr-modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    #qr-modal-backdrop.open { display: flex; }
+    #qr-modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2rem 1.8rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      max-width: 320px;
+      width: 90%;
+    }
+    #qr-modal h2 { font-size: 1rem; margin-bottom: 0.9rem; color: var(--primary); }
+    #qr-canvas-wrap { display: flex; justify-content: center; margin: 1rem 0; }
+    #qr-canvas-wrap canvas, #qr-canvas-wrap img { border-radius: 8px; border: 1px solid var(--border); }
+    #qr-url-input {
+      width: 100%; padding: 0.55rem 0.75rem;
+      border: 1px solid var(--border); border-radius: 7px;
+      font-size: 0.85rem; color: var(--text);
+      background: var(--bg);
+    }
+    #qr-url-input:focus { outline: none; border-color: var(--primary-light); }
+    .qr-url-row { display: flex; gap: 0.5rem; align-items: center; }
+    .qr-url-row .btn { flex-shrink: 0; }
+    .btn-qr {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #fff;
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .btn-qr:hover { background: rgba(255,255,255,0.28); }
+
+    /* ── Tab bar ── */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 0.75rem 0.5rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+    .tab-btn .icon { display: block; font-size: 1.2rem; margin-bottom: 2px; }
+
+    /* ── Content ── */
+    main { flex: 1; padding: 1rem; max-width: 700px; margin: 0 auto; width: 100%; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Forms & inputs ── */
+    label { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.3rem; margin-top: 0.75rem; }
+    label:first-child { margin-top: 0; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.92rem;
+      background: var(--surface);
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-light);
+    }
+    textarea { resize: vertical; min-height: 70px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    @media (max-width: 420px) { .form-row { grid-template-columns: 1fr; } }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.1rem;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover { background: var(--bg); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .card-title { font-weight: 600; font-size: 0.98rem; }
+    .card-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .card-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    /* ── Collapsible add-form ── */
+    .form-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .form-panel.open { display: block; }
+    .form-panel-footer { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+
+    /* ── Toolbar ── */
+    .toolbar { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center; }
+    .toolbar input[type="search"] { flex: 1; min-width: 140px; }
+    .toolbar .btn { flex-shrink: 0; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .badge-warn  { background: var(--warn-dim); color: #b45309; }
+    .badge-ok    { background: var(--primary-dim); color: var(--primary); }
+    .badge-danger{ background: var(--danger-dim); color: var(--danger); }
+    .badge-muted { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+
+    /* ── Inventory quantity control ── */
+    .qty-ctrl { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.4rem; }
+    .qty-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+      transition: background 0.1s;
+    }
+    .qty-btn:hover { background: var(--primary-dim); }
+    .qty-value { font-weight: 700; min-width: 28px; text-align: center; }
+
+    /* ── Low-stock highlight ── */
+    .card.low-stock { border-color: var(--warn); background: var(--warn-dim); }
+
+    /* ── Todo done ── */
+    .card.done-card { opacity: 0.55; }
+    .todo-check { cursor: pointer; width: 20px; height: 20px; accent-color: var(--primary); flex-shrink: 0; margin-top: 2px; }
+
+    /* ── Invoices summary bar ── */
+    .summary-bar {
+      background: var(--primary-dim);
+      border: 1px solid var(--primary-light);
+      border-radius: var(--radius);
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .summary-bar .label { font-size: 0.82rem; color: var(--primary); }
+    .summary-bar .amount { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1.2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #1a1a1a;
+      color: #fff;
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 999;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Error msg ── */
+    .error-msg {
+      background: var(--danger-dim);
+      color: var(--danger);
+      border-radius: 7px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    /* ── Loading ── */
+    .loading { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h2 { margin-bottom: 1rem; font-size: 1.05rem; }
+    .modal-footer { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.1rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>🏠 Haushalts-Helpy</h1>
+    <p>Bitte einloggen</p>
+    <div id="login-error" class="error-msg"></div>
+    <label>E-Mail</label>
+    <input type="email" id="login-email" placeholder="name@example.com" />
+    <label>Passwort</label>
+    <input type="password" id="login-password" placeholder="••••••••" />
+    <button class="btn btn-primary" style="width:100%;margin-top:1.2rem" onclick="doLogin()">Einloggen</button>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <header>
+    <h1>🏠 Haushalts-Helpy</h1>
+    <div style="display:flex;gap:0.5rem;align-items:center">
+      <button class="btn-qr" onclick="openQR()" title="QR-Code anzeigen">QR</button>
+      <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="inventory" onclick="switchTab('inventory',this)">
+      <span class="icon">📦</span>Inventar
+    </button>
+    <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar',this)">
+      <span class="icon">📅</span>Kalender
+    </button>
+    <button class="tab-btn" data-tab="todos" onclick="switchTab('todos',this)">
+      <span class="icon">✅</span>To-dos
+    </button>
+    <button class="tab-btn" data-tab="invoices" onclick="switchTab('invoices',this)">
+      <span class="icon">🧾</span>Rechnungen
+    </button>
+  </nav>
+
+  <main>
+    <!-- ── INVENTORY ── -->
+    <section id="section-inventory" class="section active">
+      <div class="toolbar">
+        <input type="search" id="inv-search" placeholder="Suchen …" oninput="renderInventory()" />
+        <button class="btn btn-primary" onclick="toggleForm('inv-form')">+ Hinzufügen</button>
+      </div>
+
+      <div class="form-panel" id="inv-form">
+        <div class="form-row">
+          <div><label>Name *</label><input id="inv-name" placeholder="Artikel" /></div>
+          <div><label>Ort</label><input id="inv-location" placeholder="Küche, Keller …" /></div>
+        </div>
+        <div class="form-row">
+          <div><label>Kategorie</label><input id="inv-category" placeholder="Lebensmittel …" /></div>
+          <div><label>Menge *</label><input id="inv-quantity" type="number" min="0" placeholder="0" /></div>
+        </div>
+        <div><label>Mindestbestand</label><input id="inv-min_stock" type="number" min="0" placeholder="0" /></div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveInventory()">Speichern</button>
+          <button class="btn btn-ghost" onclick="toggleForm('inv-form')">Abbrechen</button>
+        </div>
+      </div>
+
+      <div id="inv-list"><div class="loading">Lade …</div></div>
+    </section>
+
+    <!-- ── CALENDAR ── -->
+    <section id="section-calendar" class="section">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="toggleForm('cal-form')">+ Hinzufügen</button>
+      </div>
+
+      <div class="form-panel" id="cal-form">
+        <div><label>Titel *</label><input id="cal-title" placeholder="Arzttermin …" /></div>
+        <div class="form-row">
+          <div><label>Datum *</label><input id="cal-date" type="datetime-local" /></div>
+          <div><label>Person</label><input id="cal-person" placeholder="Wer?" /></div>
+        </div>
+        <div><label>Notiz</label><textarea id="cal-note" rows="2" placeholder="Weitere Infos …"></textarea></div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveCalendar()">Speichern</button>
+          <button class="btn btn-ghost" onclick="toggleForm('cal-form')">Abbrechen</button>
+        </div>
+      </div>
+
+      <div id="cal-list"><div class="loading">Lade …</div></div>
+    </section>
+
+    <!-- ── TODOS ── -->
+    <section id="section-todos" class="section">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="toggleForm('todo-form')">+ Hinzufügen</button>
+      </div>
+
+      <div class="form-panel" id="todo-form">
+        <div><label>Aufgabe *</label><input id="todo-text" placeholder="Was ist zu tun?" /></div>
+        <div class="form-row">
+          <div><label>Person</label><input id="todo-person" placeholder="Wer?" /></div>
+          <div><label>Fällig</label><input id="todo-due" type="date" /></div>
+        </div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveTodo()">Speichern</button>
+          <button class="btn btn-ghost" onclick="toggleForm('todo-form')">Abbrechen</button>
+        </div>
+      </div>
+
+      <div id="todo-list"><div class="loading">Lade …</div></div>
+    </section>
+
+    <!-- ── INVOICES ── -->
+    <section id="section-invoices" class="section">
+      <div id="inv-summary" class="summary-bar" style="display:none">
+        <span class="label">Offene Posten gesamt</span>
+        <span class="amount" id="inv-open-total">0,00 €</span>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="toggleForm('bill-form')">+ Hinzufügen</button>
+      </div>
+
+      <div class="form-panel" id="bill-form">
+        <div><label>Beschreibung *</label><input id="bill-description" placeholder="Strom, Miete …" /></div>
+        <div class="form-row">
+          <div><label>Betrag (€) *</label><input id="bill-amount" type="number" step="0.01" min="0" placeholder="0.00" /></div>
+          <div><label>Datum *</label><input id="bill-date" type="date" /></div>
+        </div>
+        <div class="form-row">
+          <div><label>Kategorie</label><input id="bill-category" placeholder="Energie, Versicherung …" /></div>
+          <div>
+            <label>Status</label>
+            <select id="bill-status">
+              <option value="offen">Offen</option>
+              <option value="bezahlt">Bezahlt</option>
+            </select>
+          </div>
+        </div>
+        <div><label>Notiz</label><textarea id="bill-note" rows="2"></textarea></div>
+        <div><label>PDF-Anhang</label><input type="file" id="bill-file" accept=".pdf,application/pdf" /></div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveInvoice()">Speichern</button>
+          <button class="btn btn-ghost" onclick="toggleForm('bill-form')">Abbrechen</button>
+        </div>
+      </div>
+
+      <div id="bill-list"><div class="loading">Lade …</div></div>
+    </section>
+  </main>
+</div>
+
+<!-- ══════════════ EDIT MODAL ══════════════ -->
+<div class="modal-backdrop" id="edit-modal">
+  <div class="modal">
+    <h2 id="edit-modal-title">Bearbeiten</h2>
+    <div id="edit-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" id="edit-modal-save" onclick="submitEdit()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ QR MODAL ══════════════ -->
+<div id="qr-modal-backdrop" onclick="closeQR()">
+  <div id="qr-modal" onclick="event.stopPropagation()">
+    <h2>📱 App auf dem Handy öffnen</h2>
+    <div class="qr-url-row">
+      <input id="qr-url-input" type="url" placeholder="https://deine-url.de" />
+      <button class="btn btn-primary btn-sm" onclick="applyQRUrl()">QR erzeugen</button>
+    </div>
+    <div id="qr-canvas-wrap"></div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:0.5rem" onclick="closeQR()">Schließen</button>
+  </div>
+</div>
+
+<!-- ══════════════ TOAST ══════════════ -->
+<div id="toast"></div>
+
+<script>
+// ── PocketBase ──
+const pb = new PocketBase('https://pocketbase-alo1.srv1510303.hstgr.cloud');
+
+// ── State ──
+let currentTab = 'inventory';
+let editRecord = null;   // {collection, id, extra}
+let invData = [], calData = [], todoData = [], billData = [];
+
+// ── Init ──
+(function init() {
+  if (pb.authStore.isValid) showApp();
+  // prefill today's date for invoice
+  document.getElementById('bill-date').valueAsDate = new Date();
+})();
+
+// ── Auth ──
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.classList.remove('show');
+  try {
+    await pb.collection('users').authWithPassword(email, pw);
+    showApp();
+  } catch(e) {
+    errEl.textContent = 'Login fehlgeschlagen: ' + (e.message || 'Unbekannter Fehler');
+    errEl.classList.add('show');
+  }
+}
+
+function doLogout() {
+  pb.authStore.clear();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  loadAll();
+}
+
+// ── Enter key on login ──
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ── Tab switch ──
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+function toggleForm(id) {
+  const panel = document.getElementById(id);
+  panel.classList.toggle('open');
+  // reset edit mode
+  editRecord = null;
+}
+
+// ── Toast ──
+function toast(msg, dur = 2200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+// ── Load all ──
+function loadAll() {
+  loadInventory();
+  loadCalendar();
+  loadTodos();
+  loadInvoices();
+}
+
+// ═══════════════════════════════════════════
+//  INVENTORY
+// ═══════════════════════════════════════════
+async function loadInventory() {
+  try {
+    const res = await pb.collection('inventory').getFullList({ sort: 'name' });
+    invData = res;
+    renderInventory();
+  } catch(e) { document.getElementById('inv-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
+}
+
+function renderInventory() {
+  const q = document.getElementById('inv-search').value.toLowerCase();
+  const list = document.getElementById('inv-list');
+  const filtered = invData.filter(r =>
+    (r.name||'').toLowerCase().includes(q) ||
+    (r.category||'').toLowerCase().includes(q) ||
+    (r.location||'').toLowerCase().includes(q)
+  );
+  if (!filtered.length) { list.innerHTML = '<p class="loading">Keine Einträge</p>'; return; }
+  list.innerHTML = filtered.map(r => {
+    const low = r.quantity <= r.min_stock;
+    return `
+    <div class="card ${low ? 'low-stock' : ''}">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${esc(r.name)}
+            ${low ? '<span class="badge badge-warn">⚠ Niedrig</span>' : ''}
+          </div>
+          <div class="card-meta">
+            ${r.location ? '📍 '+esc(r.location)+' &nbsp;' : ''}
+            ${r.category ? '🏷 '+esc(r.category) : ''}
+          </div>
+          <div class="qty-ctrl">
+            <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},-1)" title="Weniger">−</button>
+            <span class="qty-value">${r.quantity}</span>
+            <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},1)" title="Mehr">+</button>
+            <span style="font-size:0.78rem;color:var(--text-muted)">Min: ${r.min_stock||0}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditInventory('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('inventory','${r.id}',loadInventory)">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function adjustQty(id, current, delta) {
+  const newQty = Math.max(0, current + delta);
+  try {
+    await pb.collection('inventory').update(id, { quantity: newQty });
+    const idx = invData.findIndex(r => r.id === id);
+    if (idx !== -1) invData[idx].quantity = newQty;
+    renderInventory();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+async function saveInventory() {
+  const name = document.getElementById('inv-name').value.trim();
+  if (!name) { toast('Name ist Pflicht'); return; }
+  const data = {
+    name,
+    location:  document.getElementById('inv-location').value.trim(),
+    category:  document.getElementById('inv-category').value.trim(),
+    quantity:  parseFloat(document.getElementById('inv-quantity').value) || 0,
+    min_stock: parseFloat(document.getElementById('inv-min_stock').value) || 0,
+  };
+  try {
+    await pb.collection('inventory').create(data);
+    toast('✅ Gespeichert');
+    clearForm(['inv-name','inv-location','inv-category','inv-quantity','inv-min_stock']);
+    toggleForm('inv-form');
+    loadInventory();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+function openEditInventory(id) {
+  const r = invData.find(x => x.id === id);
+  if (!r) return;
+  editRecord = { collection: 'inventory', id, reload: loadInventory };
+  document.getElementById('edit-modal-title').textContent = 'Inventar bearbeiten';
+  document.getElementById('edit-modal-body').innerHTML = `
+    <label>Name</label><input id="em-name" value="${esc(r.name)}" />
+    <div class="form-row">
+      <div><label>Ort</label><input id="em-location" value="${esc(r.location||'')}" /></div>
+      <div><label>Kategorie</label><input id="em-category" value="${esc(r.category||'')}" /></div>
+    </div>
+    <div class="form-row">
+      <div><label>Menge</label><input id="em-quantity" type="number" value="${r.quantity}" /></div>
+      <div><label>Mindestbestand</label><input id="em-min_stock" type="number" value="${r.min_stock||0}" /></div>
+    </div>`;
+  editRecord.getData = () => ({
+    name:      document.getElementById('em-name').value.trim(),
+    location:  document.getElementById('em-location').value.trim(),
+    category:  document.getElementById('em-category').value.trim(),
+    quantity:  parseFloat(document.getElementById('em-quantity').value) || 0,
+    min_stock: parseFloat(document.getElementById('em-min_stock').value) || 0,
+  });
+  openModal();
+}
+
+// ═══════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════
+async function loadCalendar() {
+  try {
+    const res = await pb.collection('calendar').getFullList({ sort: 'date' });
+    calData = res;
+    renderCalendar();
+  } catch(e) { document.getElementById('cal-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
+}
+
+function renderCalendar() {
+  const list = document.getElementById('cal-list');
+  if (!calData.length) { list.innerHTML = '<p class="loading">Keine Termine</p>'; return; }
+  const now = new Date();
+  list.innerHTML = calData.map(r => {
+    const d = new Date(r.date);
+    const past = d < now;
+    return `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${esc(r.title)}
+            <span class="badge ${past ? 'badge-muted' : 'badge-ok'}">${past ? 'Vergangen' : 'Bevorstehend'}</span>
+          </div>
+          <div class="card-meta">
+            📅 ${fmtDatetime(r.date)}
+            ${r.person ? ' &nbsp;👤 '+esc(r.person) : ''}
+          </div>
+          ${r.note ? `<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>` : ''}
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditCalendar('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('calendar','${r.id}',loadCalendar)">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveCalendar() {
+  const title = document.getElementById('cal-title').value.trim();
+  const date  = document.getElementById('cal-date').value;
+  if (!title || !date) { toast('Titel und Datum sind Pflicht'); return; }
+  const data = {
+    title,
+    date,
+    person: document.getElementById('cal-person').value.trim(),
+    note:   document.getElementById('cal-note').value.trim(),
+  };
+  try {
+    await pb.collection('calendar').create(data);
+    toast('✅ Termin gespeichert');
+    clearForm(['cal-title','cal-date','cal-person','cal-note']);
+    toggleForm('cal-form');
+    loadCalendar();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+function openEditCalendar(id) {
+  const r = calData.find(x => x.id === id);
+  if (!r) return;
+  editRecord = { collection: 'calendar', id, reload: loadCalendar };
+  document.getElementById('edit-modal-title').textContent = 'Termin bearbeiten';
+  const dtLocal = r.date ? r.date.slice(0,16) : '';
+  document.getElementById('edit-modal-body').innerHTML = `
+    <label>Titel</label><input id="em-title" value="${esc(r.title)}" />
+    <div class="form-row">
+      <div><label>Datum</label><input id="em-date" type="datetime-local" value="${dtLocal}" /></div>
+      <div><label>Person</label><input id="em-person" value="${esc(r.person||'')}" /></div>
+    </div>
+    <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
+  editRecord.getData = () => ({
+    title:  document.getElementById('em-title').value.trim(),
+    date:   document.getElementById('em-date').value,
+    person: document.getElementById('em-person').value.trim(),
+    note:   document.getElementById('em-note').value.trim(),
+  });
+  openModal();
+}
+
+// ═══════════════════════════════════════════
+//  TODOS
+// ═══════════════════════════════════════════
+async function loadTodos() {
+  try {
+    const res = await pb.collection('todos').getFullList({ sort: 'done,due' });
+    todoData = res;
+    renderTodos();
+  } catch(e) { document.getElementById('todo-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
+}
+
+function renderTodos() {
+  const list = document.getElementById('todo-list');
+  if (!todoData.length) { list.innerHTML = '<p class="loading">Keine Aufgaben</p>'; return; }
+  list.innerHTML = todoData.map(r => `
+    <div class="card ${r.done ? 'done-card' : ''}">
+      <div class="card-header">
+        <div style="display:flex;gap:0.6rem;align-items:flex-start;flex:1">
+          <input type="checkbox" class="todo-check" ${r.done?'checked':''} onchange="toggleTodo('${r.id}',${r.done})" />
+          <div style="flex:1">
+            <div class="card-title" style="${r.done?'text-decoration:line-through':''}">${esc(r.text)}</div>
+            <div class="card-meta">
+              ${r.person ? '👤 '+esc(r.person)+' &nbsp;' : ''}
+              ${r.due ? '📅 '+fmtDate(r.due) : ''}
+            </div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditTodo('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('todos','${r.id}',loadTodos)">🗑</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function toggleTodo(id, currentDone) {
+  try {
+    await pb.collection('todos').update(id, { done: !currentDone });
+    const idx = todoData.findIndex(r => r.id === id);
+    if (idx !== -1) todoData[idx].done = !currentDone;
+    renderTodos();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+async function saveTodo() {
+  const text = document.getElementById('todo-text').value.trim();
+  if (!text) { toast('Aufgabe ist Pflicht'); return; }
+  const data = {
+    text,
+    person: document.getElementById('todo-person').value.trim(),
+    due:    document.getElementById('todo-due').value || null,
+    done:   false,
+  };
+  try {
+    await pb.collection('todos').create(data);
+    toast('✅ Aufgabe gespeichert');
+    clearForm(['todo-text','todo-person','todo-due']);
+    toggleForm('todo-form');
+    loadTodos();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+function openEditTodo(id) {
+  const r = todoData.find(x => x.id === id);
+  if (!r) return;
+  editRecord = { collection: 'todos', id, reload: loadTodos };
+  document.getElementById('edit-modal-title').textContent = 'Aufgabe bearbeiten';
+  document.getElementById('edit-modal-body').innerHTML = `
+    <label>Aufgabe</label><input id="em-text" value="${esc(r.text)}" />
+    <div class="form-row">
+      <div><label>Person</label><input id="em-person" value="${esc(r.person||'')}" /></div>
+      <div><label>Fällig</label><input id="em-due" type="date" value="${r.due?r.due.slice(0,10):''}" /></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem">
+      <input type="checkbox" id="em-done" ${r.done?'checked':''} style="width:auto" /> Erledigt
+    </label>`;
+  editRecord.getData = () => ({
+    text:   document.getElementById('em-text').value.trim(),
+    person: document.getElementById('em-person').value.trim(),
+    due:    document.getElementById('em-due').value || null,
+    done:   document.getElementById('em-done').checked,
+  });
+  openModal();
+}
+
+// ═══════════════════════════════════════════
+//  INVOICES
+// ═══════════════════════════════════════════
+async function loadInvoices() {
+  try {
+    const res = await pb.collection('invoices').getFullList({ sort: '-date' });
+    billData = res;
+    renderInvoices();
+  } catch(e) { document.getElementById('bill-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
+}
+
+function renderInvoices() {
+  const list = document.getElementById('bill-list');
+  const open = billData.filter(r => r.status === 'offen');
+  const total = open.reduce((s, r) => s + (parseFloat(r.amount)||0), 0);
+
+  const summaryBar = document.getElementById('inv-summary');
+  if (billData.length) {
+    summaryBar.style.display = 'flex';
+    document.getElementById('inv-open-total').textContent = fmtEuro(total);
+  } else {
+    summaryBar.style.display = 'none';
+  }
+
+  if (!billData.length) { list.innerHTML = '<p class="loading">Keine Rechnungen</p>'; return; }
+
+  list.innerHTML = billData.map(r => {
+    const paid = r.status === 'bezahlt';
+    const fileUrl = r.file
+      ? pb.files.getURL(r, r.file)
+      : null;
+    return `
+    <div class="card">
+      <div class="card-header">
+        <div style="flex:1">
+          <div class="card-title">${esc(r.description)}
+            <span class="badge ${paid ? 'badge-ok' : 'badge-danger'}">${paid ? 'Bezahlt' : 'Offen'}</span>
+          </div>
+          <div class="card-meta">
+            💶 ${fmtEuro(r.amount)} &nbsp;
+            📅 ${fmtDate(r.date)}
+            ${r.category ? ' &nbsp;🏷 '+esc(r.category) : ''}
+          </div>
+          ${r.note ? `<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>` : ''}
+          ${fileUrl ? `<a href="${fileUrl}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary)">📎 PDF öffnen</a>` : ''}
+        </div>
+        <div class="card-actions">
+          ${!paid ? `<button class="btn btn-ghost btn-sm" onclick="markPaid('${r.id}')">✓ Bezahlt</button>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="openEditInvoice('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('invoices','${r.id}',loadInvoices)">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function markPaid(id) {
+  try {
+    await pb.collection('invoices').update(id, { status: 'bezahlt' });
+    toast('✅ Als bezahlt markiert');
+    loadInvoices();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+async function saveInvoice() {
+  const desc   = document.getElementById('bill-description').value.trim();
+  const amount = document.getElementById('bill-amount').value;
+  const date   = document.getElementById('bill-date').value;
+  if (!desc || !amount || !date) { toast('Beschreibung, Betrag und Datum sind Pflicht'); return; }
+
+  const formData = new FormData();
+  formData.append('description', desc);
+  formData.append('amount',      parseFloat(amount));
+  formData.append('date',        date);
+  formData.append('category',    document.getElementById('bill-category').value.trim());
+  formData.append('status',      document.getElementById('bill-status').value);
+  formData.append('note',        document.getElementById('bill-note').value.trim());
+  const fileInput = document.getElementById('bill-file');
+  if (fileInput.files[0]) formData.append('file', fileInput.files[0]);
+
+  try {
+    await pb.collection('invoices').create(formData);
+    toast('✅ Rechnung gespeichert');
+    clearForm(['bill-description','bill-amount','bill-category','bill-note']);
+    document.getElementById('bill-file').value = '';
+    document.getElementById('bill-date').valueAsDate = new Date();
+    document.getElementById('bill-status').value = 'offen';
+    toggleForm('bill-form');
+    loadInvoices();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+function openEditInvoice(id) {
+  const r = billData.find(x => x.id === id);
+  if (!r) return;
+  editRecord = { collection: 'invoices', id, reload: loadInvoices };
+  document.getElementById('edit-modal-title').textContent = 'Rechnung bearbeiten';
+  document.getElementById('edit-modal-body').innerHTML = `
+    <label>Beschreibung</label><input id="em-description" value="${esc(r.description)}" />
+    <div class="form-row">
+      <div><label>Betrag (€)</label><input id="em-amount" type="number" step="0.01" value="${r.amount}" /></div>
+      <div><label>Datum</label><input id="em-date" type="date" value="${r.date?r.date.slice(0,10):''}" /></div>
+    </div>
+    <div class="form-row">
+      <div><label>Kategorie</label><input id="em-category" value="${esc(r.category||'')}" /></div>
+      <div><label>Status</label>
+        <select id="em-status">
+          <option value="offen" ${r.status==='offen'?'selected':''}>Offen</option>
+          <option value="bezahlt" ${r.status==='bezahlt'?'selected':''}>Bezahlt</option>
+        </select>
+      </div>
+    </div>
+    <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
+  editRecord.getData = () => ({
+    description: document.getElementById('em-description').value.trim(),
+    amount:      parseFloat(document.getElementById('em-amount').value) || 0,
+    date:        document.getElementById('em-date').value,
+    category:    document.getElementById('em-category').value.trim(),
+    status:      document.getElementById('em-status').value,
+    note:        document.getElementById('em-note').value.trim(),
+  });
+  openModal();
+}
+
+// ═══════════════════════════════════════════
+//  MODAL helpers
+// ═══════════════════════════════════════════
+function openModal() {
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editRecord = null;
+}
+
+async function submitEdit() {
+  if (!editRecord) return;
+  const data = editRecord.getData();
+  try {
+    await pb.collection(editRecord.collection).update(editRecord.id, data);
+    toast('✅ Gespeichert');
+    closeModal();
+    editRecord.reload();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+// Close modal on backdrop click
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ═══════════════════════════════════════════
+//  Generic delete
+// ═══════════════════════════════════════════
+async function deleteRecord(collection, id, reloadFn) {
+  if (!confirm('Wirklich löschen?')) return;
+  try {
+    await pb.collection(collection).delete(id);
+    toast('🗑 Gelöscht');
+    reloadFn();
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════
+//  Utilities
+// ═══════════════════════════════════════════
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function fmtDate(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function fmtDatetime(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  return d.toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function fmtEuro(val) {
+  return parseFloat(val||0).toLocaleString('de-DE', { style:'currency', currency:'EUR' });
+}
+
+// ═══════════════════════════════════════════
+//  QR CODE
+// ═══════════════════════════════════════════
+function openQR() {
+  const stored = localStorage.getItem('helpy_qr_url') || window.location.href.split('?')[0];
+  document.getElementById('qr-url-input').value = stored;
+  document.getElementById('qr-modal-backdrop').classList.add('open');
+  buildQR(stored);
+}
+
+function applyQRUrl() {
+  const url = document.getElementById('qr-url-input').value.trim();
+  if (!url) { toast('Bitte eine URL eingeben'); return; }
+  localStorage.setItem('helpy_qr_url', url);
+  buildQR(url);
+}
+
+function buildQR(url) {
+  const wrap = document.getElementById('qr-canvas-wrap');
+  wrap.innerHTML = '';
+  try {
+    new QRCode(wrap, {
+      text:         url,
+      width:        220,
+      height:       220,
+      colorDark:    '#1a1a1a',
+      colorLight:   '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {
+    wrap.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Ungültige URL</p>';
+  }
+}
+
+function closeQR() {
+  document.getElementById('qr-modal-backdrop').classList.remove('open');
+}
+
+// Enter-Taste im URL-Feld
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('qr-url-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') applyQRUrl();
+  });
+});
+
+function clearForm(ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+</script>
+</body>
+</html>
