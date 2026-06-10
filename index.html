@@ -107,6 +107,45 @@
     .chip { padding: 0.28rem 0.75rem; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-size: 0.8rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .chip.active { border-color: var(--primary); background: var(--primary-dim); color: var(--primary); font-weight: 600; }
 
+    /* ── Locations ── */
+    .loc-section-hdr { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; margin-bottom: 0.5rem; border-bottom: 2px solid var(--border); }
+    .loc-section-hdr h3 { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .room-group { margin-bottom: 1.2rem; }
+    .room-group-title { font-size: 0.88rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
+    .loc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.5rem; box-shadow: var(--shadow); overflow: hidden; }
+    .loc-card-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; cursor: pointer; }
+    .loc-card-header:hover { background: var(--bg); }
+    .loc-card-info { flex: 1; min-width: 0; }
+    .loc-card-name { font-weight: 600; font-size: 0.9rem; }
+    .loc-card-sub  { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
+    .loc-card-body { display: none; border-top: 1px solid var(--border); }
+    .loc-card-body.open { display: block; }
+    .loc-photo-wrap { position: relative; display: inline-block; cursor: crosshair; user-select: none; }
+    .loc-photo-wrap img { display: block; width: 100%; max-height: 300px; object-fit: contain; background: #111; }
+    .loc-dot {
+      position: absolute; width: 22px; height: 22px;
+      background: #e63946; border-radius: 50%;
+      border: 3px solid #fff; box-shadow: 0 0 0 2px #e63946, 0 2px 8px rgba(0,0,0,0.4);
+      transform: translate(-50%, -50%);
+      pointer-events: none; transition: all 0.15s;
+    }
+    .loc-dot::after {
+      content: ''; position: absolute; inset: -6px;
+      border-radius: 50%; border: 2px solid rgba(230,57,70,0.4);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100% { transform: scale(1); opacity:1; } 50% { transform: scale(1.4); opacity:0; } }
+    .loc-photo-hint { font-size: 0.75rem; color: var(--text-muted); padding: 0.4rem 0.75rem; background: var(--bg); }
+    .loc-actions-bar { display: flex; gap: 0.5rem; padding: 0.6rem 0.75rem; border-top: 1px solid var(--border); flex-wrap: wrap; align-items: center; }
+    .loc-items-count { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; }
+
+    /* Inline location badge on inventory cards */
+    .loc-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--primary); background: var(--primary-dim); border-radius: 6px; padding: 0.1rem 0.5rem; margin-top: 0.3rem; cursor: pointer; }
+    .loc-badge:hover { opacity: 0.8; }
+    .loc-thumb-wrap { position: relative; display: inline-block; width: 48px; height: 48px; flex-shrink: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+    .loc-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .loc-thumb-dot { position: absolute; width: 10px; height: 10px; background: #e63946; border-radius: 50%; border: 2px solid #fff; transform: translate(-50%,-50%); pointer-events: none; }
+
     /* ── Inventory qty ── */
     .qty-ctrl { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.4rem; }
     .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
@@ -375,25 +414,65 @@
 
     <!-- ══════════════ INVENTORY ══════════════ -->
     <section id="section-inventory" class="section">
-      <div class="toolbar">
-        <input type="search" id="inv-search" placeholder="Suchen …" oninput="renderInventory()" />
-        <button class="btn btn-primary" onclick="toggleForm('inv-form')">+ Hinzufügen</button>
+
+      <!-- Räume & Orte -->
+      <div class="loc-section-hdr">
+        <h3>📍 Räume & Lagerorte</h3>
+        <button class="btn btn-ghost btn-sm" onclick="toggleForm('loc-form')">+ Ort anlegen</button>
       </div>
+
+      <div class="form-panel" id="loc-form">
+        <div class="form-row">
+          <div><label>Raum *</label><input id="loc-room" placeholder="Küche, Keller, Wohnzimmer …" list="room-suggestions" /><datalist id="room-suggestions"></datalist></div>
+          <div><label>Regal / Schrank *</label><input id="loc-shelf" placeholder="Regal links, Schrank oben …" /></div>
+        </div>
+        <div><label>Fach / Platz</label><input id="loc-spot" placeholder="Fach 2, hinten rechts, obere Reihe …" /></div>
+        <div>
+          <label>Foto hochladen</label>
+          <input type="file" id="loc-photo" accept="image/*" onchange="previewLocPhoto(this)" />
+        </div>
+        <div id="loc-photo-preview-wrap" style="display:none; margin-top:0.5rem;">
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.3rem">👆 Ins Foto klicken um den <strong>roten Punkt</strong> zu setzen (genauer Ablageort)</p>
+          <div class="loc-photo-wrap" id="loc-photo-clickable">
+            <img id="loc-photo-preview" src="" alt="Vorschau" />
+            <div class="loc-dot" id="loc-dot-preview" style="display:none"></div>
+          </div>
+          <input type="hidden" id="loc-marker-x" value="" />
+          <input type="hidden" id="loc-marker-y" value="" />
+        </div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveLocation()">Ort speichern</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('loc-form')">Abbrechen</button>
+        </div>
+      </div>
+
+      <div id="loc-list" style="margin-bottom:1rem"></div>
+
+      <!-- Artikel -->
+      <div class="loc-section-hdr">
+        <h3>📦 Artikel</h3>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input type="search" id="inv-search" placeholder="Suchen …" oninput="renderInventory()" style="width:140px;padding:0.3rem 0.6rem;font-size:0.82rem" />
+          <button class="btn btn-primary btn-sm" onclick="toggleForm('inv-form')">+ Hinzufügen</button>
+        </div>
+      </div>
+
       <div class="form-panel" id="inv-form">
         <div class="form-row">
           <div><label>Name *</label><input id="inv-name" placeholder="Artikel" /></div>
-          <div><label>Ort</label><input id="inv-location" placeholder="Küche, Keller …" /></div>
+          <div><label>Kategorie</label><input id="inv-category" placeholder="Lebensmittel …" /></div>
         </div>
         <div class="form-row">
-          <div><label>Kategorie</label><input id="inv-category" placeholder="Lebensmittel …" /></div>
           <div><label>Menge *</label><input id="inv-quantity" type="number" min="0" placeholder="0" /></div>
+          <div><label>Mindestbestand</label><input id="inv-min_stock" type="number" min="0" placeholder="0" /></div>
         </div>
-        <div><label>Mindestbestand</label><input id="inv-min_stock" type="number" min="0" placeholder="0" /></div>
+        <div><label>Lagerort</label><select id="inv-location-select"><option value="">– Kein Ort –</option></select></div>
         <div class="form-panel-footer">
           <button class="btn btn-primary" onclick="saveInventory()">Speichern</button>
           <button class="btn btn-ghost"   onclick="toggleForm('inv-form')">Abbrechen</button>
         </div>
       </div>
+
       <div id="inv-list"><div class="loading">Lade …</div></div>
     </section>
 
@@ -475,6 +554,21 @@
   </main>
 </div>
 
+<!-- ══ LOCATION PHOTO MODAL ══ -->
+<div class="modal-backdrop" id="loc-photo-modal" onclick="if(event.target===this)closeLoc()">
+  <div style="background:#111;border-radius:12px;max-width:600px;width:95%;max-height:90vh;overflow:hidden;position:relative">
+    <div style="padding:0.75rem 1rem;background:#222;display:flex;align-items:center;justify-content:space-between">
+      <span id="loc-modal-title" style="color:#fff;font-weight:600;font-size:0.9rem"></span>
+      <button onclick="closeLoc()" style="background:none;border:none;color:#aaa;font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="position:relative">
+      <img id="loc-modal-img" src="" style="width:100%;display:block;max-height:70vh;object-fit:contain" />
+      <div class="loc-dot" id="loc-modal-dot" style="display:none"></div>
+    </div>
+    <div id="loc-modal-desc" style="padding:0.6rem 1rem;color:#ccc;font-size:0.82rem;background:#1a1a1a"></div>
+  </div>
+</div>
+
 <!-- ══ EDIT MODAL ══ -->
 <div class="modal-backdrop" id="edit-modal">
   <div class="modal">
@@ -508,15 +602,17 @@
 // ══════════════════════════════════════════════
 const pb = new PocketBase('https://pocketbase-alo1.srv1510303.hstgr.cloud');
 
-let currentTab       = 'dashboard';
-let editRecord       = null;
-let personsData      = [];
-let invData          = [];
-let calData          = [];
-let todoData         = [];
-let billData         = [];
-let filterCalPerson  = '';
-let filterTodoPerson = '';
+let currentTab        = 'dashboard';
+let editRecord        = null;
+let personsData       = [];
+let locationsData     = [];
+let invData           = [];
+let calData           = [];
+let todoData          = [];
+let billData          = [];
+let filterCalPerson   = '';
+let filterTodoPerson  = '';
+let filterInvRoom     = '';
 
 const EMOJIS = ['😊','😎','🧑','👩','👨','🧒','👧','👦','🧔','👩‍🦰','👩‍🦱','🧑‍🦳','🦸','🧙','🐱','🐶','🦊','🐼','🦁','🐻','🌟','💪','🎯','🏃'];
 const COLORS = ['#52b788','#e63946','#457b9d','#f4a261','#a8dadc','#9b5de5','#f15bb5','#00bbf9','#fee440','#00f5d4','#fb5607','#8338ec'];
@@ -787,7 +883,7 @@ function toggleForm(id) {
 // ══════════════════════════════════════════════
 async function loadAll() {
   await loadPersons();
-  await Promise.all([loadInventory(), loadCalendar(), loadTodos(), loadInvoices()]);
+  await Promise.all([loadLocations(), loadInventory(), loadCalendar(), loadTodos(), loadInvoices()]);
   renderDashboard();
 }
 
@@ -974,6 +1070,245 @@ function setFilter(prefix, name) {
 }
 
 // ══════════════════════════════════════════════
+//  LOCATIONS
+// ══════════════════════════════════════════════
+async function loadLocations() {
+  try {
+    const res = await pb.collection('locations').getFullList({ sort: 'room,shelf' });
+    locationsData = res;
+    renderLocations();
+    populateLocationSelect();
+    updateRoomSuggestions();
+  } catch(e) {
+    document.getElementById('loc-list').innerHTML = '<p class="loading">Fehler: Collection "locations" prüfen</p>';
+  }
+}
+
+function renderLocations() {
+  const wrap = document.getElementById('loc-list');
+  if (!locationsData.length) {
+    wrap.innerHTML = '<p style="font-size:0.82rem;color:var(--text-muted);padding:0.5rem 0">Noch keine Orte — leg Räume und Regale an!</p>';
+    return;
+  }
+  // Group by room
+  const rooms = {};
+  locationsData.forEach(l => {
+    const r = l.room || 'Sonstige';
+    if (!rooms[r]) rooms[r] = [];
+    rooms[r].push(l);
+  });
+
+  wrap.innerHTML = Object.entries(rooms).map(([room, locs]) => `
+    <div class="room-group">
+      <div class="room-group-title">🏠 ${esc(room)}</div>
+      ${locs.map(l => {
+        const itemCount = invData.filter(i => i.location_id === l.id).length;
+        const photoUrl  = l.photo ? pb.files.getURL(l, l.photo) : null;
+        return `
+        <div class="loc-card">
+          <div class="loc-card-header" onclick="toggleLocBody('lb-${l.id}')">
+            ${photoUrl
+              ? `<div class="loc-thumb-wrap">
+                   <img src="${photoUrl}" />
+                   ${l.marker_x ? `<div class="loc-thumb-dot" style="left:${l.marker_x}%;top:${l.marker_y}%"></div>` : ''}
+                 </div>`
+              : `<div style="width:48px;height:48px;border-radius:6px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:1.5rem;border:1px solid var(--border)">📦</div>`
+            }
+            <div class="loc-card-info">
+              <div class="loc-card-name">${esc(l.shelf)}</div>
+              <div class="loc-card-sub">${l.spot ? esc(l.spot) : 'Kein Fach angegeben'} · ${itemCount} Artikel</div>
+            </div>
+            <span style="color:var(--text-muted);font-size:0.8rem">▾</span>
+          </div>
+          <div class="loc-card-body" id="lb-${l.id}">
+            ${photoUrl ? `
+              <div onclick="openLocPhoto('${l.id}')" style="cursor:zoom-in">
+                <div class="loc-photo-wrap" style="pointer-events:none">
+                  <img src="${photoUrl}" style="width:100%;max-height:260px;object-fit:contain;background:#111" />
+                  ${l.marker_x ? `<div class="loc-dot" style="left:${l.marker_x}%;top:${l.marker_y}%"></div>` : ''}
+                </div>
+                <div class="loc-photo-hint">🔍 Antippen zum Vergrößern</div>
+              </div>` : ''
+            }
+            <div class="loc-actions-bar">
+              <button class="btn btn-ghost btn-sm" onclick="openEditLocation('${l.id}')">✏️ Bearbeiten</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteRecord('locations','${l.id}',loadLocations)">🗑</button>
+              <span class="loc-items-count">📦 ${itemCount} Artikel hier</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`
+  ).join('');
+}
+
+function toggleLocBody(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+function populateLocationSelect() {
+  const opts = '<option value="">– Kein Ort –</option>' +
+    locationsData.map(l => `<option value="${l.id}">${esc(l.room)} › ${esc(l.shelf)}${l.spot ? ' › '+esc(l.spot) : ''}</option>`).join('');
+  document.getElementById('inv-location-select').innerHTML = opts;
+}
+
+function updateRoomSuggestions() {
+  const rooms = [...new Set(locationsData.map(l => l.room).filter(Boolean))];
+  const dl = document.getElementById('room-suggestions');
+  if (dl) dl.innerHTML = rooms.map(r => `<option value="${esc(r)}">`).join('');
+}
+
+function previewLocPhoto(input) {
+  if (!input.files[0]) return;
+  const url  = URL.createObjectURL(input.files[0]);
+  const wrap = document.getElementById('loc-photo-preview-wrap');
+  const img  = document.getElementById('loc-photo-preview');
+  const dot  = document.getElementById('loc-dot-preview');
+  img.src    = url;
+  wrap.style.display = 'block';
+  dot.style.display  = 'none';
+  document.getElementById('loc-marker-x').value = '';
+  document.getElementById('loc-marker-y').value = '';
+  // Click-to-set-dot
+  const clickable = document.getElementById('loc-photo-clickable');
+  clickable.onclick = (e) => {
+    const rect = img.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width  * 100).toFixed(1);
+    const y = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1);
+    document.getElementById('loc-marker-x').value = x;
+    document.getElementById('loc-marker-y').value = y;
+    dot.style.left    = x + '%';
+    dot.style.top     = y + '%';
+    dot.style.display = 'block';
+    toast('📍 Punkt gesetzt!');
+  };
+}
+
+async function saveLocation() {
+  const room  = document.getElementById('loc-room').value.trim();
+  const shelf = document.getElementById('loc-shelf').value.trim();
+  if (!room || !shelf) { toast('Raum und Regal sind Pflicht'); return; }
+
+  const fd = new FormData();
+  fd.append('room',  room);
+  fd.append('shelf', shelf);
+  fd.append('spot',  document.getElementById('loc-spot').value.trim());
+  const mx = document.getElementById('loc-marker-x').value;
+  const my = document.getElementById('loc-marker-y').value;
+  if (mx) fd.append('marker_x', parseFloat(mx));
+  if (my) fd.append('marker_y', parseFloat(my));
+  const photoFile = document.getElementById('loc-photo').files[0];
+  if (photoFile) fd.append('photo', photoFile);
+
+  try {
+    await pb.collection('locations').create(fd);
+    toast('✅ Ort gespeichert');
+    clearForm(['loc-room','loc-shelf','loc-spot']);
+    document.getElementById('loc-photo').value = '';
+    document.getElementById('loc-photo-preview-wrap').style.display = 'none';
+    document.getElementById('loc-marker-x').value = '';
+    document.getElementById('loc-marker-y').value = '';
+    toggleForm('loc-form');
+    await loadLocations();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+
+function openEditLocation(id) {
+  const l = locationsData.find(x => x.id===id);
+  if (!l) return;
+  editRecord = { collection:'locations', id, reload: loadLocations };
+  document.getElementById('edit-modal-title').textContent = 'Ort bearbeiten';
+  const photoUrl = l.photo ? pb.files.getURL(l, l.photo) : null;
+  document.getElementById('edit-modal-body').innerHTML = `
+    <div class="form-row">
+      <div><label>Raum</label><input id="em-room" value="${esc(l.room||'')}" /></div>
+      <div><label>Regal / Schrank</label><input id="em-shelf" value="${esc(l.shelf||'')}" /></div>
+    </div>
+    <label>Fach / Platz</label><input id="em-spot" value="${esc(l.spot||'')}" />
+    <label>Neues Foto (leer lassen = behalten)</label>
+    <input type="file" id="em-photo" accept="image/*" onchange="previewEditLocPhoto(this)" />
+    ${photoUrl ? `
+      <div style="margin-top:0.5rem;position:relative;display:inline-block;cursor:crosshair" id="em-photo-wrap" onclick="setEditDot(event)">
+        <img id="em-photo-preview" src="${photoUrl}" style="width:100%;max-height:220px;object-fit:contain;background:#111;border-radius:6px" />
+        <div class="loc-dot" id="em-dot" style="${l.marker_x?`left:${l.marker_x}%;top:${l.marker_y}%;display:block`:'display:none'}"></div>
+      </div>
+      <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem">👆 Ins Foto klicken um den Punkt neu zu setzen</p>
+      <input type="hidden" id="em-marker-x" value="${l.marker_x||''}" />
+      <input type="hidden" id="em-marker-y" value="${l.marker_y||''}" />
+    ` : `<input type="hidden" id="em-marker-x" value="" /><input type="hidden" id="em-marker-y" value="" />`}`;
+  editRecord.getData = () => ({
+    room:     document.getElementById('em-room').value.trim(),
+    shelf:    document.getElementById('em-shelf').value.trim(),
+    spot:     document.getElementById('em-spot').value.trim(),
+    marker_x: parseFloat(document.getElementById('em-marker-x')?.value)||null,
+    marker_y: parseFloat(document.getElementById('em-marker-y')?.value)||null,
+  });
+  editRecord.reload = loadLocations;
+  // Override submitEdit to handle file upload
+  editRecord.customSave = async () => {
+    const data = editRecord.getData();
+    const fd   = new FormData();
+    Object.entries(data).forEach(([k,v]) => { if(v!==null&&v!==undefined&&v!=='') fd.append(k, v); });
+    const f = document.getElementById('em-photo');
+    if (f?.files[0]) fd.append('photo', f.files[0]);
+    await pb.collection('locations').update(id, fd);
+  };
+  openModal();
+}
+
+function previewEditLocPhoto(input) {
+  if (!input.files[0]) return;
+  const url  = URL.createObjectURL(input.files[0]);
+  const wrap = document.getElementById('em-photo-wrap');
+  if (!wrap) return;
+  document.getElementById('em-photo-preview').src = url;
+}
+
+function setEditDot(e) {
+  const wrap = document.getElementById('em-photo-wrap');
+  const img  = document.getElementById('em-photo-preview');
+  const dot  = document.getElementById('em-dot');
+  if (!wrap||!img||!dot) return;
+  const rect = img.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width  * 100).toFixed(1);
+  const y = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1);
+  document.getElementById('em-marker-x').value = x;
+  document.getElementById('em-marker-y').value = y;
+  dot.style.left    = x + '%';
+  dot.style.top     = y + '%';
+  dot.style.display = 'block';
+  toast('📍 Punkt gesetzt!');
+}
+
+function openLocPhoto(id) {
+  const l = locationsData.find(x => x.id===id);
+  if (!l || !l.photo) return;
+  const url = pb.files.getURL(l, l.photo);
+  document.getElementById('loc-modal-title').textContent = `${l.room} › ${l.shelf}${l.spot ? ' › '+l.spot : ''}`;
+  document.getElementById('loc-modal-img').src = url;
+  const dot = document.getElementById('loc-modal-dot');
+  if (l.marker_x) {
+    dot.style.left    = l.marker_x + '%';
+    dot.style.top     = l.marker_y + '%';
+    dot.style.display = 'block';
+  } else {
+    dot.style.display = 'none';
+  }
+  document.getElementById('loc-modal-desc').textContent =
+    l.spot ? `📦 Genauer Platz: ${l.spot}` : '📦 Kein Fach angegeben';
+  document.getElementById('loc-photo-modal').classList.add('open');
+}
+
+function closeLoc() { document.getElementById('loc-photo-modal').classList.remove('open'); }
+
+function locationLabel(id) {
+  const l = locationsData.find(x => x.id===id);
+  if (!l) return '';
+  return `${l.room} › ${l.shelf}${l.spot ? ' › '+l.spot : ''}`;
+}
+
+// ══════════════════════════════════════════════
 //  INVENTORY
 // ══════════════════════════════════════════════
 async function loadInventory() {
@@ -986,16 +1321,27 @@ async function loadInventory() {
 function renderInventory() {
   const q    = document.getElementById('inv-search').value.toLowerCase();
   const list = document.getElementById('inv-list');
-  const f    = invData.filter(r=>(r.name||'').toLowerCase().includes(q)||(r.category||'').toLowerCase().includes(q)||(r.location||'').toLowerCase().includes(q));
+  const f    = invData.filter(r =>
+    (r.name||'').toLowerCase().includes(q) ||
+    (r.category||'').toLowerCase().includes(q) ||
+    (r.location||'').toLowerCase().includes(q) ||
+    locationLabel(r.location_id).toLowerCase().includes(q)
+  );
   if (!f.length) { list.innerHTML='<p class="loading">Keine Einträge</p>'; return; }
   list.innerHTML = f.map(r => {
-    const low = r.quantity<=r.min_stock;
+    const low     = r.quantity <= r.min_stock;
+    const loc     = locationsData.find(l => l.id === r.location_id);
+    const locLabel = loc ? `${loc.room} › ${loc.shelf}${loc.spot?' › '+loc.spot:''}` : (r.location||'');
+    const photoUrl = loc?.photo ? pb.files.getURL(loc, loc.photo) : null;
     return `
     <div class="card ${low?'low-stock':''}">
       <div class="card-header">
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="card-title">${esc(r.name)} ${low?'<span class="badge badge-warn">⚠ Niedrig</span>':''}</div>
-          <div class="card-meta">${r.location?'📍 '+esc(r.location)+'&nbsp;':''}${r.category?'🏷 '+esc(r.category):''}</div>
+          <div class="card-meta">${r.category?'🏷 '+esc(r.category):'&nbsp;'}</div>
+          ${locLabel ? `<div class="loc-badge" onclick="${loc?`openLocPhoto('${loc.id}')`:'void(0)'}">
+            📍 ${esc(locLabel)}${photoUrl?' 🖼':''}
+          </div>` : ''}
           <div class="qty-ctrl">
             <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},-1)">−</button>
             <span class="qty-value">${r.quantity}</span>
@@ -1003,9 +1349,16 @@ function renderInventory() {
             <span style="font-size:0.78rem;color:var(--text-muted)">Min: ${r.min_stock||0}</span>
           </div>
         </div>
-        <div class="card-actions">
-          <button class="btn btn-ghost btn-sm" onclick="openEditInventory('${r.id}')">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteRecord('inventory','${r.id}',loadInventory)">🗑</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
+          ${photoUrl ? `
+            <div class="loc-thumb-wrap" onclick="openLocPhoto('${loc.id}')" style="cursor:zoom-in">
+              <img src="${photoUrl}" />
+              ${loc.marker_x ? `<div class="loc-thumb-dot" style="left:${loc.marker_x}%;top:${loc.marker_y}%"></div>` : ''}
+            </div>` : ''}
+          <div class="card-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openEditInventory('${r.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteRecord('inventory','${r.id}',loadInventory)">🗑</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -1024,11 +1377,18 @@ async function adjustQty(id,current,delta) {
 async function saveInventory() {
   const name = document.getElementById('inv-name').value.trim();
   if (!name) { toast('Name ist Pflicht'); return; }
-  const data = { name, location:document.getElementById('inv-location').value.trim(), category:document.getElementById('inv-category').value.trim(), quantity:parseFloat(document.getElementById('inv-quantity').value)||0, min_stock:parseFloat(document.getElementById('inv-min_stock').value)||0 };
+  const data = {
+    name,
+    category:    document.getElementById('inv-category').value.trim(),
+    quantity:    parseFloat(document.getElementById('inv-quantity').value)||0,
+    min_stock:   parseFloat(document.getElementById('inv-min_stock').value)||0,
+    location_id: document.getElementById('inv-location-select').value || '',
+  };
   try {
     await pb.collection('inventory').create(data);
     toast('✅ Gespeichert');
-    clearForm(['inv-name','inv-location','inv-category','inv-quantity','inv-min_stock']);
+    clearForm(['inv-name','inv-category','inv-quantity','inv-min_stock']);
+    document.getElementById('inv-location-select').value = '';
     toggleForm('inv-form'); loadInventory();
   } catch(e) { toast('Fehler: '+e.message); }
 }
@@ -1036,18 +1396,28 @@ async function saveInventory() {
 function openEditInventory(id) {
   const r = invData.find(x=>x.id===id); if(!r) return;
   editRecord = { collection:'inventory', id, reload:loadInventory };
-  document.getElementById('edit-modal-title').textContent='Inventar bearbeiten';
+  document.getElementById('edit-modal-title').textContent='Artikel bearbeiten';
+  const locOpts = '<option value="">– Kein Ort –</option>'+locationsData.map(l=>
+    `<option value="${l.id}" ${r.location_id===l.id?'selected':''}>${esc(l.room)} › ${esc(l.shelf)}${l.spot?' › '+esc(l.spot):''}</option>`
+  ).join('');
   document.getElementById('edit-modal-body').innerHTML=`
-    <label>Name</label><input id="em-name" value="${esc(r.name)}" />
     <div class="form-row">
-      <div><label>Ort</label><input id="em-location" value="${esc(r.location||'')}" /></div>
+      <div><label>Name</label><input id="em-name" value="${esc(r.name)}" /></div>
       <div><label>Kategorie</label><input id="em-category" value="${esc(r.category||'')}" /></div>
     </div>
     <div class="form-row">
       <div><label>Menge</label><input id="em-quantity" type="number" value="${r.quantity}" /></div>
       <div><label>Mindestbestand</label><input id="em-min_stock" type="number" value="${r.min_stock||0}" /></div>
-    </div>`;
-  editRecord.getData=()=>({ name:document.getElementById('em-name').value.trim(), location:document.getElementById('em-location').value.trim(), category:document.getElementById('em-category').value.trim(), quantity:parseFloat(document.getElementById('em-quantity').value)||0, min_stock:parseFloat(document.getElementById('em-min_stock').value)||0 });
+    </div>
+    <label>Lagerort</label>
+    <select id="em-location-id">${locOpts}</select>`;
+  editRecord.getData=()=>({
+    name:        document.getElementById('em-name').value.trim(),
+    category:    document.getElementById('em-category').value.trim(),
+    quantity:    parseFloat(document.getElementById('em-quantity').value)||0,
+    min_stock:   parseFloat(document.getElementById('em-min_stock').value)||0,
+    location_id: document.getElementById('em-location-id').value,
+  });
   openModal();
 }
 
@@ -1271,7 +1641,11 @@ function closeModal() { document.getElementById('edit-modal').classList.remove('
 async function submitEdit() {
   if (!editRecord) return;
   try {
-    await pb.collection(editRecord.collection).update(editRecord.id, editRecord.getData());
+    if (editRecord.customSave) {
+      await editRecord.customSave();
+    } else {
+      await pb.collection(editRecord.collection).update(editRecord.id, editRecord.getData());
+    }
     toast('✅ Gespeichert'); closeModal(); editRecord.reload();
   } catch(e) { toast('Fehler: '+e.message); }
 }
