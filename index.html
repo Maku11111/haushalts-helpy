@@ -304,6 +304,31 @@
     .summary-bar .label { font-size: 0.82rem; color: var(--primary); }
     .summary-bar .amount { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
 
+    /* ── Invoice category badges ── */
+    .cat-badge { display:inline-flex; align-items:center; gap:0.25rem; padding:0.15rem 0.55rem; border-radius:20px; font-size:0.72rem; font-weight:600; }
+    .cat-Einkauf      { background:#fef9c3; color:#92400e; }
+    .cat-Energie      { background:#fce7f3; color:#9d174d; }
+    .cat-Versicherung { background:#e0e7ff; color:#3730a3; }
+    .cat-Miete        { background:#d1fae5; color:#065f46; }
+    .cat-Mobilität    { background:#fee2e2; color:#991b1b; }
+    .cat-Gesundheit   { background:#d1fae5; color:#065f46; }
+    .cat-Freizeit     { background:#fce7f3; color:#9d174d; }
+    .cat-Sonstiges    { background:#f3f4f6; color:#374151; }
+
+    /* ── Bill invoice scan preview ── */
+    .bill-file-thumb { max-height:120px; max-width:100%; border-radius:6px; border:1px solid var(--border); margin-top:0.3rem; }
+
+    /* ── Bill items (shopping positions) ── */
+    .bill-item-row { display:flex; gap:0.4rem; align-items:center; margin-bottom:0.4rem; }
+    .bill-item-row input { flex:1; padding:0.35rem 0.6rem; font-size:0.82rem; }
+    .bill-item-row input.qty { width:64px; flex:0 0 64px; }
+    .bill-item-row button { flex-shrink:0; }
+
+    /* ── Import modal item rows ── */
+    .import-item-row { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0; border-bottom:1px solid var(--border); }
+    .import-item-row:last-child { border-bottom:none; }
+    .import-item-row label { flex:1; font-size:0.88rem; }
+
     /* ── Persons section ── */
     .person-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1rem 1rem 1.2rem; margin-bottom: 0.75rem; box-shadow: var(--shadow); border-left: 5px solid var(--primary); transition: box-shadow 0.15s; }
     .person-card.is-me { box-shadow: 0 0 0 2px var(--primary-light), var(--shadow); }
@@ -697,14 +722,30 @@
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('bill-form')">+ Hinzufügen</button>
       </div>
+      <!-- Kategorie-Filter-Chips -->
+      <div class="filter-chips" id="bill-cat-chips"></div>
+
       <div class="form-panel" id="bill-form">
-        <div><label>Beschreibung *</label><input id="bill-description" placeholder="Strom, Miete …" /></div>
+        <div><label>Beschreibung *</label><input id="bill-description" placeholder="REWE Einkauf, Strom …" /></div>
         <div class="form-row">
           <div><label>Betrag (€) *</label><input id="bill-amount" type="number" step="0.01" min="0" placeholder="0.00" /></div>
           <div><label>Datum *</label><input id="bill-date" type="date" /></div>
         </div>
         <div class="form-row">
-          <div><label>Kategorie</label><input id="bill-category" placeholder="Energie, Versicherung …" /></div>
+          <div>
+            <label>Kategorie</label>
+            <select id="bill-category" onchange="document.getElementById('bill-items-section').style.display=this.value==='Einkauf'?'block':'none'">
+              <option value="">– Wählen –</option>
+              <option value="Einkauf">🛒 Einkauf</option>
+              <option value="Energie">⚡ Energie</option>
+              <option value="Versicherung">🛡 Versicherung</option>
+              <option value="Miete">🏠 Miete</option>
+              <option value="Mobilität">🚗 Mobilität</option>
+              <option value="Gesundheit">💊 Gesundheit</option>
+              <option value="Freizeit">🎉 Freizeit</option>
+              <option value="Sonstiges">📋 Sonstiges</option>
+            </select>
+          </div>
           <div>
             <label>Status</label>
             <select id="bill-status">
@@ -714,13 +755,39 @@
           </div>
         </div>
         <div><label>Notiz</label><textarea id="bill-note" rows="2"></textarea></div>
-        <div><label>PDF-Anhang</label><input type="file" id="bill-file" accept=".pdf,application/pdf" /></div>
+        <div>
+          <label>Anhang (PDF oder Foto/Scan)</label>
+          <input type="file" id="bill-file" accept=".pdf,application/pdf,image/*" onchange="previewBillFile(this)" />
+          <div id="bill-file-preview" style="margin-top:0.4rem"></div>
+        </div>
+
+        <!-- Einkaufs-Positionen (nur wenn Kategorie = Einkauf) -->
+        <div id="bill-items-section" style="display:none;margin-top:0.75rem">
+          <label style="font-weight:700;margin-bottom:0.4rem;display:block">🛒 Einkaufspositionen <span style="font-size:0.75rem;font-weight:400;color:var(--text-muted)">(optional – für Inventar-Import)</span></label>
+          <div id="bill-items-list"></div>
+          <button type="button" class="btn btn-ghost btn-sm" style="margin-top:0.4rem" onclick="addBillItem()">+ Position hinzufügen</button>
+        </div>
+
         <div class="form-panel-footer">
           <button class="btn btn-primary" onclick="saveInvoice()">Speichern</button>
           <button class="btn btn-ghost"   onclick="toggleForm('bill-form')">Abbrechen</button>
         </div>
       </div>
+
       <div id="bill-list"><div class="loading">Lade …</div></div>
+
+      <!-- Import-Modal: Einkaufspositionen → Inventar -->
+      <div class="modal-backdrop" id="import-modal" style="display:none" onclick="if(event.target===this)closeImportModal()">
+        <div class="modal">
+          <h2>📦 In Inventar übernehmen</h2>
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem">Wähle aus welche Positionen ins Inventar sollen:</p>
+          <div id="import-items-list"></div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeImportModal()">Abbrechen</button>
+            <button class="btn btn-primary" onclick="doImportToInventory()">📦 Übernehmen</button>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 </div>
@@ -2004,8 +2071,8 @@ function openEditCalendar(id) {
 // ══════════════════════════════════════════════
 async function loadTodos() {
   try {
-    const res=await pb.collection('todos').getFullList({ sort:'done,due' });
-    todoData=res; renderTodos(); renderPersons();
+    const res=await pb.collection('todos').getFullList({ sort:'done,-created' });
+    todoData=res; renderTodos();
   } catch(e) { document.getElementById('todo-list').innerHTML='<p class="loading">Fehler beim Laden</p>'; }
 }
 
@@ -2013,14 +2080,25 @@ function renderTodos() {
   const list     = document.getElementById('todo-list');
   const filtered = todoData.filter(r => !filterTodoPerson || r.person===filterTodoPerson);
   if (!filtered.length) { list.innerHTML='<p class="loading">Keine Aufgaben</p>'; return; }
-  list.innerHTML = filtered.map(r=>`
+
+  // Group: open first, then done
+  const open = filtered.filter(r=>!r.done);
+  const done = filtered.filter(r=>r.done);
+
+  const renderItem = r => {
+    const dueField = r.due || r.date; // support both field names
+    const overdue  = dueField && !r.done && new Date(dueField) < new Date();
+    return `
     <div class="card ${r.done?'done-card':''}">
       <div class="card-header">
         <div style="display:flex;gap:0.6rem;align-items:flex-start;flex:1">
           <input type="checkbox" class="todo-check" ${r.done?'checked':''} onchange="toggleTodo('${r.id}',${r.done})" />
           <div style="flex:1">
             <div class="card-title" style="${r.done?'text-decoration:line-through':''}">${esc(r.text)}</div>
-            <div class="card-meta">${personBadge(r.person)}${r.due?'&nbsp;📅 '+fmtDate(r.due):''}</div>
+            <div class="card-meta">
+              ${personBadge(r.person)}
+              ${dueField?`&nbsp;<span style="color:${overdue?'var(--danger)':'var(--text-muted)'}">📅 ${fmtDate(dueField)}${overdue?' ⚠️':''}</span>`:''}
+            </div>
           </div>
         </div>
         <div class="card-actions">
@@ -2028,7 +2106,15 @@ function renderTodos() {
           <button class="btn btn-danger btn-sm" onclick="deleteRecord('todos','${r.id}',loadTodos)">🗑</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  };
+
+  let html = open.map(renderItem).join('');
+  if (done.length) {
+    html += `<div style="margin:1rem 0 0.4rem;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">✅ Erledigt (${done.length})</div>`;
+    html += done.map(renderItem).join('');
+  }
+  list.innerHTML = html;
 }
 
 async function toggleTodo(id,currentDone) {
@@ -2043,7 +2129,7 @@ async function saveTodo() {
   const text=document.getElementById('todo-text').value.trim();
   if (!text) { toast('Aufgabe ist Pflicht'); return; }
   try {
-    await pb.collection('todos').create({ text, person:document.getElementById('todo-person').value, due:document.getElementById('todo-due').value||null, done:false });
+    await pb.collection('todos').create({ text, person:document.getElementById('todo-person').value, date:document.getElementById('todo-due').value||null, done:false });
     toast('✅ Aufgabe gespeichert');
     clearForm(['todo-text','todo-due']); document.getElementById('todo-person').value='';
     toggleForm('todo-form'); loadTodos();
@@ -2055,55 +2141,112 @@ function openEditTodo(id) {
   editRecord={collection:'todos',id,reload:loadTodos};
   document.getElementById('edit-modal-title').textContent='Aufgabe bearbeiten';
   const po='<option value="">– Niemand –</option>'+personsData.map(p=>`<option value="${esc(p.name)}" ${r.person===p.name?'selected':''}>${p.emoji||''} ${esc(p.name)}</option>`).join('');
+  const dueVal = (r.date||r.due||'').slice(0,10);
   document.getElementById('edit-modal-body').innerHTML=`
     <label>Aufgabe</label><input id="em-text" value="${esc(r.text)}" />
     <div class="form-row">
       <div><label>Person</label><select id="em-person">${po}</select></div>
-      <div><label>Fällig</label><input id="em-due" type="date" value="${r.due?r.due.slice(0,10):''}" /></div>
+      <div><label>Fällig</label><input id="em-due" type="date" value="${dueVal}" /></div>
     </div>
     <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem">
       <input type="checkbox" id="em-done" ${r.done?'checked':''} style="width:auto" /> Erledigt
     </label>`;
-  editRecord.getData=()=>({ text:document.getElementById('em-text').value.trim(), person:document.getElementById('em-person').value, due:document.getElementById('em-due').value||null, done:document.getElementById('em-done').checked });
+  editRecord.getData=()=>({ text:document.getElementById('em-text').value.trim(), person:document.getElementById('em-person').value, date:document.getElementById('em-due').value||null, done:document.getElementById('em-done').checked });
   openModal();
 }
 
 // ══════════════════════════════════════════════
 //  INVOICES
 // ══════════════════════════════════════════════
+let filterBillCat = '';
+
+const CAT_ICONS = {
+  'Einkauf':'🛒','Energie':'⚡','Versicherung':'🛡','Miete':'🏠',
+  'Mobilität':'🚗','Gesundheit':'💊','Freizeit':'🎉','Sonstiges':'📋'
+};
+
 async function loadInvoices() {
   try {
     const res=await pb.collection('invoices').getFullList({ sort:'-date' });
-    billData=res; renderInvoices();
+    billData=res; renderInvoices(); renderBillCatChips();
   } catch(e) { document.getElementById('bill-list').innerHTML='<p class="loading">Fehler beim Laden</p>'; }
 }
 
+function renderBillCatChips() {
+  const el = document.getElementById('bill-cat-chips');
+  if (!el) return;
+  const cats = [...new Set(billData.map(r=>r.category).filter(Boolean))].sort();
+  if (!cats.length) { el.innerHTML=''; return; }
+  el.innerHTML = `<button class="chip ${!filterBillCat?'chip-active':''}" onclick="filterBillCat='';renderInvoices();renderBillCatChips()">Alle</button>`
+    + cats.map(c=>`<button class="chip ${filterBillCat===c?'chip-active':''}" onclick="filterBillCat='${esc(c)}';renderInvoices();renderBillCatChips()">${CAT_ICONS[c]||'🏷'} ${esc(c)}</button>`).join('');
+}
+
 function renderInvoices() {
-  const list  = document.getElementById('bill-list');
-  const open  = billData.filter(r=>r.status==='offen');
-  const total = open.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
-  const bar   = document.getElementById('inv-summary');
+  const list   = document.getElementById('bill-list');
+  const filtered = billData.filter(r => !filterBillCat || r.category===filterBillCat);
+  const open   = filtered.filter(r=>r.status==='offen');
+  const total  = open.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+  const bar    = document.getElementById('inv-summary');
   if (billData.length) { bar.style.display='flex'; document.getElementById('inv-open-total').textContent=fmtEuro(total); }
   else bar.style.display='none';
-  if (!billData.length) { list.innerHTML='<p class="loading">Keine Rechnungen</p>'; return; }
-  list.innerHTML=billData.map(r=>{
-    const paid=r.status==='bezahlt';
-    const fileUrl=r.file?pb.files.getURL(r,r.file):null;
+  if (!filtered.length) { list.innerHTML='<p class="loading">Keine Rechnungen</p>'; return; }
+
+  // Group by category
+  const groups = {};
+  filtered.forEach(r => {
+    const cat = r.category || 'Sonstiges';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(r);
+  });
+
+  list.innerHTML = Object.entries(groups).map(([cat, records]) => {
+    const catTotal = records.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+    const cards = records.map(r => {
+      const paid    = r.status==='bezahlt';
+      const fileName = Array.isArray(r.file) ? r.file[0] : r.file;
+      const fileUrl  = fileName ? pb.getFileUrl(r, fileName) : null;
+      const isImg    = fileUrl && !fileName.endsWith('.pdf');
+      const items   = r.items ? JSON.parse(r.items) : [];
+      const catClass= 'cat-'+CSS.escape(cat);
+      return `
+      <div class="card">
+        <div class="card-header">
+          <div style="flex:1">
+            <div class="card-title">
+              ${esc(r.description)}
+              <span class="badge ${paid?'badge-ok':'badge-danger'}">${paid?'Bezahlt':'Offen'}</span>
+            </div>
+            <div class="card-meta">
+              💶 <strong>${fmtEuro(r.amount)}</strong> &nbsp;📅 ${fmtDate(r.date)}
+              ${r.category?`&nbsp;<span class="cat-badge cat-${r.category.replace(/[^a-zA-ZäöüÄÖÜ]/g,'')}">${CAT_ICONS[r.category]||'🏷'} ${esc(r.category)}</span>`:''}
+            </div>
+            ${r.note?`<div style="margin-top:0.3rem;font-size:0.82rem;color:var(--text-muted)">${esc(r.note)}</div>`:''}
+            ${fileUrl?`<div style="margin-top:0.4rem">${isImg
+              ?`<img src="${fileUrl}" class="bill-file-thumb" onclick="window.open('${fileUrl}','_blank')" style="cursor:zoom-in" />`
+              :`<a href="${fileUrl}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary)">📎 Anhang öffnen</a>`
+            }</div>`:''}
+            ${items.length?`<div style="margin-top:0.5rem">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:0.3rem">POSITIONEN</div>
+              ${items.map(it=>`<div style="font-size:0.8rem;color:var(--text-muted)">• ${esc(it.name)} × ${it.qty}${it.unit?' '+esc(it.unit):''}</div>`).join('')}
+              <button class="btn btn-ghost btn-sm" style="margin-top:0.4rem;font-size:0.75rem" onclick="openImportModal('${r.id}')">📦 In Inventar übernehmen</button>
+            </div>`:''}
+          </div>
+          <div class="card-actions">
+            ${!paid?`<button class="btn btn-ghost btn-sm" title="Als bezahlt markieren" onclick="markPaid('${r.id}')">✓ Bezahlt</button>`:''}
+            <button class="btn btn-ghost btn-sm" onclick="openEditInvoice('${r.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteRecord('invoices','${r.id}',loadInvoices)">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
     return `
-    <div class="card">
-      <div class="card-header">
-        <div style="flex:1">
-          <div class="card-title">${esc(r.description)} <span class="badge ${paid?'badge-ok':'badge-danger'}">${paid?'Bezahlt':'Offen'}</span></div>
-          <div class="card-meta">💶 ${fmtEuro(r.amount)} &nbsp;📅 ${fmtDate(r.date)}${r.category?' &nbsp;🏷 '+esc(r.category):''}</div>
-          ${r.note?`<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>`:''}
-          ${fileUrl?`<a href="${fileUrl}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary)">📎 PDF öffnen</a>`:''}
-        </div>
-        <div class="card-actions">
-          ${!paid?`<button class="btn btn-ghost btn-sm" onclick="markPaid('${r.id}')">✓</button>`:''}
-          <button class="btn btn-ghost btn-sm" onclick="openEditInvoice('${r.id}')">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteRecord('invoices','${r.id}',loadInvoices)">🗑</button>
-        </div>
+    <div style="margin-bottom:1.2rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+        <span style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">${CAT_ICONS[cat]||'🏷'} ${esc(cat)}</span>
+        <span style="font-size:0.78rem;color:var(--text-muted)">${fmtEuro(catTotal)}</span>
       </div>
+      ${cards}
     </div>`;
   }).join('');
 }
@@ -2113,20 +2256,76 @@ async function markPaid(id) {
   catch(e) { toast('Fehler: '+e.message); }
 }
 
+// ── File preview in form ──
+function previewBillFile(input) {
+  const preview = document.getElementById('bill-file-preview');
+  if (!input.files[0]) { preview.innerHTML=''; return; }
+  const f = input.files[0];
+  if (f.type.startsWith('image/')) {
+    const url = URL.createObjectURL(f);
+    preview.innerHTML = `<img src="${url}" class="bill-file-thumb" />`;
+  } else {
+    preview.innerHTML = `<span style="font-size:0.8rem;color:var(--text-muted)">📎 ${esc(f.name)}</span>`;
+  }
+}
+
+// ── Einkaufs-Positionen ──
+let billItemCounter = 0;
+function addBillItem() {
+  const i = ++billItemCounter;
+  const row = document.createElement('div');
+  row.className = 'bill-item-row';
+  row.id = 'bill-item-'+i;
+  row.innerHTML = `
+    <input placeholder="Artikel" id="bi-name-${i}" />
+    <input type="number" min="0" step="0.1" placeholder="Menge" class="qty" id="bi-qty-${i}" value="1" />
+    <input placeholder="Einheit" style="width:64px;flex:0 0 64px" id="bi-unit-${i}" />
+    <button class="btn btn-danger btn-sm" onclick="document.getElementById('bill-item-${i}').remove()">✕</button>`;
+  document.getElementById('bill-items-list').appendChild(row);
+}
+
+function collectBillItems() {
+  const rows = document.querySelectorAll('#bill-items-list .bill-item-row');
+  const items = [];
+  rows.forEach(row => {
+    const id = row.id.replace('bill-item-','');
+    const name = document.getElementById('bi-name-'+id)?.value.trim();
+    const qty  = parseFloat(document.getElementById('bi-qty-'+id)?.value)||1;
+    const unit = document.getElementById('bi-unit-'+id)?.value.trim()||'';
+    if (name) items.push({name,qty,unit});
+  });
+  return items;
+}
+
 async function saveInvoice() {
-  const desc=document.getElementById('bill-description').value.trim(), amount=document.getElementById('bill-amount').value, date=document.getElementById('bill-date').value;
+  const desc=document.getElementById('bill-description').value.trim();
+  const amount=document.getElementById('bill-amount').value;
+  const date=document.getElementById('bill-date').value;
   if (!desc||!amount||!date) { toast('Beschreibung, Betrag und Datum sind Pflicht'); return; }
+
+  const items = collectBillItems();
   const fd=new FormData();
-  fd.append('description',desc); fd.append('amount',parseFloat(amount)); fd.append('date',date);
-  fd.append('category',document.getElementById('bill-category').value.trim());
+  fd.append('description',desc);
+  fd.append('amount',parseFloat(amount));
+  fd.append('date',date);
+  fd.append('category',document.getElementById('bill-category').value);
   fd.append('status',document.getElementById('bill-status').value);
   fd.append('note',document.getElementById('bill-note').value.trim());
-  const f=document.getElementById('bill-file'); if(f.files[0]) fd.append('file',f.files[0]);
+  if (items.length) fd.append('items', JSON.stringify(items));
+  const f=document.getElementById('bill-file');
+  if (f.files[0]) fd.append('file',f.files[0]);
+
   try {
     await pb.collection('invoices').create(fd);
     toast('✅ Rechnung gespeichert');
-    clearForm(['bill-description','bill-amount','bill-category','bill-note']);
-    f.value=''; document.getElementById('bill-date').valueAsDate=new Date(); document.getElementById('bill-status').value='offen';
+    clearForm(['bill-description','bill-amount','bill-note']);
+    f.value='';
+    document.getElementById('bill-file-preview').innerHTML='';
+    document.getElementById('bill-date').valueAsDate=new Date();
+    document.getElementById('bill-status').value='offen';
+    document.getElementById('bill-category').value='';
+    document.getElementById('bill-items-list').innerHTML='';
+    document.getElementById('bill-items-section').style.display='none';
     toggleForm('bill-form'); loadInvoices();
   } catch(e) { toast('Fehler: '+e.message); }
 }
@@ -2135,6 +2334,8 @@ function openEditInvoice(id) {
   const r=billData.find(x=>x.id===id); if(!r) return;
   editRecord={collection:'invoices',id,reload:loadInvoices};
   document.getElementById('edit-modal-title').textContent='Rechnung bearbeiten';
+  const catOpts = ['','Einkauf','Energie','Versicherung','Miete','Mobilität','Gesundheit','Freizeit','Sonstiges']
+    .map(c=>`<option value="${c}" ${r.category===c?'selected':''}>${c?CAT_ICONS[c]+' '+c:'– Wählen –'}</option>`).join('');
   document.getElementById('edit-modal-body').innerHTML=`
     <label>Beschreibung</label><input id="em-description" value="${esc(r.description)}" />
     <div class="form-row">
@@ -2142,12 +2343,67 @@ function openEditInvoice(id) {
       <div><label>Datum</label><input id="em-date" type="date" value="${r.date?r.date.slice(0,10):''}" /></div>
     </div>
     <div class="form-row">
-      <div><label>Kategorie</label><input id="em-category" value="${esc(r.category||'')}" /></div>
+      <div><label>Kategorie</label><select id="em-category">${catOpts}</select></div>
       <div><label>Status</label><select id="em-status"><option value="offen" ${r.status==='offen'?'selected':''}>Offen</option><option value="bezahlt" ${r.status==='bezahlt'?'selected':''}>Bezahlt</option></select></div>
     </div>
     <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
-  editRecord.getData=()=>({ description:document.getElementById('em-description').value.trim(), amount:parseFloat(document.getElementById('em-amount').value)||0, date:document.getElementById('em-date').value, category:document.getElementById('em-category').value.trim(), status:document.getElementById('em-status').value, note:document.getElementById('em-note').value.trim() });
+  editRecord.getData=()=>({
+    description: document.getElementById('em-description').value.trim(),
+    amount: parseFloat(document.getElementById('em-amount').value)||0,
+    date: document.getElementById('em-date').value,
+    category: document.getElementById('em-category').value,
+    status: document.getElementById('em-status').value,
+    note: document.getElementById('em-note').value.trim()
+  });
   openModal();
+}
+
+// ── Import to Inventory ──
+let importInvoiceId = null;
+function openImportModal(id) {
+  importInvoiceId = id;
+  const r = billData.find(x=>x.id===id); if(!r) return;
+  const items = r.items ? JSON.parse(r.items) : [];
+  if (!items.length) { toast('Keine Positionen hinterlegt'); return; }
+
+  const locOpts = '<option value="">– Kein Ort –</option>' +
+    locationsData.map(l=>`<option value="${l.id}">${l.room}${l.shelf?' › '+l.shelf:''}</option>`).join('');
+
+  document.getElementById('import-items-list').innerHTML = items.map((it,i)=>`
+    <div class="import-item-row">
+      <input type="checkbox" id="imp-chk-${i}" checked style="width:auto;flex-shrink:0" />
+      <label for="imp-chk-${i}">
+        <strong>${esc(it.name)}</strong> × ${it.qty}${it.unit?' '+esc(it.unit):''}
+      </label>
+      <select id="imp-loc-${i}" style="font-size:0.78rem;padding:0.25rem">${locOpts}</select>
+    </div>`).join('');
+
+  document.getElementById('import-modal').style.display='flex';
+}
+function closeImportModal() { document.getElementById('import-modal').style.display='none'; importInvoiceId=null; }
+
+async function doImportToInventory() {
+  const r = billData.find(x=>x.id===importInvoiceId); if(!r) return;
+  const items = r.items ? JSON.parse(r.items) : [];
+  let count=0;
+  for (let i=0;i<items.length;i++) {
+    const chk = document.getElementById('imp-chk-'+i);
+    if (!chk?.checked) continue;
+    const loc = document.getElementById('imp-loc-'+i)?.value||'';
+    try {
+      await pb.collection('inventory').create({
+        name: items[i].name,
+        quantity: items[i].qty,
+        category: r.category||'Einkauf',
+        location_id: loc||null,
+        min_stock: 0
+      });
+      count++;
+    } catch(e) { console.warn('Import failed for',items[i].name,e.message); }
+  }
+  closeImportModal();
+  toast(`✅ ${count} Artikel ins Inventar übernommen`);
+  loadInventory();
 }
 
 // ══════════════════════════════════════════════
