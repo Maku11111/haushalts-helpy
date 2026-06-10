@@ -20,13 +20,14 @@
       --danger-dim: #fde8ea;
       --warn: #f4a261;
       --warn-dim: #fff3e0;
+      --info: #457b9d;
+      --info-dim: #e8f4f8;
       --text: #1a1a1a;
       --text-muted: #6b7280;
       --radius: 10px;
       --shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     /* ── Login ── */
@@ -37,23 +38,18 @@
 
     /* ── App shell ── */
     #app { display: none; flex-direction: column; min-height: 100vh; }
-
     header { background: var(--primary); color: #fff; padding: 0.9rem 1.2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
     .header-right { display: flex; gap: 0.5rem; align-items: center; }
-
-    .btn-hdr {
-      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
-      color: #fff; padding: 0.35rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.82rem;
-    }
+    .btn-hdr { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35); color: #fff; padding: 0.35rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.82rem; }
     .btn-hdr:hover { background: rgba(255,255,255,0.28); }
 
     /* ── Tabs ── */
     .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-    .tab-btn { flex: 1; min-width: 68px; padding: 0.65rem 0.4rem; border: none; background: none; cursor: pointer; font-size: 0.75rem; color: var(--text-muted); border-bottom: 3px solid transparent; white-space: nowrap; transition: color 0.15s, border-color 0.15s; }
+    .tab-btn { flex: 1; min-width: 60px; padding: 0.6rem 0.3rem; border: none; background: none; cursor: pointer; font-size: 0.72rem; color: var(--text-muted); border-bottom: 3px solid transparent; white-space: nowrap; transition: color 0.15s, border-color 0.15s; }
     .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-    .tab-btn .icon { display: block; font-size: 1.15rem; margin-bottom: 2px; }
+    .tab-btn .icon { display: block; font-size: 1.1rem; margin-bottom: 2px; }
 
     /* ── Content ── */
     main { flex: 1; padding: 1rem; max-width: 700px; margin: 0 auto; width: 100%; }
@@ -74,7 +70,7 @@
     .btn:active { transform: scale(0.97); }
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-primary:hover { opacity: 0.88; }
-    .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+    .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.78rem; }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-ghost:hover { background: var(--bg); }
@@ -98,25 +94,17 @@
 
     /* ── Badges ── */
     .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
-    .badge-warn   { background: var(--warn-dim); color: #b45309; }
+    .badge-warn   { background: var(--warn-dim);   color: #b45309; }
     .badge-ok     { background: var(--primary-dim); color: var(--primary); }
-    .badge-danger { background: var(--danger-dim); color: var(--danger); }
+    .badge-danger { background: var(--danger-dim);  color: var(--danger); }
     .badge-muted  { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
 
-    /* ── Person chip (inline in cards) ── */
-    .person-chip {
-      display: inline-flex; align-items: center; gap: 0.25rem;
-      padding: 0.1rem 0.5rem; border-radius: 20px;
-      font-size: 0.75rem; font-weight: 600;
-    }
+    /* ── Person chip ── */
+    .person-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
 
     /* ── Filter chips ── */
     .filter-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
-    .chip {
-      padding: 0.28rem 0.75rem; border-radius: 20px; border: 1px solid var(--border);
-      background: var(--surface); font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
-      white-space: nowrap;
-    }
+    .chip { padding: 0.28rem 0.75rem; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-size: 0.8rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .chip.active { border-color: var(--primary); background: var(--primary-dim); color: var(--primary); font-weight: 600; }
 
     /* ── Inventory qty ── */
@@ -136,42 +124,81 @@
     .summary-bar .amount { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
 
     /* ── Persons section ── */
-    .person-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 1rem 1rem 1rem 1.2rem; margin-bottom: 0.75rem; box-shadow: var(--shadow);
-      display: flex; align-items: center; gap: 1rem;
-      border-left: 5px solid var(--primary);
-    }
-    .person-avatar {
-      width: 46px; height: 46px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; flex-shrink: 0;
-    }
+    .person-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1rem 1rem 1.2rem; margin-bottom: 0.75rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: 1rem; border-left: 5px solid var(--primary); }
+    .person-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
     .person-info { flex: 1; min-width: 0; }
     .person-name { font-weight: 700; font-size: 1rem; }
     .person-stats { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
-    .person-stat { display: flex; align-items: center; gap: 0.2rem; }
 
-    /* ── Emoji picker ── */
+    /* ── Emoji / Color picker ── */
     .emoji-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 4px; margin-top: 0.5rem; }
     .emoji-opt { font-size: 1.3rem; padding: 4px; border-radius: 6px; cursor: pointer; text-align: center; border: 2px solid transparent; }
     .emoji-opt:hover, .emoji-opt.selected { border-color: var(--primary); background: var(--primary-dim); }
-
-    /* ── Color picker ── */
     .color-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.5rem; }
     .color-opt { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.1s; }
     .color-opt:hover { transform: scale(1.15); }
     .color-opt.selected { border-color: var(--text); transform: scale(1.15); }
 
+    /* ════════════════════════════════
+       DASHBOARD
+    ════════════════════════════════ */
+    .dash-greeting { margin-bottom: 1.2rem; }
+    .dash-greeting h2 { font-size: 1.25rem; font-weight: 700; }
+    .dash-greeting p  { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+    /* KPI tiles */
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.65rem; margin-bottom: 1.2rem; }
+    @media (min-width: 500px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+    .kpi-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.9rem 1rem; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.12s; border-top: 4px solid var(--primary); }
+    .kpi-tile:hover { transform: translateY(-2px); }
+    .kpi-tile .kpi-icon { font-size: 1.4rem; }
+    .kpi-tile .kpi-val  { font-size: 1.6rem; font-weight: 800; margin: 0.15rem 0; line-height: 1; }
+    .kpi-tile .kpi-lbl  { font-size: 0.72rem; color: var(--text-muted); }
+    .kpi-tile.kpi-warn  { border-top-color: var(--warn); }
+    .kpi-tile.kpi-danger{ border-top-color: var(--danger); }
+    .kpi-tile.kpi-info  { border-top-color: var(--info); }
+    .kpi-tile.kpi-ok    { border-top-color: var(--primary-light); }
+
+    /* Section headers */
+    .dash-section-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 1.2rem 0 0.6rem;
+    }
+    .dash-section-hdr h3 { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .dash-section-hdr a  { font-size: 0.78rem; color: var(--primary); cursor: pointer; text-decoration: none; }
+    .dash-section-hdr a:hover { text-decoration: underline; }
+
+    /* Compact dash cards */
+    .dash-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 0.9rem; margin-bottom: 0.5rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: 0.75rem; }
+    .dash-card-left { flex: 1; min-width: 0; }
+    .dash-card-title { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dash-card-sub   { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
+    .dash-card-right { flex-shrink: 0; font-size: 0.8rem; text-align: right; }
+
+    /* Person overview row */
+    .persons-row { display: flex; gap: 0.65rem; overflow-x: auto; padding-bottom: 0.3rem; margin-bottom: 0.5rem; scrollbar-width: none; }
+    .persons-row::-webkit-scrollbar { display: none; }
+    .person-bubble {
+      flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.75rem 1rem; min-width: 120px;
+      box-shadow: var(--shadow); text-align: center; cursor: pointer;
+      transition: transform 0.12s; border-top: 4px solid var(--primary-light);
+    }
+    .person-bubble:hover { transform: translateY(-2px); }
+    .person-bubble .pb-emoji { font-size: 1.8rem; }
+    .person-bubble .pb-name  { font-size: 0.82rem; font-weight: 700; margin-top: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .person-bubble .pb-stats { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .person-bubble .pb-dot   { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); margin-right: 3px; }
+
+    /* Empty state */
+    .dash-empty { text-align: center; padding: 1.2rem; font-size: 0.85rem; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); }
+
     /* ── Toast ── */
     #toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 0.6rem 1.2rem; border-radius: 20px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 999; pointer-events: none; white-space: nowrap; }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ── Error ── */
     .error-msg { background: var(--danger-dim); color: var(--danger); border-radius: 7px; padding: 0.6rem 0.85rem; font-size: 0.85rem; margin-bottom: 0.75rem; display: none; }
     .error-msg.show { display: block; }
-
-    /* ── Loading ── */
     .loading { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; }
 
     /* ── Modal ── */
@@ -181,7 +208,7 @@
     .modal h2 { margin-bottom: 1rem; font-size: 1.05rem; }
     .modal-footer { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.1rem; flex-wrap: wrap; }
 
-    /* ── QR Modal ── */
+    /* ── QR ── */
     #qr-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; }
     #qr-modal-backdrop.open { display: flex; }
     #qr-modal { background: #fff; border-radius: 16px; padding: 2rem 1.8rem 1.5rem; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.18); max-width: 320px; width: 90%; }
@@ -192,14 +219,11 @@
     #qr-url-input:focus { outline: none; border-color: var(--primary-light); }
     .qr-url-row { display: flex; gap: 0.5rem; }
     .qr-url-row .btn { flex-shrink: 0; }
-
-    /* ── Section heading ── */
-    .section-title { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 1.2rem 0 0.5rem; }
   </style>
 </head>
 <body>
 
-<!-- ══════════════ LOGIN ══════════════ -->
+<!-- ══ LOGIN ══ -->
 <div id="login-screen">
   <div class="login-card">
     <h1>🏠 Haushalts-Helpy</h1>
@@ -213,7 +237,7 @@
   </div>
 </div>
 
-<!-- ══════════════ APP ══════════════ -->
+<!-- ══ APP ══ -->
 <div id="app">
   <header>
     <h1>🏠 Haushalts-Helpy</h1>
@@ -224,21 +248,90 @@
   </header>
 
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="persons"   onclick="switchTab('persons',this)"><span class="icon">👥</span>Personen</button>
-    <button class="tab-btn"        data-tab="inventory" onclick="switchTab('inventory',this)"><span class="icon">📦</span>Inventar</button>
-    <button class="tab-btn"        data-tab="calendar"  onclick="switchTab('calendar',this)"><span class="icon">📅</span>Kalender</button>
-    <button class="tab-btn"        data-tab="todos"     onclick="switchTab('todos',this)"><span class="icon">✅</span>To-dos</button>
-    <button class="tab-btn"        data-tab="invoices"  onclick="switchTab('invoices',this)"><span class="icon">🧾</span>Rechnungen</button>
+    <button class="tab-btn active" data-tab="dashboard"  onclick="switchTab('dashboard',this)"><span class="icon">🏠</span>Start</button>
+    <button class="tab-btn"        data-tab="persons"    onclick="switchTab('persons',this)"><span class="icon">👥</span>Personen</button>
+    <button class="tab-btn"        data-tab="inventory"  onclick="switchTab('inventory',this)"><span class="icon">📦</span>Inventar</button>
+    <button class="tab-btn"        data-tab="calendar"   onclick="switchTab('calendar',this)"><span class="icon">📅</span>Kalender</button>
+    <button class="tab-btn"        data-tab="todos"      onclick="switchTab('todos',this)"><span class="icon">✅</span>To-dos</button>
+    <button class="tab-btn"        data-tab="invoices"   onclick="switchTab('invoices',this)"><span class="icon">🧾</span>Rechnungen</button>
   </nav>
 
   <main>
 
-    <!-- ══ PERSONEN ══ -->
-    <section id="section-persons" class="section active">
+    <!-- ══════════════ DASHBOARD ══════════════ -->
+    <section id="section-dashboard" class="section active">
+      <div class="dash-greeting">
+        <h2 id="dash-greeting-text">Guten Tag! 👋</h2>
+        <p id="dash-date-text"></p>
+      </div>
+
+      <!-- KPI tiles -->
+      <div class="kpi-grid">
+        <div class="kpi-tile kpi-danger" onclick="switchTabByName('todos')" title="Zu To-dos">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-val" id="kpi-todos">–</div>
+          <div class="kpi-lbl">Offene Aufgaben</div>
+        </div>
+        <div class="kpi-tile kpi-ok" onclick="switchTabByName('calendar')" title="Zu Kalender">
+          <div class="kpi-icon">📅</div>
+          <div class="kpi-val" id="kpi-events">–</div>
+          <div class="kpi-lbl">Nächste Termine</div>
+        </div>
+        <div class="kpi-tile kpi-warn" onclick="switchTabByName('inventory')" title="Zu Inventar">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-val" id="kpi-lowstock">–</div>
+          <div class="kpi-lbl">Niedr. Bestand</div>
+        </div>
+        <div class="kpi-tile kpi-info" onclick="switchTabByName('invoices')" title="Zu Rechnungen">
+          <div class="kpi-icon">🧾</div>
+          <div class="kpi-val" id="kpi-invoices">–</div>
+          <div class="kpi-lbl">Offen (€)</div>
+        </div>
+      </div>
+
+      <!-- Personen-Bubbles -->
+      <div class="dash-section-hdr">
+        <h3>👥 Haushaltsmitglieder</h3>
+        <a onclick="switchTabByName('persons')">Alle →</a>
+      </div>
+      <div class="persons-row" id="dash-persons-row">
+        <div class="dash-empty" style="width:100%">Noch keine Personen</div>
+      </div>
+
+      <!-- Nächste Termine -->
+      <div class="dash-section-hdr">
+        <h3>📅 Nächste Termine</h3>
+        <a onclick="switchTabByName('calendar')">Alle →</a>
+      </div>
+      <div id="dash-events"><div class="dash-empty">Keine bevorstehenden Termine</div></div>
+
+      <!-- Offene To-dos -->
+      <div class="dash-section-hdr">
+        <h3>✅ Offene Aufgaben</h3>
+        <a onclick="switchTabByName('todos')">Alle →</a>
+      </div>
+      <div id="dash-todos"><div class="dash-empty">Keine offenen Aufgaben 🎉</div></div>
+
+      <!-- Lagerwarnung -->
+      <div class="dash-section-hdr">
+        <h3>📦 Niedriger Lagerbestand</h3>
+        <a onclick="switchTabByName('inventory')">Alle →</a>
+      </div>
+      <div id="dash-lowstock"><div class="dash-empty">Alles gut bevorratet ✅</div></div>
+
+      <!-- Offene Rechnungen -->
+      <div class="dash-section-hdr">
+        <h3>🧾 Offene Rechnungen</h3>
+        <a onclick="switchTabByName('invoices')">Alle →</a>
+      </div>
+      <div id="dash-invoices"><div class="dash-empty">Keine offenen Rechnungen 🎉</div></div>
+    </section>
+
+    <!-- ══════════════ PERSONEN ══════════════ -->
+    <section id="section-persons" class="section">
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('person-form')">+ Person hinzufügen</button>
       </div>
-
       <div class="form-panel" id="person-form">
         <div><label>Name *</label><input id="p-name" placeholder="z.B. Max, Anna …" /></div>
         <div>
@@ -256,17 +349,15 @@
           <button class="btn btn-ghost"   onclick="toggleForm('person-form')">Abbrechen</button>
         </div>
       </div>
-
       <div id="persons-list"><div class="loading">Lade …</div></div>
     </section>
 
-    <!-- ══ INVENTORY ══ -->
+    <!-- ══════════════ INVENTORY ══════════════ -->
     <section id="section-inventory" class="section">
       <div class="toolbar">
         <input type="search" id="inv-search" placeholder="Suchen …" oninput="renderInventory()" />
         <button class="btn btn-primary" onclick="toggleForm('inv-form')">+ Hinzufügen</button>
       </div>
-
       <div class="form-panel" id="inv-form">
         <div class="form-row">
           <div><label>Name *</label><input id="inv-name" placeholder="Artikel" /></div>
@@ -282,21 +373,19 @@
           <button class="btn btn-ghost"   onclick="toggleForm('inv-form')">Abbrechen</button>
         </div>
       </div>
-
       <div id="inv-list"><div class="loading">Lade …</div></div>
     </section>
 
-    <!-- ══ KALENDER ══ -->
+    <!-- ══════════════ KALENDER ══════════════ -->
     <section id="section-calendar" class="section">
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('cal-form')">+ Hinzufügen</button>
       </div>
-
       <div class="form-panel" id="cal-form">
         <div><label>Titel *</label><input id="cal-title" placeholder="Arzttermin …" /></div>
         <div class="form-row">
           <div><label>Datum *</label><input id="cal-date" type="datetime-local" /></div>
-          <div><label>Person</label><select id="cal-person"><option value="">– Alle –</option></select></div>
+          <div><label>Person</label><select id="cal-person"><option value="">– Niemand –</option></select></div>
         </div>
         <div><label>Notiz</label><textarea id="cal-note" rows="2" placeholder="Weitere Infos …"></textarea></div>
         <div class="form-panel-footer">
@@ -304,21 +393,19 @@
           <button class="btn btn-ghost"   onclick="toggleForm('cal-form')">Abbrechen</button>
         </div>
       </div>
-
       <div class="filter-chips" id="cal-filter-chips"></div>
       <div id="cal-list"><div class="loading">Lade …</div></div>
     </section>
 
-    <!-- ══ TODOS ══ -->
+    <!-- ══════════════ TODOS ══════════════ -->
     <section id="section-todos" class="section">
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('todo-form')">+ Hinzufügen</button>
       </div>
-
       <div class="form-panel" id="todo-form">
         <div><label>Aufgabe *</label><input id="todo-text" placeholder="Was ist zu tun?" /></div>
         <div class="form-row">
-          <div><label>Person</label><select id="todo-person"><option value="">– Alle –</option></select></div>
+          <div><label>Person</label><select id="todo-person"><option value="">– Niemand –</option></select></div>
           <div><label>Fällig</label><input id="todo-due" type="date" /></div>
         </div>
         <div class="form-panel-footer">
@@ -326,22 +413,19 @@
           <button class="btn btn-ghost"   onclick="toggleForm('todo-form')">Abbrechen</button>
         </div>
       </div>
-
       <div class="filter-chips" id="todo-filter-chips"></div>
       <div id="todo-list"><div class="loading">Lade …</div></div>
     </section>
 
-    <!-- ══ RECHNUNGEN ══ -->
+    <!-- ══════════════ RECHNUNGEN ══════════════ -->
     <section id="section-invoices" class="section">
       <div id="inv-summary" class="summary-bar" style="display:none">
         <span class="label">Offene Posten gesamt</span>
         <span class="amount" id="inv-open-total">0,00 €</span>
       </div>
-
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('bill-form')">+ Hinzufügen</button>
       </div>
-
       <div class="form-panel" id="bill-form">
         <div><label>Beschreibung *</label><input id="bill-description" placeholder="Strom, Miete …" /></div>
         <div class="form-row">
@@ -365,13 +449,12 @@
           <button class="btn btn-ghost"   onclick="toggleForm('bill-form')">Abbrechen</button>
         </div>
       </div>
-
       <div id="bill-list"><div class="loading">Lade …</div></div>
     </section>
   </main>
 </div>
 
-<!-- ══════════════ EDIT MODAL ══════════════ -->
+<!-- ══ EDIT MODAL ══ -->
 <div class="modal-backdrop" id="edit-modal">
   <div class="modal">
     <h2 id="edit-modal-title">Bearbeiten</h2>
@@ -383,7 +466,7 @@
   </div>
 </div>
 
-<!-- ══════════════ QR MODAL ══════════════ -->
+<!-- ══ QR MODAL ══ -->
 <div id="qr-modal-backdrop" onclick="closeQR()">
   <div id="qr-modal" onclick="event.stopPropagation()">
     <h2>📱 App auf dem Handy öffnen</h2>
@@ -396,7 +479,6 @@
   </div>
 </div>
 
-<!-- ══════════════ TOAST ══════════════ -->
 <div id="toast"></div>
 
 <script>
@@ -405,13 +487,13 @@
 // ══════════════════════════════════════════════
 const pb = new PocketBase('https://pocketbase-alo1.srv1510303.hstgr.cloud');
 
-let currentTab   = 'persons';
-let editRecord   = null;
-let personsData  = [];
-let invData      = [];
-let calData      = [];
-let todoData     = [];
-let billData     = [];
+let currentTab       = 'dashboard';
+let editRecord       = null;
+let personsData      = [];
+let invData          = [];
+let calData          = [];
+let todoData         = [];
+let billData         = [];
 let filterCalPerson  = '';
 let filterTodoPerson = '';
 
@@ -424,12 +506,172 @@ const COLORS = ['#52b788','#e63946','#457b9d','#f4a261','#a8dadc','#9b5de5','#f1
 (function init() {
   buildEmojiGrid();
   buildColorGrid();
+  setDashboardGreeting();
   if (pb.authStore.isValid) showApp();
   document.getElementById('bill-date').valueAsDate = new Date();
-  document.getElementById('login-password').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
-  document.getElementById('qr-url-input').addEventListener('keydown',   e => { if (e.key==='Enter') applyQRUrl(); });
-  document.getElementById('edit-modal').addEventListener('click', function(e) { if (e.target===this) closeModal(); });
+  document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  document.getElementById('qr-url-input').addEventListener('keydown',   e => { if(e.key==='Enter') applyQRUrl(); });
+  document.getElementById('edit-modal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
 })();
+
+// ══════════════════════════════════════════════
+//  DASHBOARD HELPERS
+// ══════════════════════════════════════════════
+function setDashboardGreeting() {
+  const h    = new Date().getHours();
+  const greet = h < 12 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
+  document.getElementById('dash-greeting-text').textContent = greet + '! 👋';
+  document.getElementById('dash-date-text').textContent =
+    new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+function renderDashboard() {
+  const now = new Date();
+
+  // ── KPI ──
+  const openTodos   = todoData.filter(t => !t.done).length;
+  const upcoming    = calData.filter(c => new Date(c.date) >= now).length;
+  const lowStock    = invData.filter(i => i.quantity <= i.min_stock).length;
+  const openBills   = billData.filter(b => b.status==='offen');
+  const openTotal   = openBills.reduce((s,b) => s+(parseFloat(b.amount)||0), 0);
+
+  document.getElementById('kpi-todos').textContent    = openTodos;
+  document.getElementById('kpi-events').textContent   = upcoming;
+  document.getElementById('kpi-lowstock').textContent = lowStock;
+  document.getElementById('kpi-invoices').textContent = fmtEuroShort(openTotal);
+
+  // ── Personen bubbles ──
+  const pRow = document.getElementById('dash-persons-row');
+  if (!personsData.length) {
+    pRow.innerHTML = '<div class="dash-empty" style="width:100%">Noch keine Personen — <strong>Personen-Tab</strong> öffnen</div>';
+  } else {
+    pRow.innerHTML = personsData.map(p => {
+      const pTodos  = todoData.filter(t => t.person===p.name && !t.done).length;
+      const pEvents = calData.filter(c => c.person===p.name && new Date(c.date)>=now).length;
+      const hasDue  = todoData.some(t => t.person===p.name && !t.done && t.due && new Date(t.due)<now);
+      return `
+      <div class="person-bubble" style="border-top-color:${p.color||'var(--primary-light)'}" onclick="filterByPerson('${esc(p.name)}')">
+        <div class="pb-emoji">${p.emoji||'😊'}</div>
+        <div class="pb-name">${esc(p.name)}</div>
+        <div class="pb-stats">
+          ${hasDue?'<span class="pb-dot"></span>':''}${pTodos} Aufg. · ${pEvents} Term.
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Nächste Termine (max 4) ──
+  const nextEvents = calData
+    .filter(c => new Date(c.date) >= now)
+    .sort((a,b) => new Date(a.date)-new Date(b.date))
+    .slice(0,4);
+  const evEl = document.getElementById('dash-events');
+  if (!nextEvents.length) {
+    evEl.innerHTML = '<div class="dash-empty">Keine bevorstehenden Termine</div>';
+  } else {
+    evEl.innerHTML = nextEvents.map(c => `
+      <div class="dash-card">
+        <div style="font-size:1.4rem">${calPersonEmoji(c.person)}</div>
+        <div class="dash-card-left">
+          <div class="dash-card-title">${esc(c.title)}</div>
+          <div class="dash-card-sub">${fmtDatetime(c.date)}${c.person?' · '+esc(c.person):''}</div>
+        </div>
+        <div class="dash-card-right">
+          <span class="badge badge-ok">${daysUntil(c.date)}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Offene Todos (max 5, überfällige zuerst) ──
+  const openTodoList = todoData
+    .filter(t => !t.done)
+    .sort((a,b) => {
+      const da = a.due ? new Date(a.due) : new Date('9999');
+      const db = b.due ? new Date(b.due) : new Date('9999');
+      return da - db;
+    })
+    .slice(0,5);
+  const tdEl = document.getElementById('dash-todos');
+  if (!openTodoList.length) {
+    tdEl.innerHTML = '<div class="dash-empty">Keine offenen Aufgaben 🎉</div>';
+  } else {
+    tdEl.innerHTML = openTodoList.map(t => {
+      const overdue = t.due && new Date(t.due) < now;
+      return `
+      <div class="dash-card">
+        <input type="checkbox" class="todo-check" onchange="toggleTodo('${t.id}',false)" style="flex-shrink:0" />
+        <div class="dash-card-left">
+          <div class="dash-card-title">${esc(t.text)}</div>
+          <div class="dash-card-sub">${t.person?personBadge(t.person)+'&nbsp;':''}${t.due?'📅 '+fmtDate(t.due):''}</div>
+        </div>
+        ${overdue?'<span class="badge badge-danger">Überfällig</span>':''}
+      </div>`;
+    }).join('');
+  }
+
+  // ── Niedriger Lagerbestand ──
+  const lowItems = invData.filter(i => i.quantity <= i.min_stock).slice(0,4);
+  const lsEl = document.getElementById('dash-lowstock');
+  if (!lowItems.length) {
+    lsEl.innerHTML = '<div class="dash-empty">Alles gut bevorratet ✅</div>';
+  } else {
+    lsEl.innerHTML = lowItems.map(i => `
+      <div class="dash-card">
+        <div style="font-size:1.3rem">📦</div>
+        <div class="dash-card-left">
+          <div class="dash-card-title">${esc(i.name)}</div>
+          <div class="dash-card-sub">${i.location?'📍 '+esc(i.location)+' · ':''}Bestand: ${i.quantity} / Min: ${i.min_stock}</div>
+        </div>
+        <div class="dash-card-right">
+          <span class="badge badge-warn">⚠ Niedrig</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Offene Rechnungen (max 4) ──
+  const openBillList = billData.filter(b => b.status==='offen').slice(0,4);
+  const biEl = document.getElementById('dash-invoices');
+  if (!openBillList.length) {
+    biEl.innerHTML = '<div class="dash-empty">Keine offenen Rechnungen 🎉</div>';
+  } else {
+    biEl.innerHTML = openBillList.map(b => `
+      <div class="dash-card">
+        <div style="font-size:1.3rem">🧾</div>
+        <div class="dash-card-left">
+          <div class="dash-card-title">${esc(b.description)}</div>
+          <div class="dash-card-sub">📅 ${fmtDate(b.date)}${b.category?' · '+esc(b.category):''}</div>
+        </div>
+        <div class="dash-card-right" style="color:var(--danger);font-weight:700">${fmtEuro(b.amount)}</div>
+      </div>`).join('');
+  }
+}
+
+function filterByPerson(name) {
+  filterTodoPerson = name;
+  filterCalPerson  = name;
+  renderFilterChips();
+  switchTabByName('todos');
+}
+
+function daysUntil(dateStr) {
+  const diff = Math.round((new Date(dateStr) - new Date()) / 86400000);
+  if (diff === 0) return 'Heute';
+  if (diff === 1) return 'Morgen';
+  if (diff < 0)  return Math.abs(diff)+'d her';
+  return 'in '+diff+'d';
+}
+
+function fmtEuroShort(val) {
+  const v = parseFloat(val||0);
+  if (v >= 1000) return (v/1000).toFixed(1)+'k€';
+  return v.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})+'€';
+}
+
+function calPersonEmoji(name) {
+  if (!name) return '📅';
+  const p = personsData.find(x => x.name===name);
+  return p ? p.emoji||'👤' : '👤';
+}
 
 // ══════════════════════════════════════════════
 //  AUTH
@@ -443,14 +685,14 @@ async function doLogin() {
     await pb.collection('users').authWithPassword(email, pw);
     showApp();
   } catch(e) {
-    errEl.textContent = 'Login fehlgeschlagen: ' + (e.message||'Unbekannter Fehler');
+    errEl.textContent = 'Login fehlgeschlagen: '+(e.message||'Unbekannter Fehler');
     errEl.classList.add('show');
   }
 }
 
 function doLogout() {
   pb.authStore.clear();
-  document.getElementById('app').style.display = 'none';
+  document.getElementById('app').style.display   = 'none';
   document.getElementById('login-screen').style.display = 'flex';
 }
 
@@ -469,6 +711,12 @@ function switchTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('section-'+tab).classList.add('active');
   btn.classList.add('active');
+  if (tab==='dashboard') renderDashboard();
+}
+
+function switchTabByName(tab) {
+  const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+  if (btn) switchTab(tab, btn);
 }
 
 function toggleForm(id) {
@@ -480,51 +728,34 @@ function toggleForm(id) {
 //  LOAD ALL
 // ══════════════════════════════════════════════
 async function loadAll() {
-  await loadPersons();     // persons first — others depend on it
-  loadInventory();
-  loadCalendar();
-  loadTodos();
-  loadInvoices();
+  await loadPersons();
+  await Promise.all([loadInventory(), loadCalendar(), loadTodos(), loadInvoices()]);
+  renderDashboard();
 }
 
 // ══════════════════════════════════════════════
 //  PERSONS
 // ══════════════════════════════════════════════
 function buildEmojiGrid() {
-  const grid = document.getElementById('emoji-grid');
-  grid.innerHTML = EMOJIS.map((e,i) =>
-    `<div class="emoji-opt${i===0?' selected':''}" onclick="selectEmoji(this,'${e}')">${e}</div>`
-  ).join('');
+  document.getElementById('emoji-grid').innerHTML = EMOJIS.map((e,i) =>
+    `<div class="emoji-opt${i===0?' selected':''}" onclick="selectEmoji(this,'${e}')">${e}</div>`).join('');
 }
-
 function buildColorGrid() {
-  const grid = document.getElementById('color-grid');
-  grid.innerHTML = COLORS.map((c,i) =>
-    `<div class="color-opt${i===0?' selected':''}" onclick="selectColor(this,'${c}')" style="background:${c}" title="${c}"></div>`
-  ).join('');
+  document.getElementById('color-grid').innerHTML = COLORS.map((c,i) =>
+    `<div class="color-opt${i===0?' selected':''}" onclick="selectColor(this,'${c}')" style="background:${c}"></div>`).join('');
 }
-
-function selectEmoji(el, val) {
-  document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('p-emoji').value = val;
-}
-
-function selectColor(el, val) {
-  document.querySelectorAll('.color-opt').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('p-color').value = val;
-}
+function selectEmoji(el,val) { document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.remove('selected')); el.classList.add('selected'); document.getElementById('p-emoji').value=val; }
+function selectColor(el,val) { document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected')); el.classList.add('selected'); document.getElementById('p-color').value=val; }
 
 async function loadPersons() {
   try {
-    const res = await pb.collection('persons').getFullList({ sort: 'name' });
+    const res = await pb.collection('persons').getFullList({ sort:'name' });
     personsData = res;
     renderPersons();
     populatePersonSelects();
     renderFilterChips();
   } catch(e) {
-    document.getElementById('persons-list').innerHTML = '<p class="loading">Fehler beim Laden (Collection "persons" anlegen!)</p>';
+    document.getElementById('persons-list').innerHTML = '<p class="loading">Fehler: Collection "persons" anlegen!</p>';
   }
 }
 
@@ -535,16 +766,17 @@ function renderPersons() {
     return;
   }
   list.innerHTML = personsData.map(p => {
+    const now        = new Date();
     const openTodos  = todoData.filter(t => t.person===p.name && !t.done).length;
-    const nextEvents = calData.filter(c => c.person===p.name && new Date(c.date) >= new Date()).length;
+    const nextEvents = calData.filter(c => c.person===p.name && new Date(c.date)>=now).length;
     return `
     <div class="person-card" style="border-left-color:${p.color||'var(--primary)'}">
       <div class="person-avatar" style="background:${hexAlpha(p.color||'#52b788',0.18)}">${p.emoji||'😊'}</div>
       <div class="person-info">
         <div class="person-name">${esc(p.name)}</div>
         <div class="person-stats">
-          <span class="person-stat">✅ ${openTodos} offene Aufgabe${openTodos!==1?'n':''}</span>
-          <span class="person-stat">📅 ${nextEvents} komm. Termin${nextEvents!==1?'e':''}</span>
+          <span>✅ ${openTodos} offene Aufgabe${openTodos!==1?'n':''}</span>
+          <span>📅 ${nextEvents} komm. Termin${nextEvents!==1?'e':''}</span>
         </div>
       </div>
       <div class="card-actions">
@@ -558,24 +790,20 @@ function renderPersons() {
 async function savePerson() {
   const name = document.getElementById('p-name').value.trim();
   if (!name) { toast('Name ist Pflicht'); return; }
-  const data = {
-    name,
-    emoji: document.getElementById('p-emoji').value,
-    color: document.getElementById('p-color').value,
-  };
   try {
-    await pb.collection('persons').create(data);
+    await pb.collection('persons').create({ name, emoji: document.getElementById('p-emoji').value, color: document.getElementById('p-color').value });
     toast('✅ Person gespeichert');
     document.getElementById('p-name').value = '';
     toggleForm('person-form');
     await loadPersons();
+    renderDashboard();
   } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditPerson(id) {
-  const p = personsData.find(x => x.id===id);
+  const p = personsData.find(x=>x.id===id);
   if (!p) return;
-  editRecord = { collection:'persons', id, reload: loadPersons };
+  editRecord = { collection:'persons', id, reload: async()=>{ await loadPersons(); renderDashboard(); } };
   document.getElementById('edit-modal-title').textContent = 'Person bearbeiten';
   document.getElementById('edit-modal-body').innerHTML = `
     <label>Name</label><input id="em-name" value="${esc(p.name)}" />
@@ -585,55 +813,38 @@ function openEditPerson(id) {
     </div>
     <input type="hidden" id="em-emoji" value="${esc(p.emoji||'😊')}" />
     <label>Farbe</label>
-    <div class="color-grid" id="em-color-grid">
+    <div class="color-grid">
       ${COLORS.map(c=>`<div class="color-opt${c===p.color?' selected':''}" onclick="selectModalColor(this,'${c}')" style="background:${c}"></div>`).join('')}
     </div>
     <input type="hidden" id="em-color" value="${esc(p.color||'#52b788')}" />`;
-  editRecord.getData = () => ({
-    name:  document.getElementById('em-name').value.trim(),
-    emoji: document.getElementById('em-emoji').value,
-    color: document.getElementById('em-color').value,
-  });
+  editRecord.getData = () => ({ name: document.getElementById('em-name').value.trim(), emoji: document.getElementById('em-emoji').value, color: document.getElementById('em-color').value });
   openModal();
 }
+function selectModalEmoji(el,val) { document.querySelectorAll('#em-emoji-grid .emoji-opt').forEach(e=>e.classList.remove('selected')); el.classList.add('selected'); document.getElementById('em-emoji').value=val; }
+function selectModalColor(el,val) { document.querySelectorAll('#edit-modal-body .color-opt').forEach(e=>e.classList.remove('selected')); el.classList.add('selected'); document.getElementById('em-color').value=val; }
 
-function selectModalEmoji(el, val) {
-  document.querySelectorAll('#em-emoji-grid .emoji-opt').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('em-emoji').value = val;
-}
-function selectModalColor(el, val) {
-  document.querySelectorAll('#em-color-grid .color-opt').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('em-color').value = val;
-}
-
-// ── Person selects & filter chips ──
 function populatePersonSelects() {
-  const opts = '<option value="">– Niemand –</option>' +
-    personsData.map(p => `<option value="${esc(p.name)}">${p.emoji||''} ${esc(p.name)}</option>`).join('');
-  ['cal-person','todo-person'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (sel) sel.innerHTML = opts;
-  });
+  const opts = '<option value="">– Niemand –</option>'+personsData.map(p=>`<option value="${esc(p.name)}">${p.emoji||''} ${esc(p.name)}</option>`).join('');
+  ['cal-person','todo-person'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=opts; });
 }
 
 function renderFilterChips() {
   ['cal','todo'].forEach(prefix => {
     const wrap = document.getElementById(prefix+'-filter-chips');
     if (!wrap) return;
-    const current = prefix==='cal' ? filterCalPerson : filterTodoPerson;
+    const cur = prefix==='cal' ? filterCalPerson : filterTodoPerson;
     wrap.innerHTML =
-      `<div class="chip${current===''?' active':''}" onclick="setFilter('${prefix}','')">Alle</div>` +
-      personsData.map(p =>
-        `<div class="chip${current===p.name?' active':''}" onclick="setFilter('${prefix}','${esc(p.name)}')" style="${current===p.name?`background:${hexAlpha(p.color||'#52b788',0.2)};border-color:${p.color||'var(--primary)'};color:${p.color||'var(--primary)'}`:''}">${p.emoji||''} ${esc(p.name)}</div>`
+      `<div class="chip${cur===''?' active':''}" onclick="setFilter('${prefix}','')">Alle</div>`+
+      personsData.map(p=>
+        `<div class="chip${cur===p.name?' active':''}" onclick="setFilter('${prefix}','${esc(p.name)}')"
+          style="${cur===p.name?`background:${hexAlpha(p.color||'#52b788',0.2)};border-color:${p.color};color:${p.color}`:''}"
+        >${p.emoji||''} ${esc(p.name)}</div>`
       ).join('');
   });
 }
-
 function setFilter(prefix, name) {
-  if (prefix==='cal')  { filterCalPerson  = name; renderCalendar(); }
-  if (prefix==='todo') { filterTodoPerson = name; renderTodos(); }
+  if (prefix==='cal')  { filterCalPerson=name;  renderCalendar(); }
+  if (prefix==='todo') { filterTodoPerson=name; renderTodos(); }
   renderFilterChips();
 }
 
@@ -642,32 +853,24 @@ function setFilter(prefix, name) {
 // ══════════════════════════════════════════════
 async function loadInventory() {
   try {
-    const res = await pb.collection('inventory').getFullList({ sort: 'name' });
-    invData = res;
-    renderInventory();
-  } catch(e) { document.getElementById('inv-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
+    const res = await pb.collection('inventory').getFullList({ sort:'name' });
+    invData = res; renderInventory();
+  } catch(e) { document.getElementById('inv-list').innerHTML='<p class="loading">Fehler beim Laden</p>'; }
 }
 
 function renderInventory() {
   const q    = document.getElementById('inv-search').value.toLowerCase();
   const list = document.getElementById('inv-list');
-  const filtered = invData.filter(r =>
-    (r.name||'').toLowerCase().includes(q) ||
-    (r.category||'').toLowerCase().includes(q) ||
-    (r.location||'').toLowerCase().includes(q)
-  );
-  if (!filtered.length) { list.innerHTML = '<p class="loading">Keine Einträge</p>'; return; }
-  list.innerHTML = filtered.map(r => {
-    const low = r.quantity <= r.min_stock;
+  const f    = invData.filter(r=>(r.name||'').toLowerCase().includes(q)||(r.category||'').toLowerCase().includes(q)||(r.location||'').toLowerCase().includes(q));
+  if (!f.length) { list.innerHTML='<p class="loading">Keine Einträge</p>'; return; }
+  list.innerHTML = f.map(r => {
+    const low = r.quantity<=r.min_stock;
     return `
     <div class="card ${low?'low-stock':''}">
       <div class="card-header">
         <div>
           <div class="card-title">${esc(r.name)} ${low?'<span class="badge badge-warn">⚠ Niedrig</span>':''}</div>
-          <div class="card-meta">
-            ${r.location?'📍 '+esc(r.location)+'&nbsp;':''}
-            ${r.category?'🏷 '+esc(r.category):''}
-          </div>
+          <div class="card-meta">${r.location?'📍 '+esc(r.location)+'&nbsp;':''}${r.category?'🏷 '+esc(r.category):''}</div>
           <div class="qty-ctrl">
             <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},-1)">−</button>
             <span class="qty-value">${r.quantity}</span>
@@ -684,41 +887,32 @@ function renderInventory() {
   }).join('');
 }
 
-async function adjustQty(id, current, delta) {
-  const newQty = Math.max(0, current+delta);
+async function adjustQty(id,current,delta) {
+  const n = Math.max(0,current+delta);
   try {
-    await pb.collection('inventory').update(id, { quantity: newQty });
-    const idx = invData.findIndex(r => r.id===id);
-    if (idx!==-1) invData[idx].quantity = newQty;
-    renderInventory();
+    await pb.collection('inventory').update(id,{quantity:n});
+    const i = invData.findIndex(r=>r.id===id); if(i!==-1) invData[i].quantity=n;
+    renderInventory(); renderDashboard();
   } catch(e) { toast('Fehler: '+e.message); }
 }
 
 async function saveInventory() {
   const name = document.getElementById('inv-name').value.trim();
   if (!name) { toast('Name ist Pflicht'); return; }
-  const data = {
-    name,
-    location:  document.getElementById('inv-location').value.trim(),
-    category:  document.getElementById('inv-category').value.trim(),
-    quantity:  parseFloat(document.getElementById('inv-quantity').value)||0,
-    min_stock: parseFloat(document.getElementById('inv-min_stock').value)||0,
-  };
+  const data = { name, location:document.getElementById('inv-location').value.trim(), category:document.getElementById('inv-category').value.trim(), quantity:parseFloat(document.getElementById('inv-quantity').value)||0, min_stock:parseFloat(document.getElementById('inv-min_stock').value)||0 };
   try {
     await pb.collection('inventory').create(data);
     toast('✅ Gespeichert');
     clearForm(['inv-name','inv-location','inv-category','inv-quantity','inv-min_stock']);
-    toggleForm('inv-form');
-    loadInventory();
+    toggleForm('inv-form'); loadInventory();
   } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditInventory(id) {
-  const r = invData.find(x => x.id===id);
-  if (!r) return;
+  const r = invData.find(x=>x.id===id); if(!r) return;
   editRecord = { collection:'inventory', id, reload:loadInventory };
-  document.getElementById('edit-modal-title').textContent = 'Inventar bearbeiten';
-  document.getElementById('edit-modal-body').innerHTML = `
+  document.getElementById('edit-modal-title').textContent='Inventar bearbeiten';
+  document.getElementById('edit-modal-body').innerHTML=`
     <label>Name</label><input id="em-name" value="${esc(r.name)}" />
     <div class="form-row">
       <div><label>Ort</label><input id="em-location" value="${esc(r.location||'')}" /></div>
@@ -728,13 +922,7 @@ function openEditInventory(id) {
       <div><label>Menge</label><input id="em-quantity" type="number" value="${r.quantity}" /></div>
       <div><label>Mindestbestand</label><input id="em-min_stock" type="number" value="${r.min_stock||0}" /></div>
     </div>`;
-  editRecord.getData = () => ({
-    name:      document.getElementById('em-name').value.trim(),
-    location:  document.getElementById('em-location').value.trim(),
-    category:  document.getElementById('em-category').value.trim(),
-    quantity:  parseFloat(document.getElementById('em-quantity').value)||0,
-    min_stock: parseFloat(document.getElementById('em-min_stock').value)||0,
-  });
+  editRecord.getData=()=>({ name:document.getElementById('em-name').value.trim(), location:document.getElementById('em-location').value.trim(), category:document.getElementById('em-category').value.trim(), quantity:parseFloat(document.getElementById('em-quantity').value)||0, min_stock:parseFloat(document.getElementById('em-min_stock').value)||0 });
   openModal();
 }
 
@@ -743,29 +931,24 @@ function openEditInventory(id) {
 // ══════════════════════════════════════════════
 async function loadCalendar() {
   try {
-    const res = await pb.collection('calendar').getFullList({ sort: 'date' });
-    calData = res;
-    renderCalendar();
-    renderPersons(); // refresh stats
-  } catch(e) { document.getElementById('cal-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
+    const res = await pb.collection('calendar').getFullList({ sort:'date' });
+    calData = res; renderCalendar(); renderPersons();
+  } catch(e) { document.getElementById('cal-list').innerHTML='<p class="loading">Fehler beim Laden</p>'; }
 }
 
 function renderCalendar() {
-  const list = document.getElementById('cal-list');
-  const now  = new Date();
+  const list     = document.getElementById('cal-list');
+  const now      = new Date();
   const filtered = calData.filter(r => !filterCalPerson || r.person===filterCalPerson);
-  if (!filtered.length) { list.innerHTML = '<p class="loading">Keine Termine</p>'; return; }
+  if (!filtered.length) { list.innerHTML='<p class="loading">Keine Termine</p>'; return; }
   list.innerHTML = filtered.map(r => {
-    const past = new Date(r.date) < now;
-    const personChip = personBadge(r.person);
+    const past = new Date(r.date)<now;
     return `
     <div class="card">
       <div class="card-header">
         <div>
-          <div class="card-title">${esc(r.title)}
-            <span class="badge ${past?'badge-muted':'badge-ok'}">${past?'Vergangen':'Bevorstehend'}</span>
-          </div>
-          <div class="card-meta">📅 ${fmtDatetime(r.date)} ${personChip}</div>
+          <div class="card-title">${esc(r.title)} <span class="badge ${past?'badge-muted':'badge-ok'}">${past?'Vergangen':'Bevorstehend'}</span></div>
+          <div class="card-meta">📅 ${fmtDatetime(r.date)} ${personBadge(r.person)}</div>
           ${r.note?`<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>`:''}
         </div>
         <div class="card-actions">
@@ -778,39 +961,29 @@ function renderCalendar() {
 }
 
 async function saveCalendar() {
-  const title = document.getElementById('cal-title').value.trim();
-  const date  = document.getElementById('cal-date').value;
+  const title=document.getElementById('cal-title').value.trim(), date=document.getElementById('cal-date').value;
   if (!title||!date) { toast('Titel und Datum sind Pflicht'); return; }
-  const data = { title, date, person: document.getElementById('cal-person').value, note: document.getElementById('cal-note').value.trim() };
   try {
-    await pb.collection('calendar').create(data);
+    await pb.collection('calendar').create({ title, date, person:document.getElementById('cal-person').value, note:document.getElementById('cal-note').value.trim() });
     toast('✅ Termin gespeichert');
-    clearForm(['cal-title','cal-date','cal-note']);
-    document.getElementById('cal-person').value = '';
-    toggleForm('cal-form');
-    loadCalendar();
+    clearForm(['cal-title','cal-date','cal-note']); document.getElementById('cal-person').value='';
+    toggleForm('cal-form'); loadCalendar();
   } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditCalendar(id) {
-  const r = calData.find(x => x.id===id);
-  if (!r) return;
-  editRecord = { collection:'calendar', id, reload:loadCalendar };
-  document.getElementById('edit-modal-title').textContent = 'Termin bearbeiten';
-  const personOpts = '<option value="">– Niemand –</option>'+personsData.map(p=>`<option value="${esc(p.name)}" ${r.person===p.name?'selected':''}>${p.emoji||''} ${esc(p.name)}</option>`).join('');
-  document.getElementById('edit-modal-body').innerHTML = `
+  const r=calData.find(x=>x.id===id); if(!r) return;
+  editRecord={ collection:'calendar', id, reload:loadCalendar };
+  document.getElementById('edit-modal-title').textContent='Termin bearbeiten';
+  const po='<option value="">– Niemand –</option>'+personsData.map(p=>`<option value="${esc(p.name)}" ${r.person===p.name?'selected':''}>${p.emoji||''} ${esc(p.name)}</option>`).join('');
+  document.getElementById('edit-modal-body').innerHTML=`
     <label>Titel</label><input id="em-title" value="${esc(r.title)}" />
     <div class="form-row">
       <div><label>Datum</label><input id="em-date" type="datetime-local" value="${r.date?r.date.slice(0,16):''}" /></div>
-      <div><label>Person</label><select id="em-person">${personOpts}</select></div>
+      <div><label>Person</label><select id="em-person">${po}</select></div>
     </div>
     <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
-  editRecord.getData = () => ({
-    title:  document.getElementById('em-title').value.trim(),
-    date:   document.getElementById('em-date').value,
-    person: document.getElementById('em-person').value,
-    note:   document.getElementById('em-note').value.trim(),
-  });
+  editRecord.getData=()=>({ title:document.getElementById('em-title').value.trim(), date:document.getElementById('em-date').value, person:document.getElementById('em-person').value, note:document.getElementById('em-note').value.trim() });
   openModal();
 }
 
@@ -819,28 +992,23 @@ function openEditCalendar(id) {
 // ══════════════════════════════════════════════
 async function loadTodos() {
   try {
-    const res = await pb.collection('todos').getFullList({ sort: 'done,due' });
-    todoData = res;
-    renderTodos();
-    renderPersons();
-  } catch(e) { document.getElementById('todo-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
+    const res=await pb.collection('todos').getFullList({ sort:'done,due' });
+    todoData=res; renderTodos(); renderPersons();
+  } catch(e) { document.getElementById('todo-list').innerHTML='<p class="loading">Fehler beim Laden</p>'; }
 }
 
 function renderTodos() {
-  const list = document.getElementById('todo-list');
+  const list     = document.getElementById('todo-list');
   const filtered = todoData.filter(r => !filterTodoPerson || r.person===filterTodoPerson);
-  if (!filtered.length) { list.innerHTML = '<p class="loading">Keine Aufgaben</p>'; return; }
-  list.innerHTML = filtered.map(r => `
+  if (!filtered.length) { list.innerHTML='<p class="loading">Keine Aufgaben</p>'; return; }
+  list.innerHTML = filtered.map(r=>`
     <div class="card ${r.done?'done-card':''}">
       <div class="card-header">
         <div style="display:flex;gap:0.6rem;align-items:flex-start;flex:1">
           <input type="checkbox" class="todo-check" ${r.done?'checked':''} onchange="toggleTodo('${r.id}',${r.done})" />
           <div style="flex:1">
             <div class="card-title" style="${r.done?'text-decoration:line-through':''}">${esc(r.text)}</div>
-            <div class="card-meta">
-              ${personBadge(r.person)}
-              ${r.due?'&nbsp;📅 '+fmtDate(r.due):''}
-            </div>
+            <div class="card-meta">${personBadge(r.person)}${r.due?'&nbsp;📅 '+fmtDate(r.due):''}</div>
           </div>
         </div>
         <div class="card-actions">
@@ -851,51 +1019,40 @@ function renderTodos() {
     </div>`).join('');
 }
 
-async function toggleTodo(id, currentDone) {
+async function toggleTodo(id,currentDone) {
   try {
-    await pb.collection('todos').update(id, { done: !currentDone });
-    const idx = todoData.findIndex(r => r.id===id);
-    if (idx!==-1) todoData[idx].done = !currentDone;
-    renderTodos();
-    renderPersons();
+    await pb.collection('todos').update(id,{done:!currentDone});
+    const i=todoData.findIndex(r=>r.id===id); if(i!==-1) todoData[i].done=!currentDone;
+    renderTodos(); renderPersons(); renderDashboard();
   } catch(e) { toast('Fehler: '+e.message); }
 }
 
 async function saveTodo() {
-  const text = document.getElementById('todo-text').value.trim();
+  const text=document.getElementById('todo-text').value.trim();
   if (!text) { toast('Aufgabe ist Pflicht'); return; }
-  const data = { text, person: document.getElementById('todo-person').value, due: document.getElementById('todo-due').value||null, done: false };
   try {
-    await pb.collection('todos').create(data);
+    await pb.collection('todos').create({ text, person:document.getElementById('todo-person').value, due:document.getElementById('todo-due').value||null, done:false });
     toast('✅ Aufgabe gespeichert');
-    clearForm(['todo-text','todo-due']);
-    document.getElementById('todo-person').value = '';
-    toggleForm('todo-form');
-    loadTodos();
+    clearForm(['todo-text','todo-due']); document.getElementById('todo-person').value='';
+    toggleForm('todo-form'); loadTodos();
   } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditTodo(id) {
-  const r = todoData.find(x => x.id===id);
-  if (!r) return;
-  editRecord = { collection:'todos', id, reload:loadTodos };
-  document.getElementById('edit-modal-title').textContent = 'Aufgabe bearbeiten';
-  const personOpts = '<option value="">– Niemand –</option>'+personsData.map(p=>`<option value="${esc(p.name)}" ${r.person===p.name?'selected':''}>${p.emoji||''} ${esc(p.name)}</option>`).join('');
-  document.getElementById('edit-modal-body').innerHTML = `
+  const r=todoData.find(x=>x.id===id); if(!r) return;
+  editRecord={collection:'todos',id,reload:loadTodos};
+  document.getElementById('edit-modal-title').textContent='Aufgabe bearbeiten';
+  const po='<option value="">– Niemand –</option>'+personsData.map(p=>`<option value="${esc(p.name)}" ${r.person===p.name?'selected':''}>${p.emoji||''} ${esc(p.name)}</option>`).join('');
+  document.getElementById('edit-modal-body').innerHTML=`
     <label>Aufgabe</label><input id="em-text" value="${esc(r.text)}" />
     <div class="form-row">
-      <div><label>Person</label><select id="em-person">${personOpts}</select></div>
+      <div><label>Person</label><select id="em-person">${po}</select></div>
       <div><label>Fällig</label><input id="em-due" type="date" value="${r.due?r.due.slice(0,10):''}" /></div>
     </div>
     <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem">
       <input type="checkbox" id="em-done" ${r.done?'checked':''} style="width:auto" /> Erledigt
     </label>`;
-  editRecord.getData = () => ({
-    text:   document.getElementById('em-text').value.trim(),
-    person: document.getElementById('em-person').value,
-    due:    document.getElementById('em-due').value||null,
-    done:   document.getElementById('em-done').checked,
-  });
+  editRecord.getData=()=>({ text:document.getElementById('em-text').value.trim(), person:document.getElementById('em-person').value, due:document.getElementById('em-due').value||null, done:document.getElementById('em-done').checked });
   openModal();
 }
 
@@ -904,30 +1061,27 @@ function openEditTodo(id) {
 // ══════════════════════════════════════════════
 async function loadInvoices() {
   try {
-    const res = await pb.collection('invoices').getFullList({ sort: '-date' });
-    billData = res;
-    renderInvoices();
-  } catch(e) { document.getElementById('bill-list').innerHTML = '<p class="loading">Fehler beim Laden</p>'; }
+    const res=await pb.collection('invoices').getFullList({ sort:'-date' });
+    billData=res; renderInvoices();
+  } catch(e) { document.getElementById('bill-list').innerHTML='<p class="loading">Fehler beim Laden</p>'; }
 }
 
 function renderInvoices() {
   const list  = document.getElementById('bill-list');
-  const open  = billData.filter(r => r.status==='offen');
-  const total = open.reduce((s,r) => s+(parseFloat(r.amount)||0), 0);
+  const open  = billData.filter(r=>r.status==='offen');
+  const total = open.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
   const bar   = document.getElementById('inv-summary');
   if (billData.length) { bar.style.display='flex'; document.getElementById('inv-open-total').textContent=fmtEuro(total); }
-  else bar.style.display = 'none';
+  else bar.style.display='none';
   if (!billData.length) { list.innerHTML='<p class="loading">Keine Rechnungen</p>'; return; }
-  list.innerHTML = billData.map(r => {
-    const paid    = r.status==='bezahlt';
-    const fileUrl = r.file ? pb.files.getURL(r,r.file) : null;
+  list.innerHTML=billData.map(r=>{
+    const paid=r.status==='bezahlt';
+    const fileUrl=r.file?pb.files.getURL(r,r.file):null;
     return `
     <div class="card">
       <div class="card-header">
         <div style="flex:1">
-          <div class="card-title">${esc(r.description)}
-            <span class="badge ${paid?'badge-ok':'badge-danger'}">${paid?'Bezahlt':'Offen'}</span>
-          </div>
+          <div class="card-title">${esc(r.description)} <span class="badge ${paid?'badge-ok':'badge-danger'}">${paid?'Bezahlt':'Offen'}</span></div>
           <div class="card-meta">💶 ${fmtEuro(r.amount)} &nbsp;📅 ${fmtDate(r.date)}${r.category?' &nbsp;🏷 '+esc(r.category):''}</div>
           ${r.note?`<div style="margin-top:0.4rem;font-size:0.85rem;color:var(--text-muted)">${esc(r.note)}</div>`:''}
           ${fileUrl?`<a href="${fileUrl}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary)">📎 PDF öffnen</a>`:''}
@@ -943,40 +1097,33 @@ function renderInvoices() {
 }
 
 async function markPaid(id) {
-  try { await pb.collection('invoices').update(id,{status:'bezahlt'}); toast('✅ Als bezahlt markiert'); loadInvoices(); }
+  try { await pb.collection('invoices').update(id,{status:'bezahlt'}); toast('✅ Als bezahlt markiert'); loadInvoices(); renderDashboard(); }
   catch(e) { toast('Fehler: '+e.message); }
 }
 
 async function saveInvoice() {
-  const desc   = document.getElementById('bill-description').value.trim();
-  const amount = document.getElementById('bill-amount').value;
-  const date   = document.getElementById('bill-date').value;
+  const desc=document.getElementById('bill-description').value.trim(), amount=document.getElementById('bill-amount').value, date=document.getElementById('bill-date').value;
   if (!desc||!amount||!date) { toast('Beschreibung, Betrag und Datum sind Pflicht'); return; }
-  const fd = new FormData();
-  fd.append('description', desc);
-  fd.append('amount',      parseFloat(amount));
-  fd.append('date',        date);
-  fd.append('category',    document.getElementById('bill-category').value.trim());
-  fd.append('status',      document.getElementById('bill-status').value);
-  fd.append('note',        document.getElementById('bill-note').value.trim());
-  const f = document.getElementById('bill-file');
-  if (f.files[0]) fd.append('file', f.files[0]);
+  const fd=new FormData();
+  fd.append('description',desc); fd.append('amount',parseFloat(amount)); fd.append('date',date);
+  fd.append('category',document.getElementById('bill-category').value.trim());
+  fd.append('status',document.getElementById('bill-status').value);
+  fd.append('note',document.getElementById('bill-note').value.trim());
+  const f=document.getElementById('bill-file'); if(f.files[0]) fd.append('file',f.files[0]);
   try {
     await pb.collection('invoices').create(fd);
     toast('✅ Rechnung gespeichert');
     clearForm(['bill-description','bill-amount','bill-category','bill-note']);
     f.value=''; document.getElementById('bill-date').valueAsDate=new Date(); document.getElementById('bill-status').value='offen';
-    toggleForm('bill-form');
-    loadInvoices();
+    toggleForm('bill-form'); loadInvoices();
   } catch(e) { toast('Fehler: '+e.message); }
 }
 
 function openEditInvoice(id) {
-  const r = billData.find(x => x.id===id);
-  if (!r) return;
-  editRecord = { collection:'invoices', id, reload:loadInvoices };
-  document.getElementById('edit-modal-title').textContent = 'Rechnung bearbeiten';
-  document.getElementById('edit-modal-body').innerHTML = `
+  const r=billData.find(x=>x.id===id); if(!r) return;
+  editRecord={collection:'invoices',id,reload:loadInvoices};
+  document.getElementById('edit-modal-title').textContent='Rechnung bearbeiten';
+  document.getElementById('edit-modal-body').innerHTML=`
     <label>Beschreibung</label><input id="em-description" value="${esc(r.description)}" />
     <div class="form-row">
       <div><label>Betrag (€)</label><input id="em-amount" type="number" step="0.01" value="${r.amount}" /></div>
@@ -984,22 +1131,10 @@ function openEditInvoice(id) {
     </div>
     <div class="form-row">
       <div><label>Kategorie</label><input id="em-category" value="${esc(r.category||'')}" /></div>
-      <div><label>Status</label>
-        <select id="em-status">
-          <option value="offen" ${r.status==='offen'?'selected':''}>Offen</option>
-          <option value="bezahlt" ${r.status==='bezahlt'?'selected':''}>Bezahlt</option>
-        </select>
-      </div>
+      <div><label>Status</label><select id="em-status"><option value="offen" ${r.status==='offen'?'selected':''}>Offen</option><option value="bezahlt" ${r.status==='bezahlt'?'selected':''}>Bezahlt</option></select></div>
     </div>
     <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
-  editRecord.getData = () => ({
-    description: document.getElementById('em-description').value.trim(),
-    amount:      parseFloat(document.getElementById('em-amount').value)||0,
-    date:        document.getElementById('em-date').value,
-    category:    document.getElementById('em-category').value.trim(),
-    status:      document.getElementById('em-status').value,
-    note:        document.getElementById('em-note').value.trim(),
-  });
+  editRecord.getData=()=>({ description:document.getElementById('em-description').value.trim(), amount:parseFloat(document.getElementById('em-amount').value)||0, date:document.getElementById('em-date').value, category:document.getElementById('em-category').value.trim(), status:document.getElementById('em-status').value, note:document.getElementById('em-note').value.trim() });
   openModal();
 }
 
@@ -1008,24 +1143,20 @@ function openEditInvoice(id) {
 // ══════════════════════════════════════════════
 function openModal()  { document.getElementById('edit-modal').classList.add('open'); }
 function closeModal() { document.getElementById('edit-modal').classList.remove('open'); editRecord=null; }
-
 async function submitEdit() {
   if (!editRecord) return;
-  const data = editRecord.getData();
   try {
-    await pb.collection(editRecord.collection).update(editRecord.id, data);
-    toast('✅ Gespeichert');
-    closeModal();
-    editRecord.reload();
+    await pb.collection(editRecord.collection).update(editRecord.id, editRecord.getData());
+    toast('✅ Gespeichert'); closeModal(); editRecord.reload();
   } catch(e) { toast('Fehler: '+e.message); }
 }
 
 // ══════════════════════════════════════════════
 //  DELETE
 // ══════════════════════════════════════════════
-async function deleteRecord(collection, id, reloadFn) {
+async function deleteRecord(collection,id,reloadFn) {
   if (!confirm('Wirklich löschen?')) return;
-  try { await pb.collection(collection).delete(id); toast('🗑 Gelöscht'); reloadFn(); }
+  try { await pb.collection(collection).delete(id); toast('🗑 Gelöscht'); reloadFn(); renderDashboard(); }
   catch(e) { toast('Fehler: '+e.message); }
 }
 
@@ -1033,44 +1164,41 @@ async function deleteRecord(collection, id, reloadFn) {
 //  QR CODE
 // ══════════════════════════════════════════════
 function openQR() {
-  const stored = localStorage.getItem('helpy_qr_url') || window.location.href.split('?')[0];
-  document.getElementById('qr-url-input').value = stored;
+  const stored=localStorage.getItem('helpy_qr_url')||window.location.href.split('?')[0];
+  document.getElementById('qr-url-input').value=stored;
   document.getElementById('qr-modal-backdrop').classList.add('open');
   buildQR(stored);
 }
 function applyQRUrl() {
-  const url = document.getElementById('qr-url-input').value.trim();
+  const url=document.getElementById('qr-url-input').value.trim();
   if (!url) { toast('Bitte eine URL eingeben'); return; }
-  localStorage.setItem('helpy_qr_url', url);
-  buildQR(url);
+  localStorage.setItem('helpy_qr_url',url); buildQR(url);
 }
 function buildQR(url) {
-  const wrap = document.getElementById('qr-canvas-wrap');
-  wrap.innerHTML = '';
-  try {
-    new QRCode(wrap, { text:url, width:220, height:220, colorDark:'#1a1a1a', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.M });
-  } catch(e) { wrap.innerHTML='<p style="color:var(--danger)">Ungültige URL</p>'; }
+  const wrap=document.getElementById('qr-canvas-wrap'); wrap.innerHTML='';
+  try { new QRCode(wrap,{text:url,width:220,height:220,colorDark:'#1a1a1a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); }
+  catch(e) { wrap.innerHTML='<p style="color:var(--danger)">Ungültige URL</p>'; }
 }
 function closeQR() { document.getElementById('qr-modal-backdrop').classList.remove('open'); }
 
 // ══════════════════════════════════════════════
 //  UTILITIES
 // ══════════════════════════════════════════════
-function toast(msg, dur=2200) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), dur);
+function toast(msg,dur=2200) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
 }
 
 function personBadge(name) {
   if (!name) return '';
-  const p = personsData.find(x => x.name===name);
+  const p=personsData.find(x=>x.name===name);
   if (!p) return `<span style="font-size:0.78rem;color:var(--text-muted)">👤 ${esc(name)}</span>`;
   return `<span class="person-chip" style="background:${hexAlpha(p.color||'#52b788',0.18)};color:${p.color||'var(--primary)'}">${p.emoji||'👤'} ${esc(p.name)}</span>`;
 }
 
-function hexAlpha(hex, alpha) {
-  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+function hexAlpha(hex,alpha) {
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
@@ -1090,9 +1218,7 @@ function fmtDatetime(str) {
 function fmtEuro(val) {
   return parseFloat(val||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 }
-function clearForm(ids) {
-  ids.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-}
+function clearForm(ids) { ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
 </script>
 </body>
 </html>
