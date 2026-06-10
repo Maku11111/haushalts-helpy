@@ -124,11 +124,17 @@
     .summary-bar .amount { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
 
     /* ── Persons section ── */
-    .person-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1rem 1rem 1.2rem; margin-bottom: 0.75rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: 1rem; border-left: 5px solid var(--primary); }
+    .person-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1rem 1rem 1.2rem; margin-bottom: 0.75rem; box-shadow: var(--shadow); border-left: 5px solid var(--primary); transition: box-shadow 0.15s; }
+    .person-card.is-me { box-shadow: 0 0 0 2px var(--primary-light), var(--shadow); }
+    .person-card-top { display: flex; align-items: center; gap: 1rem; }
     .person-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
     .person-info { flex: 1; min-width: 0; }
-    .person-name { font-weight: 700; font-size: 1rem; }
+    .person-name { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .me-badge { font-size: 0.68rem; background: var(--primary-dim); color: var(--primary); border-radius: 20px; padding: 0.1rem 0.5rem; font-weight: 700; }
     .person-stats { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .person-notes { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--border); white-space: pre-wrap; line-height: 1.5; }
+    .notes-toggle { font-size: 0.75rem; color: var(--primary); cursor: pointer; background: none; border: none; padding: 0; margin-top: 0.35rem; display: inline-flex; align-items: center; gap: 0.2rem; }
+    .notes-toggle:hover { text-decoration: underline; }
 
     /* ── Emoji / Color picker ── */
     .emoji-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 4px; margin-top: 0.5rem; }
@@ -325,6 +331,13 @@
         <a onclick="switchTabByName('invoices')">Alle →</a>
       </div>
       <div id="dash-invoices"><div class="dash-empty">Keine offenen Rechnungen 🎉</div></div>
+
+      <!-- Geburtstage -->
+      <div class="dash-section-hdr">
+        <h3>🎂 Geburtstage</h3>
+        <a onclick="switchTabByName('persons')">Alle →</a>
+      </div>
+      <div id="dash-birthdays"><div class="dash-empty">Keine Geburtstage hinterlegt</div></div>
     </section>
 
     <!-- ══════════════ PERSONEN ══════════════ -->
@@ -333,7 +346,14 @@
         <button class="btn btn-primary" onclick="toggleForm('person-form')">+ Person hinzufügen</button>
       </div>
       <div class="form-panel" id="person-form">
-        <div><label>Name *</label><input id="p-name" placeholder="z.B. Max, Anna …" /></div>
+        <div class="form-row">
+          <div><label>Name *</label><input id="p-name" placeholder="z.B. Max, Anna …" /></div>
+          <div><label>E-Mail (für Login-Verknüpfung)</label><input id="p-email" type="email" placeholder="name@example.com" /></div>
+        </div>
+        <div class="form-row">
+          <div><label>Geburtstag</label><input id="p-birthday" type="date" /></div>
+          <div></div>
+        </div>
         <div>
           <label>Emoji / Avatar</label>
           <div class="emoji-grid" id="emoji-grid"></div>
@@ -344,6 +364,7 @@
           <div class="color-grid" id="color-grid"></div>
           <input type="hidden" id="p-color" value="#52b788" />
         </div>
+        <div><label>Persönliche Notizen</label><textarea id="p-notes" rows="2" placeholder="Allergien, Vorlieben, wichtige Infos …"></textarea></div>
         <div class="form-panel-footer">
           <button class="btn btn-primary" onclick="savePerson()">Speichern</button>
           <button class="btn btn-ghost"   onclick="toggleForm('person-form')">Abbrechen</button>
@@ -518,15 +539,19 @@ const COLORS = ['#52b788','#e63946','#457b9d','#f4a261','#a8dadc','#9b5de5','#f1
 //  DASHBOARD HELPERS
 // ══════════════════════════════════════════════
 function setDashboardGreeting() {
-  const h    = new Date().getHours();
-  const greet = h < 12 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
-  document.getElementById('dash-greeting-text').textContent = greet + '! 👋';
+  const h      = new Date().getHours();
+  const greet  = h < 12 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
+  const myEmail = pb.authStore.model?.email || '';
+  const me      = personsData.find(p => p.email && p.email.toLowerCase() === myEmail.toLowerCase());
+  const name    = me ? ', ' + me.name : '';
+  document.getElementById('dash-greeting-text').textContent = greet + name + '! 👋';
   document.getElementById('dash-date-text').textContent =
     new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 }
 
 function renderDashboard() {
   const now = new Date();
+  setDashboardGreeting();
 
   // ── KPI ──
   const openTodos   = todoData.filter(t => !t.done).length;
@@ -624,6 +649,39 @@ function renderDashboard() {
         </div>
         <div class="dash-card-right">
           <span class="badge badge-warn">⚠ Niedrig</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Geburtstage (nächste 60 Tage) ──
+  const bdayEl = document.getElementById('dash-birthdays');
+  const upcoming_bdays = personsData
+    .filter(p => p.birthday)
+    .map(p => {
+      const b    = new Date(p.birthday);
+      const next = new Date(now.getFullYear(), b.getMonth(), b.getDate());
+      if (next < now) next.setFullYear(now.getFullYear() + 1);
+      const days = Math.round((next - now) / 86400000);
+      const age  = now.getFullYear() + (next.getFullYear() > now.getFullYear() ? 1 : 0) - b.getFullYear();
+      return { p, days, age, next };
+    })
+    .filter(x => x.days <= 60)
+    .sort((a,b) => a.days - b.days);
+
+  if (!upcoming_bdays.length) {
+    bdayEl.innerHTML = '<div class="dash-empty">Keine Geburtstage in den nächsten 60 Tagen</div>';
+  } else {
+    bdayEl.innerHTML = upcoming_bdays.map(({p, days, age}) => `
+      <div class="dash-card">
+        <div style="font-size:1.5rem">${p.emoji||'🎂'}</div>
+        <div class="dash-card-left">
+          <div class="dash-card-title">${esc(p.name)} ${days===0?'🎉':''}</div>
+          <div class="dash-card-sub">wird ${age} Jahre alt · ${fmtDate(p.birthday)}</div>
+        </div>
+        <div class="dash-card-right">
+          <span class="badge ${days===0?'badge-warn':days<=7?'badge-danger':'badge-muted'}">
+            ${days===0?'Heute!':days===1?'Morgen':'in '+days+'d'}
+          </span>
         </div>
       </div>`).join('');
   }
@@ -760,40 +818,94 @@ async function loadPersons() {
 }
 
 function renderPersons() {
-  const list = document.getElementById('persons-list');
+  const list   = document.getElementById('persons-list');
+  const myEmail = pb.authStore.model?.email || '';
   if (!personsData.length) {
     list.innerHTML = '<p class="loading">Noch keine Personen – füge deine Haushaltsmitglieder hinzu!</p>';
     return;
   }
   list.innerHTML = personsData.map(p => {
-    const now        = new Date();
-    const openTodos  = todoData.filter(t => t.person===p.name && !t.done).length;
-    const nextEvents = calData.filter(c => c.person===p.name && new Date(c.date)>=now).length;
+    const now       = new Date();
+    const isMe      = p.email && p.email.toLowerCase() === myEmail.toLowerCase();
+    const openTodos = todoData.filter(t => t.person===p.name && !t.done).length;
+    const nextEvts  = calData.filter(c => c.person===p.name && new Date(c.date)>=now).length;
+    const ageStr    = p.birthday ? calcAge(p.birthday) : null;
+    const bdayInfo  = p.birthday ? birthdayCountdown(p.birthday) : null;
     return `
-    <div class="person-card" style="border-left-color:${p.color||'var(--primary)'}">
-      <div class="person-avatar" style="background:${hexAlpha(p.color||'#52b788',0.18)}">${p.emoji||'😊'}</div>
-      <div class="person-info">
-        <div class="person-name">${esc(p.name)}</div>
-        <div class="person-stats">
-          <span>✅ ${openTodos} offene Aufgabe${openTodos!==1?'n':''}</span>
-          <span>📅 ${nextEvents} komm. Termin${nextEvents!==1?'e':''}</span>
+    <div class="person-card ${isMe?'is-me':''}" style="border-left-color:${p.color||'var(--primary)'}">
+      <div class="person-card-top">
+        <div class="person-avatar" style="background:${hexAlpha(p.color||'#52b788',0.18)}">${p.emoji||'😊'}</div>
+        <div class="person-info">
+          <div class="person-name">
+            ${esc(p.name)}
+            ${isMe ? '<span class="me-badge">👤 Ich</span>' : ''}
+            ${bdayInfo?.today ? '<span class="me-badge" style="background:#fff3cd;color:#b45309">🎂 Heute!</span>' : ''}
+          </div>
+          <div class="person-stats">
+            <span>✅ ${openTodos} Aufgabe${openTodos!==1?'n':''}</span>
+            <span>📅 ${nextEvts} Termin${nextEvts!==1?'e':''}</span>
+            ${ageStr ? `<span>🎂 ${ageStr} Jahre</span>` : ''}
+            ${bdayInfo && !bdayInfo.today ? `<span>${bdayInfo.label}</span>` : ''}
+          </div>
+          ${p.notes ? `<button class="notes-toggle" onclick="toggleNotes('notes-${p.id}')">📝 Notizen anzeigen ▾</button>
+          <div id="notes-${p.id}" class="person-notes" style="display:none">${esc(p.notes)}</div>` : ''}
         </div>
-      </div>
-      <div class="card-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openEditPerson('${p.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteRecord('persons','${p.id}',loadPersons)">🗑</button>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditPerson('${p.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('persons','${p.id}',loadPersons)">🗑</button>
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleNotes(id) {
+  const el = document.getElementById(id);
+  const btn = el.previousElementSibling;
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    btn.textContent = '📝 Notizen ausblenden ▴';
+  } else {
+    el.style.display = 'none';
+    btn.textContent = '📝 Notizen anzeigen ▾';
+  }
+}
+
+function calcAge(birthday) {
+  const b = new Date(birthday), now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+  return age;
+}
+
+function birthdayCountdown(birthday) {
+  const now   = new Date();
+  const b     = new Date(birthday);
+  const next  = new Date(now.getFullYear(), b.getMonth(), b.getDate());
+  if (next < now) next.setFullYear(now.getFullYear() + 1);
+  const days  = Math.round((next - now) / 86400000);
+  const today = days === 0;
+  if (today)    return { today: true, label: '🎂 Heute Geburtstag!' };
+  if (days <= 7)  return { today: false, label: `🎂 in ${days} Tag${days!==1?'en':''}` };
+  if (days <= 30) return { today: false, label: `🎂 in ${days} Tagen` };
+  return null;
 }
 
 async function savePerson() {
   const name = document.getElementById('p-name').value.trim();
   if (!name) { toast('Name ist Pflicht'); return; }
   try {
-    await pb.collection('persons').create({ name, emoji: document.getElementById('p-emoji').value, color: document.getElementById('p-color').value });
+    await pb.collection('persons').create({
+      name,
+      emoji:    document.getElementById('p-emoji').value,
+      color:    document.getElementById('p-color').value,
+      email:    document.getElementById('p-email').value.trim(),
+      birthday: document.getElementById('p-birthday').value || null,
+      notes:    document.getElementById('p-notes').value.trim(),
+    });
     toast('✅ Person gespeichert');
-    document.getElementById('p-name').value = '';
+    clearForm(['p-name','p-email','p-birthday','p-notes']);
     toggleForm('person-form');
     await loadPersons();
     renderDashboard();
@@ -807,6 +919,10 @@ function openEditPerson(id) {
   document.getElementById('edit-modal-title').textContent = 'Person bearbeiten';
   document.getElementById('edit-modal-body').innerHTML = `
     <label>Name</label><input id="em-name" value="${esc(p.name)}" />
+    <div class="form-row">
+      <div><label>E-Mail (Login-Verknüpfung)</label><input id="em-email" type="email" value="${esc(p.email||'')}" placeholder="name@example.com" /></div>
+      <div><label>Geburtstag</label><input id="em-birthday" type="date" value="${p.birthday?p.birthday.slice(0,10):''}" /></div>
+    </div>
     <label>Emoji</label>
     <div class="emoji-grid" id="em-emoji-grid">
       ${EMOJIS.map(e=>`<div class="emoji-opt${e===p.emoji?' selected':''}" onclick="selectModalEmoji(this,'${e}')">${e}</div>`).join('')}
@@ -816,8 +932,17 @@ function openEditPerson(id) {
     <div class="color-grid">
       ${COLORS.map(c=>`<div class="color-opt${c===p.color?' selected':''}" onclick="selectModalColor(this,'${c}')" style="background:${c}"></div>`).join('')}
     </div>
-    <input type="hidden" id="em-color" value="${esc(p.color||'#52b788')}" />`;
-  editRecord.getData = () => ({ name: document.getElementById('em-name').value.trim(), emoji: document.getElementById('em-emoji').value, color: document.getElementById('em-color').value });
+    <input type="hidden" id="em-color" value="${esc(p.color||'#52b788')}" />
+    <label>Persönliche Notizen</label>
+    <textarea id="em-notes" rows="3" placeholder="Allergien, Vorlieben, wichtige Infos …">${esc(p.notes||'')}</textarea>`;
+  editRecord.getData = () => ({
+    name:     document.getElementById('em-name').value.trim(),
+    email:    document.getElementById('em-email').value.trim(),
+    birthday: document.getElementById('em-birthday').value || null,
+    emoji:    document.getElementById('em-emoji').value,
+    color:    document.getElementById('em-color').value,
+    notes:    document.getElementById('em-notes').value.trim(),
+  });
   openModal();
 }
 function selectModalEmoji(el,val) { document.querySelectorAll('#em-emoji-grid .emoji-opt').forEach(e=>e.classList.remove('selected')); el.classList.add('selected'); document.getElementById('em-emoji').value=val; }
