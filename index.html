@@ -6,6 +6,7 @@
   <title>Haushalts-Helpy</title>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -431,6 +432,42 @@
     #qr-url-input:focus { outline: none; border-color: var(--primary-light); }
     .qr-url-row { display: flex; gap: 0.5rem; }
     .qr-url-row .btn { flex-shrink: 0; }
+
+    /* ── Shopping list ── */
+    .shop-item { display:flex;align-items:center;gap:0.6rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.65rem 0.9rem;margin-bottom:0.45rem;box-shadow:var(--shadow);transition:opacity 0.2s; }
+    .shop-item.done-item { opacity:0.45; }
+    .shop-item.done-item .shop-name { text-decoration:line-through; }
+    .shop-check { width:22px;height:22px;accent-color:var(--primary);flex-shrink:0;cursor:pointer; }
+    .shop-name { flex:1;font-size:0.92rem;font-weight:500; }
+    .shop-qty  { font-size:0.78rem;color:var(--text-muted);white-space:nowrap; }
+    .shop-cat-hdr { font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin:0.9rem 0 0.35rem; }
+    /* ── Recurrence ── */
+    .recur-badge { font-size:0.68rem;background:var(--info-dim);color:var(--info);border-radius:20px;padding:0.1rem 0.45rem;white-space:nowrap; }
+    /* ── Documents ── */
+    .doc-card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.85rem 1rem;margin-bottom:0.6rem;box-shadow:var(--shadow);display:flex;gap:0.75rem;align-items:flex-start; }
+    .doc-icon { font-size:1.8rem;flex-shrink:0; }
+    .doc-info { flex:1;min-width:0; }
+    .doc-name { font-weight:600;font-size:0.95rem; }
+    .doc-meta { font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem; }
+    .doc-expiry-ok   { color:var(--primary); }
+    .doc-expiry-warn { color:var(--warn);font-weight:600; }
+    .doc-expiry-bad  { color:var(--danger);font-weight:600; }
+    /* ── Statistics ── */
+    .stat-grid { display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem; }
+    @media(max-width:460px){ .stat-grid { grid-template-columns:1fr; } }
+    .stat-card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow); }
+    .stat-card h4 { font-size:0.82rem;font-weight:700;color:var(--text-muted);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.05em; }
+    /* ── Taschengeld ── */
+    .allowance-person { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:0.75rem;box-shadow:var(--shadow); }
+    .allowance-header { display:flex;align-items:center;gap:0.75rem;margin-bottom:0.6rem; }
+    .allowance-balance { font-size:1.5rem;font-weight:800; }
+    .allowance-balance.positive { color:var(--primary); }
+    .allowance-balance.negative { color:var(--danger); }
+    .allowance-tx { display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;padding:0.3rem 0;border-bottom:1px solid var(--border); }
+    .allowance-tx:last-child { border-bottom:none; }
+    .tx-amount.credit { color:var(--primary);font-weight:600; }
+    .tx-amount.debit  { color:var(--danger);font-weight:600; }
+    .tx-amount.bonus  { color:var(--info);font-weight:600; }
   </style>
 </head>
 <body>
@@ -466,6 +503,10 @@
     <button class="tab-btn"        data-tab="calendar"   onclick="switchTab('calendar',this)"><span class="icon">📅</span>Kalender</button>
     <button class="tab-btn"        data-tab="todos"      onclick="switchTab('todos',this)"><span class="icon">✅</span>To-dos</button>
     <button class="tab-btn"        data-tab="invoices"   onclick="switchTab('invoices',this)"><span class="icon">🧾</span>Rechnungen</button>
+    <button class="tab-btn"        data-tab="shopping"   onclick="switchTab('shopping',this)"><span class="icon">🛒</span>Einkauf</button>
+    <button class="tab-btn"        data-tab="documents"  onclick="switchTab('documents',this)"><span class="icon">📄</span>Dokumente</button>
+    <button class="tab-btn"        data-tab="stats"      onclick="switchTab('stats',this)"><span class="icon">📊</span>Statistiken</button>
+    <button class="tab-btn"        data-tab="allowance"  onclick="switchTab('allowance',this)"><span class="icon">💰</span>Taschengeld</button>
   </nav>
 
   <main>
@@ -704,6 +745,23 @@
           <div><label>Person</label><select id="todo-person"><option value="">– Niemand –</option></select></div>
           <div><label>Fällig</label><input id="todo-due" type="date" /></div>
         </div>
+        <div class="form-row">
+          <div><label>Wiederholung</label>
+            <select id="todo-recurrence">
+              <option value="">Keine</option>
+              <option value="daily">Täglich</option>
+              <option value="weekly">Wöchentlich</option>
+              <option value="monthly">Monatlich</option>
+            </select>
+          </div>
+          <div><label>Priorität</label>
+            <select id="todo-priority">
+              <option value="">Normal</option>
+              <option value="high">🔴 Hoch</option>
+              <option value="low">🔵 Niedrig</option>
+            </select>
+          </div>
+        </div>
         <div class="form-panel-footer">
           <button class="btn btn-primary" onclick="saveTodo()">Speichern</button>
           <button class="btn btn-ghost"   onclick="toggleForm('todo-form')">Abbrechen</button>
@@ -788,6 +846,127 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- EINKAUFSLISTE -->
+    <section id="section-shopping" class="section">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="toggleForm('shop-form')">+ Hinzufügen</button>
+        <button class="btn btn-ghost"   onclick="fillFromLowStock()">📦 Aus Inventar</button>
+        <button class="btn btn-ghost"   onclick="clearDoneShop()">🗑 Erledigt löschen</button>
+      </div>
+      <div class="form-panel" id="shop-form">
+        <div class="form-row">
+          <div><label>Artikel *</label><input id="shop-name" placeholder="Milch, Brot …" /></div>
+          <div><label>Kategorie</label><input id="shop-cat" placeholder="Lebensmittel …" /></div>
+        </div>
+        <div class="form-row">
+          <div><label>Menge</label><input id="shop-qty" placeholder="2 Liter …" /></div>
+          <div><label>Person</label><select id="shop-person"><option value="">– Niemand –</option></select></div>
+        </div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveShopItem()">Speichern</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('shop-form')">Abbrechen</button>
+        </div>
+      </div>
+      <div id="shop-list"><div class="loading">Lade …</div></div>
+    </section>
+
+    <!-- DOKUMENTE -->
+    <section id="section-documents" class="section">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="toggleForm('doc-form')">+ Dokument hochladen</button>
+      </div>
+      <div class="form-panel" id="doc-form">
+        <div class="form-row">
+          <div><label>Name *</label><input id="doc-name" placeholder="KFZ-Versicherung …" /></div>
+          <div><label>Kategorie</label>
+            <select id="doc-category">
+              <option value="Vertrag">📝 Vertrag</option>
+              <option value="Garantie">🛡 Garantie</option>
+              <option value="Ausweis">🪪 Ausweis</option>
+              <option value="Versicherung">🏦 Versicherung</option>
+              <option value="Wohnung">🏠 Wohnung</option>
+              <option value="Gesundheit">💊 Gesundheit</option>
+              <option value="Finanzen">💶 Finanzen</option>
+              <option value="Sonstiges">📋 Sonstiges</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div><label>Ablaufdatum</label><input id="doc-expiry" type="date" /></div>
+          <div><label>Person</label><select id="doc-person"><option value="">– Alle –</option></select></div>
+        </div>
+        <div><label>Notiz</label><textarea id="doc-note" rows="2"></textarea></div>
+        <div><label>Datei (PDF oder Bild)</label><input type="file" id="doc-file" accept=".pdf,image/*" /></div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveDocument()">Speichern</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('doc-form')">Abbrechen</button>
+        </div>
+      </div>
+      <div class="filter-chips" id="doc-cat-chips"></div>
+      <div id="doc-list"><div class="loading">Lade …</div></div>
+    </section>
+
+    <!-- STATISTIKEN -->
+    <section id="section-stats" class="section">
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap">
+        <label style="margin:0;font-size:0.82rem;color:var(--text-muted)">Zeitraum:</label>
+        <select id="stats-range" onchange="renderStats()" style="width:auto;padding:0.35rem 0.6rem;font-size:0.82rem">
+          <option value="3">Letzte 3 Monate</option>
+          <option value="6" selected>Letzte 6 Monate</option>
+          <option value="12">Letztes Jahr</option>
+          <option value="0">Alles</option>
+        </select>
+      </div>
+      <div class="kpi-grid" id="stats-kpis"></div>
+      <div class="stat-grid">
+        <div class="stat-card" style="grid-column:1/-1">
+          <h4>📅 Ausgaben pro Monat</h4>
+          <canvas id="chart-monthly" height="110"></canvas>
+        </div>
+        <div class="stat-card">
+          <h4>🏷 Nach Kategorie</h4>
+          <canvas id="chart-cat" height="200"></canvas>
+        </div>
+        <div class="stat-card">
+          <h4>✅ Aufgaben</h4>
+          <canvas id="chart-todos" height="200"></canvas>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow)">
+        <h4 style="font-size:0.82rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.6rem">💳 Größte Ausgaben</h4>
+        <div id="stats-top-bills"></div>
+      </div>
+    </section>
+
+    <!-- TASCHENGELD -->
+    <section id="section-allowance" class="section">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="toggleForm('allowance-form')">+ Buchung eintragen</button>
+      </div>
+      <div class="form-panel" id="allowance-form">
+        <div class="form-row">
+          <div><label>Person *</label><select id="alw-person"><option value="">– Wählen –</option></select></div>
+          <div><label>Art</label>
+            <select id="alw-type">
+              <option value="credit">💰 Einzahlung / Taschengeld</option>
+              <option value="debit">💸 Ausgabe</option>
+              <option value="bonus">⭐ Bonus (Aufgabe erledigt)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div><label>Betrag (€) *</label><input id="alw-amount" type="number" step="0.01" min="0" placeholder="5.00" /></div>
+          <div><label>Datum</label><input id="alw-date" type="date" /></div>
+        </div>
+        <div><label>Beschreibung</label><input id="alw-desc" placeholder="Wochentaschengeld …" /></div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveAllowance()">Speichern</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('allowance-form')">Abbrechen</button>
+        </div>
+      </div>
+      <div id="allowance-list"><div class="loading">Lade …</div></div>
     </section>
   </main>
 </div>
@@ -2491,6 +2670,462 @@ function fmtEuro(val) {
   return parseFloat(val||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 }
 function clearForm(ids) { ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
+
+// ══ NEW FEATURES ══
+// ══════════════════════════════════════════════
+//  NEW STATE
+// ══════════════════════════════════════════════
+var shopData = [], docData = [], allowanceData = [];
+var filterDocCat = '';
+var chartMonthly = null, chartCat = null, chartTodos = null;
+
+// ══════════════════════════════════════════════
+//  EXTEND loadAll
+// ══════════════════════════════════════════════
+var _origLoadAll = loadAll;
+loadAll = async function() {
+  await loadPersons();
+  await Promise.all([
+    loadLocations(), loadInventory(), loadCalendar(),
+    loadTodos(), loadInvoices(),
+    loadShopping(), loadDocuments(), loadAllowance()
+  ]);
+  renderDashboard();
+  populateNewSelects();
+};
+
+// ══════════════════════════════════════════════
+//  EXTEND switchTab (render stats on demand)
+// ══════════════════════════════════════════════
+var _origSwitchTab = switchTab;
+switchTab = function(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('section-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'stats')     renderStats();
+};
+
+function switchTabByName(tab) {
+  var btn = document.querySelector('.tab-btn[data-tab="'+tab+'"]');
+  if (btn) switchTab(tab, btn);
+}
+
+// ══════════════════════════════════════════════
+//  EINKAUFSLISTE
+// ══════════════════════════════════════════════
+async function loadShopping() {
+  try {
+    var res = await pb.collection('shopping').getFullList({ sort: 'done,category,name' });
+    shopData = res; renderShopping();
+  } catch(e) {
+    document.getElementById('shop-list').innerHTML = '<p class="loading">Collection "shopping" in PocketBase anlegen (Felder: name, category, quantity, person, done)</p>';
+  }
+}
+
+function renderShopping() {
+  var list = document.getElementById('shop-list');
+  if (!shopData.length) { list.innerHTML = '<p class="loading">Noch nichts auf der Liste — füge Artikel hinzu!</p>'; return; }
+  var open = shopData.filter(function(r){ return !r.done; });
+  var done = shopData.filter(function(r){ return  r.done; });
+  var groups = {};
+  open.forEach(function(r){ var c = r.category||'Sonstiges'; if(!groups[c]) groups[c]=[]; groups[c].push(r); });
+  var html = '';
+  Object.keys(groups).sort().forEach(function(cat){
+    html += '<div class="shop-cat-hdr">'+esc(cat)+'</div>';
+    html += groups[cat].map(shopItemHtml).join('');
+  });
+  if (done.length) {
+    html += '<div class="shop-cat-hdr" style="margin-top:1rem">✅ Erledigt ('+done.length+')</div>';
+    html += done.map(shopItemHtml).join('');
+  }
+  list.innerHTML = html;
+}
+
+function shopItemHtml(r) {
+  var p = r.person ? personsData.find(function(x){ return x.name===r.person; }) : null;
+  return '<div class="shop-item'+(r.done?' done-item':'')+'">'+
+    '<input type="checkbox" class="shop-check"'+(r.done?' checked':'')+' onchange="toggleShopItem(\''+r.id+'\','+r.done+')" />'+
+    '<span class="shop-name">'+esc(r.name)+'</span>'+
+    (r.quantity?'<span class="shop-qty">'+esc(r.quantity)+'</span>':'')+
+    (p?'<span style="font-size:1rem">'+(p.emoji||'👤')+'</span>':'')+
+    '<div style="display:flex;gap:0.3rem;margin-left:auto">'+
+    '<button class="btn btn-danger btn-sm" onclick="deleteRecord(\'shopping\',\''+r.id+'\',loadShopping)">🗑</button>'+
+    '</div></div>';
+}
+
+async function saveShopItem() {
+  var name = document.getElementById('shop-name').value.trim();
+  if (!name) { toast('Name ist Pflicht'); return; }
+  try {
+    await pb.collection('shopping').create({
+      name: name,
+      category: document.getElementById('shop-cat').value.trim()||'Sonstiges',
+      quantity: document.getElementById('shop-qty').value.trim(),
+      person:   document.getElementById('shop-person').value,
+      done:     false
+    });
+    toast('✅ Hinzugefügt');
+    clearForm(['shop-name','shop-cat','shop-qty']);
+    document.getElementById('shop-person').value='';
+    toggleForm('shop-form');
+    await loadShopping();
+  } catch(e){ toast('Fehler: '+e.message); }
+}
+
+async function toggleShopItem(id, currentDone) {
+  try {
+    await pb.collection('shopping').update(id, { done: !currentDone });
+    var i = shopData.findIndex(function(r){ return r.id===id; });
+    if (i!==-1) shopData[i].done=!currentDone;
+    renderShopping();
+  } catch(e){ toast('Fehler: '+e.message); }
+}
+
+async function clearDoneShop() {
+  var done = shopData.filter(function(r){ return r.done; });
+  if (!done.length){ toast('Keine erledigten Einträge'); return; }
+  if (!confirm(done.length+' erledigte Einträge löschen?')) return;
+  await Promise.all(done.map(function(r){ return pb.collection('shopping').delete(r.id); }));
+  toast('🗑 Gelöscht'); loadShopping();
+}
+
+async function fillFromLowStock() {
+  var low = invData.filter(function(i){ return i.quantity<=i.min_stock; });
+  if (!low.length){ toast('Kein Artikel unter Mindestbestand ✅'); return; }
+  var added=0;
+  for (var item of low) {
+    var already = shopData.some(function(s){ return s.name.toLowerCase()===item.name.toLowerCase()&&!s.done; });
+    if (already) continue;
+    try { await pb.collection('shopping').create({ name:item.name, category:item.category||'Inventar', done:false }); added++; } catch(e){}
+  }
+  toast('✅ '+added+' Artikel hinzugefügt'); loadShopping();
+}
+
+// ══════════════════════════════════════════════
+//  WIEDERKEHRENDE AUFGABEN
+// ══════════════════════════════════════════════
+var RECURRENCE_LABELS = { daily:'Täglich', weekly:'Wöchentlich', monthly:'Monatlich' };
+
+function calcNextRecurrence(dateStr, recurrence) {
+  var d = dateStr ? new Date(dateStr) : new Date();
+  if (recurrence==='daily')   d.setDate(d.getDate()+1);
+  if (recurrence==='weekly')  d.setDate(d.getDate()+7);
+  if (recurrence==='monthly') d.setMonth(d.getMonth()+1);
+  return d.toISOString().slice(0,10);
+}
+
+// Override saveTodo
+var _origSaveTodo = saveTodo;
+saveTodo = async function() {
+  var text = document.getElementById('todo-text').value.trim();
+  if (!text){ toast('Aufgabe ist Pflicht'); return; }
+  var recEl = document.getElementById('todo-recurrence');
+  var prEl  = document.getElementById('todo-priority');
+  try {
+    await pb.collection('todos').create({
+      text: text,
+      person:     document.getElementById('todo-person').value,
+      date:       document.getElementById('todo-due').value||null,
+      done:       false,
+      recurrence: recEl?recEl.value:'',
+      priority:   prEl?prEl.value:''
+    });
+    toast('✅ Aufgabe gespeichert');
+    clearForm(['todo-text','todo-due']);
+    document.getElementById('todo-person').value='';
+    if(recEl) recEl.value='';
+    if(prEl)  prEl.value='';
+    toggleForm('todo-form'); loadTodos();
+  } catch(e){ toast('Fehler: '+e.message); }
+};
+
+// Override toggleTodo for recurrence
+var _origToggleTodo = toggleTodo;
+toggleTodo = async function(id, currentDone) {
+  var todo = todoData.find(function(r){ return r.id===id; });
+  try {
+    await pb.collection('todos').update(id,{done:!currentDone});
+    var i=todoData.findIndex(function(r){ return r.id===id; });
+    if(i!==-1) todoData[i].done=!currentDone;
+    if (!currentDone && todo && todo.recurrence) {
+      var nextDate = calcNextRecurrence(todo.date||todo.due, todo.recurrence);
+      try {
+        await pb.collection('todos').create({
+          text:todo.text, person:todo.person, date:nextDate,
+          done:false, recurrence:todo.recurrence, priority:todo.priority||''
+        });
+        toast('✅ Erledigt — nächste: '+fmtDate(nextDate));
+      } catch(e2){ toast('✅ Erledigt'); }
+    }
+    renderTodos(); renderPersons(); renderDashboard();
+  } catch(e){ toast('Fehler: '+e.message); }
+};
+
+// Override renderTodos for priority + recurrence badges
+var _origRenderTodos = renderTodos;
+renderTodos = function() {
+  var list     = document.getElementById('todo-list');
+  var filtered = todoData.filter(function(r){ return !filterTodoPerson||r.person===filterTodoPerson; });
+  if (!filtered.length){ list.innerHTML='<p class="loading">Keine Aufgaben</p>'; return; }
+  var open = filtered.filter(function(r){ return !r.done; });
+  var done = filtered.filter(function(r){ return  r.done; });
+  open.sort(function(a,b){
+    if (a.priority==='high'&&b.priority!=='high') return -1;
+    if (b.priority==='high'&&a.priority!=='high') return 1;
+    var da=(a.due||a.date)?new Date(a.due||a.date):new Date('9999');
+    var db=(b.due||b.date)?new Date(b.due||b.date):new Date('9999');
+    return da-db;
+  });
+  var now=new Date();
+  var renderItem=function(r){
+    var dueField=r.due||r.date;
+    var overdue=dueField&&!r.done&&new Date(dueField)<now;
+    var prioStyle=r.priority==='high'?'border-left:3px solid var(--danger);':r.priority==='low'?'border-left:3px solid var(--info);':'';
+    return '<div class="card'+(r.done?' done-card':'')+'" style="'+prioStyle+'">'+
+      '<div class="card-header">'+
+      '<div style="display:flex;gap:0.6rem;align-items:flex-start;flex:1">'+
+      '<input type="checkbox" class="todo-check"'+(r.done?' checked':'')+' onchange="toggleTodo(\''+r.id+'\','+r.done+')" />'+
+      '<div style="flex:1">'+
+      '<div class="card-title" style="'+(r.done?'text-decoration:line-through':'')+'">'+esc(r.text)+'</div>'+
+      '<div class="card-meta">'+personBadge(r.person)+
+      (dueField?'&nbsp;<span style="color:'+(overdue?'var(--danger)':'var(--text-muted)')+'">📅 '+fmtDate(dueField)+(overdue?' ⚠️':'')+'</span>':'')+
+      (r.recurrence?'&nbsp;<span class="recur-badge">🔁 '+(RECURRENCE_LABELS[r.recurrence]||r.recurrence)+'</span>':'')+
+      (r.priority==='high'?'&nbsp;<span class="badge badge-danger">Hoch</span>':'')+
+      (r.priority==='low' ?'&nbsp;<span class="badge badge-muted">Niedrig</span>':'')+
+      '</div></div></div>'+
+      '<div class="card-actions">'+
+      '<button class="btn btn-ghost btn-sm" onclick="openEditTodo(\''+r.id+'\')">✏️</button>'+
+      '<button class="btn btn-danger btn-sm" onclick="deleteRecord(\'todos\',\''+r.id+'\',loadTodos)">🗑</button>'+
+      '</div></div></div>';
+  };
+  var html=open.map(renderItem).join('');
+  if(done.length){
+    html+='<div style="margin:1rem 0 0.4rem;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">✅ Erledigt ('+done.length+')</div>';
+    html+=done.map(renderItem).join('');
+  }
+  list.innerHTML=html;
+};
+
+// ══════════════════════════════════════════════
+//  DOKUMENTE
+// ══════════════════════════════════════════════
+var DOC_ICONS={Vertrag:'📝',Garantie:'🛡',Ausweis:'🪪',Versicherung:'🏦',Wohnung:'🏠',Gesundheit:'💊',Finanzen:'💶',Sonstiges:'📋'};
+
+async function loadDocuments() {
+  try {
+    var res=await pb.collection('documents').getFullList({sort:'-created'});
+    docData=res; renderDocuments(); renderDocCatChips();
+  } catch(e){
+    document.getElementById('doc-list').innerHTML='<p class="loading">Collection "documents" anlegen (Felder: name, category, expiry_date, person, note, file)</p>';
+  }
+}
+
+function renderDocCatChips() {
+  var el=document.getElementById('doc-cat-chips'); if(!el) return;
+  var cats=[...new Set(docData.map(function(r){return r.category;}).filter(Boolean))].sort();
+  el.innerHTML='<div class="chip'+(filterDocCat?'':' active')+'" onclick="filterDocCat=\'\';renderDocuments();renderDocCatChips()">Alle</div>'+
+    cats.map(function(c){return '<div class="chip'+(filterDocCat===c?' active':'')+'" onclick="filterDocCat=\''+esc(c)+'\';renderDocuments();renderDocCatChips()">'+( DOC_ICONS[c]||'📄')+' '+esc(c)+'</div>';}).join('');
+}
+
+function expiryInfo(dateStr) {
+  if(!dateStr) return {cls:'',lbl:''};
+  var days=Math.round((new Date(dateStr)-new Date())/86400000);
+  if(days<0)   return {cls:'doc-expiry-bad', lbl:'⛔ Abgelaufen ('+fmtDate(dateStr)+')'};
+  if(days===0) return {cls:'doc-expiry-warn',lbl:'⚠️ Läuft heute ab!'};
+  if(days<=30) return {cls:'doc-expiry-warn',lbl:'⚠️ Läuft ab in '+days+'d ('+fmtDate(dateStr)+')'};
+  return {cls:'doc-expiry-ok',lbl:'✅ Gültig bis '+fmtDate(dateStr)};
+}
+
+function renderDocuments() {
+  var list=document.getElementById('doc-list');
+  var filtered=docData.filter(function(r){return !filterDocCat||r.category===filterDocCat;});
+  if(!filtered.length){list.innerHTML='<p class="loading">Keine Dokumente</p>';return;}
+  list.innerHTML=filtered.map(function(r){
+    var fileUrl=r.file?pb.files.getURL(r,r.file):null;
+    var isImg=fileUrl&&!r.file.endsWith('.pdf');
+    var exp=expiryInfo(r.expiry_date);
+    return '<div class="doc-card">'+
+      '<div class="doc-icon">'+(DOC_ICONS[r.category]||'📄')+'</div>'+
+      '<div class="doc-info">'+
+      '<div class="doc-name">'+esc(r.name)+'</div>'+
+      '<div class="doc-meta">'+(r.category?esc(r.category):'')+(r.person?' · '+esc(r.person):'')+'</div>'+
+      (exp.lbl?'<div class="doc-meta '+exp.cls+'" style="margin-top:0.2rem">'+exp.lbl+'</div>':'')+
+      (r.note?'<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem">'+esc(r.note)+'</div>':'')+
+      (fileUrl?'<div style="margin-top:0.4rem">'+(isImg?'<img src="'+fileUrl+'" style="max-height:80px;border-radius:6px;border:1px solid var(--border);cursor:zoom-in" onclick="window.open(\''+fileUrl+'\',\'_blank\')" />':'<a href="'+fileUrl+'" target="_blank" rel="noopener" style="font-size:0.82rem;color:var(--primary)">📎 Öffnen</a>')+'</div>':'')+
+      '</div>'+
+      '<div class="card-actions" style="flex-shrink:0"><button class="btn btn-danger btn-sm" onclick="deleteRecord(\'documents\',\''+r.id+'\',loadDocuments)">🗑</button></div>'+
+      '</div>';
+  }).join('');
+}
+
+async function saveDocument() {
+  var name=document.getElementById('doc-name').value.trim();
+  if(!name){toast('Name ist Pflicht');return;}
+  var fd=new FormData();
+  fd.append('name',name);
+  fd.append('category',document.getElementById('doc-category').value);
+  fd.append('person',document.getElementById('doc-person').value);
+  fd.append('note',document.getElementById('doc-note').value.trim());
+  var exp=document.getElementById('doc-expiry').value;
+  if(exp) fd.append('expiry_date',exp);
+  var f=document.getElementById('doc-file');
+  if(f.files[0]) fd.append('file',f.files[0]);
+  try{
+    await pb.collection('documents').create(fd);
+    toast('✅ Dokument gespeichert');
+    clearForm(['doc-name','doc-note','doc-expiry']); f.value='';
+    toggleForm('doc-form'); loadDocuments();
+  }catch(e){toast('Fehler: '+e.message);}
+}
+
+// ══════════════════════════════════════════════
+//  STATISTIKEN
+// ══════════════════════════════════════════════
+function renderStats() {
+  var months=parseInt(document.getElementById('stats-range')&&document.getElementById('stats-range').value)||6;
+  var cutoff=months>0?new Date(Date.now()-months*30*86400000):new Date(0);
+  var filtered=billData.filter(function(b){return !months||new Date(b.date)>=cutoff;});
+  var total=filtered.reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
+  var paid=filtered.filter(function(b){return b.status==='bezahlt';}).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
+  var open=total-paid;
+  document.getElementById('stats-kpis').innerHTML=
+    '<div class="kpi-tile kpi-info"><div class="kpi-icon">💶</div><div class="kpi-val">'+fmtEuroShort(total)+'</div><div class="kpi-lbl">Gesamt</div></div>'+
+    '<div class="kpi-tile kpi-ok"><div class="kpi-icon">✅</div><div class="kpi-val">'+fmtEuroShort(paid)+'</div><div class="kpi-lbl">Bezahlt</div></div>'+
+    '<div class="kpi-tile kpi-danger"><div class="kpi-icon">⏳</div><div class="kpi-val">'+fmtEuroShort(open)+'</div><div class="kpi-lbl">Offen</div></div>'+
+    '<div class="kpi-tile kpi-warn"><div class="kpi-icon">📄</div><div class="kpi-val">'+filtered.length+'</div><div class="kpi-lbl">Buchungen</div></div>';
+  // Monthly bar
+  var monthMap={};
+  filtered.forEach(function(b){var k=b.date?b.date.slice(0,7):'?';monthMap[k]=(monthMap[k]||0)+(parseFloat(b.amount)||0);});
+  var mLabels=Object.keys(monthMap).sort();
+  var mVals=mLabels.map(function(k){return parseFloat(monthMap[k].toFixed(2));});
+  if(chartMonthly) chartMonthly.destroy();
+  var ctx1=document.getElementById('chart-monthly');
+  if(ctx1){ chartMonthly=new Chart(ctx1,{type:'bar',data:{labels:mLabels.map(function(l){var p=l.split('-');return new Date(p[0],p[1]-1).toLocaleDateString('de-DE',{month:'short',year:'2-digit'});}),datasets:[{label:'€',data:mVals,backgroundColor:'#52b788',borderRadius:5}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}}); }
+  // Category doughnut
+  var catMap={};
+  filtered.forEach(function(b){var c=b.category||'Sonstiges';catMap[c]=(catMap[c]||0)+(parseFloat(b.amount)||0);});
+  var cLabels=Object.keys(catMap).sort();
+  var cVals=cLabels.map(function(k){return parseFloat(catMap[k].toFixed(2));});
+  var CC=['#52b788','#e63946','#457b9d','#f4a261','#9b5de5','#f15bb5','#00bbf9','#fee440'];
+  if(chartCat) chartCat.destroy();
+  var ctx2=document.getElementById('chart-cat');
+  if(ctx2){ chartCat=new Chart(ctx2,{type:'doughnut',data:{labels:cLabels,datasets:[{data:cVals,backgroundColor:CC}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}}); }
+  // Todos doughnut
+  var tdOpen=todoData.filter(function(t){return !t.done;}).length;
+  var tdDone=todoData.filter(function(t){return  t.done;}).length;
+  if(chartTodos) chartTodos.destroy();
+  var ctx3=document.getElementById('chart-todos');
+  if(ctx3){ chartTodos=new Chart(ctx3,{type:'doughnut',data:{labels:['Offen','Erledigt'],datasets:[{data:[tdOpen,tdDone],backgroundColor:['#e63946','#52b788']}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}}); }
+  // Top bills
+  var top5=[...filtered].sort(function(a,b){return (parseFloat(b.amount)||0)-(parseFloat(a.amount)||0);}).slice(0,5);
+  document.getElementById('stats-top-bills').innerHTML=top5.length?top5.map(function(b){return '<div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.85rem"><span>'+esc(b.description)+'<span style="color:var(--text-muted);margin-left:0.4rem;font-size:0.75rem">'+fmtDate(b.date)+'</span></span><strong>'+fmtEuro(b.amount)+'</strong></div>';}).join(''):'<p style="color:var(--text-muted);font-size:0.85rem">Keine Daten</p>';
+}
+
+// ══════════════════════════════════════════════
+//  TASCHENGELD
+// ══════════════════════════════════════════════
+async function loadAllowance() {
+  try {
+    var res=await pb.collection('allowance').getFullList({sort:'-date,-created'});
+    allowanceData=res; renderAllowance();
+  } catch(e){
+    document.getElementById('allowance-list').innerHTML='<p class="loading">Collection "allowance" anlegen (Felder: person, type, amount, date, description)</p>';
+  }
+}
+
+function renderAllowance() {
+  var list=document.getElementById('allowance-list');
+  if(!personsData.length){list.innerHTML='<p class="loading">Erst Personen anlegen</p>';return;}
+  list.innerHTML=personsData.map(function(p){
+    var txs=allowanceData.filter(function(r){return r.person===p.name;});
+    var balance=txs.reduce(function(s,r){return s+(r.type==='debit'?-1:1)*(parseFloat(r.amount)||0);},0);
+    var recent=txs.slice(0,5);
+    return '<div class="allowance-person">'+
+      '<div class="allowance-header">'+
+      '<span style="font-size:1.8rem">'+(p.emoji||'👤')+'</span>'+
+      '<div style="flex:1"><div style="font-weight:700">'+esc(p.name)+'</div>'+
+      '<div class="allowance-balance '+(balance>=0?'positive':'negative')+'">'+fmtEuro(balance)+'</div></div>'+
+      '<button class="btn btn-ghost btn-sm" onclick="quickAllowance(\''+esc(p.name)+'\')">+ Buchen</button>'+
+      '</div>'+
+      (recent.length?recent.map(function(r){return '<div class="allowance-tx"><span>'+esc(r.description||'–')+' <span style="color:var(--text-muted);font-size:0.72rem">'+fmtDate(r.date)+'</span></span><span class="tx-amount '+r.type+'">'+(r.type==='debit'?'-':'+')+fmtEuro(r.amount)+'</span></div>';}).join(''):'<p style="font-size:0.8rem;color:var(--text-muted)">Noch keine Buchungen</p>')+
+      '</div>';
+  }).join('');
+}
+
+function quickAllowance(personName) {
+  var el=document.getElementById('alw-person');
+  if(el) el.value=personName;
+  if(!document.getElementById('allowance-form').classList.contains('open')) toggleForm('allowance-form');
+  document.getElementById('alw-amount').focus();
+}
+
+async function saveAllowance() {
+  var person=document.getElementById('alw-person').value;
+  var amount=document.getElementById('alw-amount').value;
+  if(!person||!amount){toast('Person und Betrag sind Pflicht');return;}
+  try{
+    await pb.collection('allowance').create({
+      person:person, type:document.getElementById('alw-type').value,
+      amount:parseFloat(amount),
+      date:document.getElementById('alw-date').value||new Date().toISOString().slice(0,10),
+      description:document.getElementById('alw-desc').value.trim()
+    });
+    toast('✅ Buchung gespeichert');
+    clearForm(['alw-amount','alw-desc']); document.getElementById('alw-date').value=''; document.getElementById('alw-person').value='';
+    toggleForm('allowance-form'); loadAllowance();
+  }catch(e){toast('Fehler: '+e.message);}
+}
+
+// ══════════════════════════════════════════════
+//  POPULATE NEW SELECTS
+// ══════════════════════════════════════════════
+function populateNewSelects() {
+  var shopEl=document.getElementById('shop-person');
+  var docEl=document.getElementById('doc-person');
+  var alwEl=document.getElementById('alw-person');
+  var opts=personsData.map(function(p){return '<option value="'+esc(p.name)+'">'+(p.emoji||'')+' '+esc(p.name)+'</option>';}).join('');
+  if(shopEl) shopEl.innerHTML='<option value="">– Niemand –</option>'+opts;
+  if(docEl)  docEl.innerHTML='<option value="">– Alle –</option>'+opts;
+  if(alwEl)  alwEl.innerHTML='<option value="">– Wählen –</option>'+opts;
+}
+
+// ══════════════════════════════════════════════
+//  DASHBOARD – ablaufende Dokumente
+// ══════════════════════════════════════════════
+var _origRenderDashboard = renderDashboard;
+renderDashboard = function() {
+  _origRenderDashboard();
+  var now=new Date();
+  var expiring=docData.filter(function(d){
+    if(!d.expiry_date) return false;
+    return Math.round((new Date(d.expiry_date)-now)/86400000)<=30;
+  }).sort(function(a,b){return new Date(a.expiry_date)-new Date(b.expiry_date);});
+  var secEl=document.getElementById('dash-docs-warning');
+  if(!secEl){
+    var bdayEl=document.getElementById('dash-birthdays');
+    if(bdayEl&&bdayEl.parentElement){
+      var hdr=document.createElement('div'); hdr.className='dash-section-hdr';
+      hdr.innerHTML='<h3>📄 Ablaufende Dokumente</h3><a onclick="switchTabByName(\'documents\')">Alle →</a>';
+      var sec=document.createElement('div'); sec.id='dash-docs-warning';
+      bdayEl.parentElement.appendChild(hdr); bdayEl.parentElement.appendChild(sec); secEl=sec;
+    }
+  }
+  if(secEl){
+    if(!expiring.length){ secEl.innerHTML='<div class="dash-empty">Keine ablaufenden Dokumente ✅</div>'; }
+    else { secEl.innerHTML=expiring.map(function(d){
+      var days=Math.round((new Date(d.expiry_date)-now)/86400000);
+      return '<div class="dash-card"><div style="font-size:1.4rem">'+(DOC_ICONS[d.category]||'📄')+'</div><div class="dash-card-left"><div class="dash-card-title">'+esc(d.name)+'</div><div class="dash-card-sub">'+esc(d.category||'')+'&nbsp;·&nbsp;'+fmtDate(d.expiry_date)+'</div></div><span class="badge '+(days<0?'badge-danger':days<=7?'badge-warn':'badge-muted')+'">'+(days<0?'Abgelaufen':days===0?'Heute':'in '+days+'d')+'</span></div>';
+    }).join('');}
+  }
+};
+
+// Patch populatePersonSelects
+var _origPopulate=populatePersonSelects;
+populatePersonSelects=function(){ _origPopulate(); populateNewSelects(); };
+
 </script>
 </body>
 </html>
