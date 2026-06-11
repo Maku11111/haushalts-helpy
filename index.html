@@ -2916,7 +2916,7 @@ var DOC_ICONS={Vertrag:'📝',Garantie:'🛡',Ausweis:'🪪',Versicherung:'🏦'
 
 async function loadDocuments() {
   try {
-    var res=await pb.collection('documents').getFullList({sort:'-created'});
+    var res=await pb.collection('documents').getFullList({sort:'expiry_date'});
     docData=res; renderDocuments(); renderDocCatChips();
   } catch(e){
     document.getElementById('doc-list').innerHTML='<p class="loading">Collection "documents" anlegen (Felder: name, category, expiry_date, person, note, file)</p>';
@@ -3029,7 +3029,7 @@ function renderStats() {
 // ══════════════════════════════════════════════
 async function loadAllowance() {
   try {
-    var res=await pb.collection('allowance').getFullList({sort:'-date,-created'});
+    var res=await pb.collection('allowance').getFullList({sort:'-date'});
     allowanceData=res; renderAllowance();
   } catch(e){
     document.getElementById('allowance-list').innerHTML='<p class="loading">Collection "allowance" anlegen (Felder: person, type, amount, date, description)</p>';
