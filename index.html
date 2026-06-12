@@ -2250,7 +2250,7 @@ function openEditCalendar(id) {
 // ══════════════════════════════════════════════
 async function loadTodos() {
   try {
-    const res=await pb.collection('todos').getFullList({ sort:'done,-created' });
+    const res=await pb.collection('todos').getFullList({ sort:'done' });
     todoData=res; renderTodos();
   } catch(e) { document.getElementById('todo-list').innerHTML='<p class="loading">Fehler beim Laden</p>'; }
 }
