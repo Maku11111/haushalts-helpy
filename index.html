@@ -222,12 +222,16 @@
     .cal-day-num:hover { background: var(--primary-dim); border-radius: 4px; }
     .cal-pills { padding: 0 2px 3px; }
     .cal-pill {
-      display: block; width: 100%; margin-bottom: 1px;
+      display: block; margin-bottom: 1px;
       padding: 1px 4px; border-radius: 3px;
       font-size: 0.65rem; font-weight: 600; color: #fff;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       cursor: pointer; line-height: 1.5;
     }
+    /* Mehrtägige Events: Balken über Zellgrenzen hinweg verbinden */
+    .cal-pill.span-start { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: -3px; }
+    .cal-pill.span-end   { border-top-left-radius: 0;  border-bottom-left-radius: 0;  margin-left: -3px; }
+    .cal-pill.span-mid   { border-radius: 0; margin-left: -3px; margin-right: -3px; }
     .cal-pill:hover { opacity: 0.85; }
     .cal-pill-more { font-size: 0.62rem; color: var(--text-muted); padding: 0 4px; cursor: pointer; }
 
@@ -1907,17 +1911,23 @@ function eventColor(ev) {
 // Build combined array of all events (calendar records + synthesised birthdays)
 function buildAllEvents() {
   const evts = calData
-    .filter(r => !filterCalPerson || r.person===filterCalPerson)
-    .map(r => ({
-      type:'event', id:r.id,
-      title: r.title,
-      person: r.person,
-      note: r.note,
-      start: new Date(r.date),
-      end: r.date_end ? new Date(r.date_end) : null,
-      allday: r.allday || false,
-      color: null // set later
-    }));
+    .filter(r => r.date && (!filterCalPerson || r.person===filterCalPerson))
+    .map(r => {
+      const allday = r.allday || false;
+      let start = parsePBDate(r.date);
+      let end   = r.date_end ? parsePBDate(r.date_end) : null;
+      // Ganztägige Events auf volle lokale Tage normalisieren
+      if (allday && start) start = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      if (allday && end)   end   = new Date(end.getFullYear(),   end.getMonth(),   end.getDate(), 23, 59, 59);
+      return {
+        type:'event', id:r.id,
+        title: r.title,
+        person: r.person,
+        note: r.note,
+        start, end, allday,
+        color: null // set later
+      };
+    });
 
   // Synthesise birthdays (show for all years as recurring)
   if (!filterCalPerson) {
@@ -1998,10 +2008,26 @@ function renderMonthView(year, month, evts) {
       const otherMonth = cur.getMonth()!==month;
       const dateStr = localDateStr(cur);
       const cellEvts = evts.filter(e => spansDay(e, cur));
+      // Mehrtägige Events zuerst und stabil sortiert, damit die Balken über die Tage hinweg auf gleicher Höhe bleiben
+      cellEvts.sort((a,b) => {
+        const am = a.end && !sameDay(a.start,a.end), bm = b.end && !sameDay(b.start,b.end);
+        if (am!==bm) return am?-1:1;
+        return a.start-b.start || String(a.id).localeCompare(String(b.id));
+      });
       const max = 3;
-      let pills = cellEvts.slice(0,max).map(e =>
-        `<span class="cal-pill" style="background:${e.color}" onclick="showCalPopover(event,'${e.id}')" title="${esc(e.title)}">${esc(e.title)}</span>`
-      ).join('');
+      let pills = cellEvts.slice(0,max).map(e => {
+        const multi = e.end && !sameDay(e.start, e.end);
+        let cls = 'cal-pill', label = esc(e.title);
+        if (multi) {
+          const isStart = sameDay(e.start, cur), isEnd = sameDay(e.end, cur);
+          if (isStart && !isEnd)       cls += ' span-start';
+          else if (isEnd && !isStart)  cls += ' span-end';
+          else if (!isStart && !isEnd) cls += ' span-mid';
+          // Titel nur am Starttag und am Wochenanfang zeigen
+          if (!isStart && d!==0) label = '&nbsp;';
+        }
+        return `<span class="${cls}" style="background:${e.color}" onclick="showCalPopover(event,'${e.id}')" title="${esc(e.title)}">${label}</span>`;
+      }).join('');
       if (cellEvts.length>max) pills+=`<span class="cal-pill-more">+${cellEvts.length-max} mehr</span>`;
 
       html += `<td class="${otherMonth?'other-month':''} ${isToday?'today':''}">
@@ -2123,6 +2149,12 @@ function renderDayView(day, evts) {
 }
 
 // ── Helpers ──
+// PocketBase-Datum als lokale Wanduhrzeit parsen (ohne UTC-Verschiebung)
+function parsePBDate(s) {
+  if (!s) return null;
+  return new Date(s.replace(' ','T').replace(/\.\d{3}Z?$/,'').replace(/Z$/,''));
+}
+
 // Liegt der Tag innerhalb der Laufzeit des Events (start..end)?
 function spansDay(e, day) {
   if (!e.end) return sameDay(e.start, day);
