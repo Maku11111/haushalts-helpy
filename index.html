@@ -495,6 +495,7 @@
   <header>
     <h1>🏠 Haushalts-Helpy</h1>
     <div class="header-right">
+      <button class="btn-hdr" onclick="openVoice()" title="Spracheingabe">🎤</button>
       <button class="btn-hdr" onclick="openQR()">QR</button>
       <button class="btn-hdr" onclick="doLogout()">Abmelden</button>
     </div>
@@ -998,6 +999,23 @@
     <div class="modal-footer">
       <button class="btn btn-ghost"   onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-primary" onclick="submitEdit()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VOICE MODAL ══ -->
+<div class="modal-backdrop" id="voice-modal" onclick="if(event.target===this)closeVoice()">
+  <div class="modal" style="max-width:420px">
+    <h2>🎤 Spracheingabe</h2>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem">
+      Sprich oder tippe, z.B. <em>„Termin Zahnarzt für Maxi am Donnerstag um 9:30"</em> oder <em>„Milch und Brot auf die Einkaufsliste"</em>
+    </p>
+    <div id="voice-status" style="font-size:0.85rem;font-weight:600;color:var(--primary);min-height:1.4em;margin-bottom:0.5rem"></div>
+    <textarea id="voice-text" rows="3" placeholder="Hier erscheint dein Text …" style="width:100%"></textarea>
+    <div class="modal-footer" style="margin-top:0.75rem">
+      <button class="btn btn-ghost" onclick="closeVoice()">Abbrechen</button>
+      <button class="btn btn-ghost" id="voice-rec-btn" onclick="startVoiceRecognition()">🎤 Aufnehmen</button>
+      <button class="btn btn-primary" id="voice-send-btn" onclick="sendVoiceCommand()">Senden</button>
     </div>
   </div>
 </div>
@@ -2654,6 +2672,67 @@ async function deleteRecord(collection,id,reloadFn) {
 // ══════════════════════════════════════════════
 //  QR CODE
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  SPRACHEINGABE (Voice Input)
+// ══════════════════════════════════════════════
+let voiceRecognition = null;
+
+function openVoice() {
+  document.getElementById('voice-text').value = '';
+  document.getElementById('voice-status').textContent = '';
+  document.getElementById('voice-modal').classList.add('open');
+  // Auf unterstützten Geräten direkt mit Aufnahme starten
+  if (window.SpeechRecognition || window.webkitSpeechRecognition) startVoiceRecognition();
+  else document.getElementById('voice-status').textContent = 'ℹ️ Keine Browser-Spracherkennung — nutze das Mikrofon deiner Tastatur oder tippe.';
+}
+
+function closeVoice() {
+  if (voiceRecognition) { try { voiceRecognition.stop(); } catch(e){} }
+  document.getElementById('voice-modal').classList.remove('open');
+}
+
+function startVoiceRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Spracherkennung nicht verfügbar — bitte tippen'); return; }
+  const status = document.getElementById('voice-status');
+  voiceRecognition = new SR();
+  voiceRecognition.lang = 'de-DE';
+  voiceRecognition.interimResults = true;
+  voiceRecognition.onstart  = () => { status.textContent = '🔴 Ich höre zu …'; };
+  voiceRecognition.onresult = (ev) => {
+    let txt = '';
+    for (const res of ev.results) txt += res[0].transcript;
+    document.getElementById('voice-text').value = txt;
+  };
+  voiceRecognition.onerror = (ev) => { status.textContent = '⚠️ ' + (ev.error==='not-allowed' ? 'Mikrofon-Zugriff verweigert' : 'Fehler: '+ev.error); };
+  voiceRecognition.onend   = () => { status.textContent = document.getElementById('voice-text').value ? '✅ Verstanden — prüfen und Senden drücken' : ''; };
+  try { voiceRecognition.start(); } catch(e) {}
+}
+
+async function sendVoiceCommand() {
+  const text = document.getElementById('voice-text').value.trim();
+  if (!text) { toast('Bitte erst etwas sagen oder tippen'); return; }
+  const btn = document.getElementById('voice-send-btn');
+  const status = document.getElementById('voice-status');
+  btn.disabled = true; status.textContent = '🤖 Verarbeite …';
+  try {
+    const res = await fetch(pb.baseUrl + '/api/voice-input', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': pb.authStore.token },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+    closeVoice();
+    toast(data.reply || '✅ Eingetragen');
+    loadAll();
+  } catch(e) {
+    status.textContent = '❌ Fehler: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function openQR() {
   const stored=localStorage.getItem('helpy_qr_url')||window.location.href.split('?')[0];
   document.getElementById('qr-url-input').value=stored;
