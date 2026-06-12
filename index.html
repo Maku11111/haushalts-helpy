@@ -1997,7 +1997,7 @@ function renderMonthView(year, month, evts) {
       const isToday = sameDay(cur, today);
       const otherMonth = cur.getMonth()!==month;
       const dateStr = localDateStr(cur);
-      const cellEvts = evts.filter(e => sameDay(e.start, cur));
+      const cellEvts = evts.filter(e => spansDay(e, cur));
       const max = 3;
       let pills = cellEvts.slice(0,max).map(e =>
         `<span class="cal-pill" style="background:${e.color}" onclick="showCalPopover(event,'${e.id}')" title="${esc(e.title)}">${esc(e.title)}</span>`
@@ -2042,7 +2042,7 @@ function renderWeekView(monday, evts) {
     const dateStr = localDateStr(day);
     const dayLabel = day.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'});
 
-    const dayAlls = alldayEvts.filter(e=>sameDay(e.start,day));
+    const dayAlls = alldayEvts.filter(e=>spansDay(e,day));
     const dayTimed= timedEvts.filter(e=>sameDay(e.start,day));
 
     const SLOT_H = 52; // px per hour
@@ -2087,7 +2087,7 @@ function renderDayView(day, evts) {
   const HOURS_START=6, HOURS_END=23, SLOT_H=52;
   const today = new Date();
   const dateStr = localDateStr(day);
-  const dayAlls  = evts.filter(e=>sameDay(e.start,day)&&(e.allday||e.type==='birthday'));
+  const dayAlls  = evts.filter(e=>spansDay(e,day)&&(e.allday||e.type==='birthday'));
   const dayTimed = evts.filter(e=>sameDay(e.start,day)&&!e.allday&&e.type!=='birthday');
   const numHours = HOURS_END-HOURS_START+1;
   const bodyH = numHours*SLOT_H;
@@ -2123,6 +2123,14 @@ function renderDayView(day, evts) {
 }
 
 // ── Helpers ──
+// Liegt der Tag innerhalb der Laufzeit des Events (start..end)?
+function spansDay(e, day) {
+  if (!e.end) return sameDay(e.start, day);
+  const d0 = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+  const d1 = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23, 59, 59);
+  return e.start <= d1 && e.end >= d0;
+}
+
 function sameDay(a,b) {
   return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
 }
