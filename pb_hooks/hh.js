@@ -6,6 +6,35 @@ module.exports = {
   CLAUDE_KEY: "__CLAUDE_KEY__",
   TG_TOKEN: "__TG_TOKEN__",
   TG_SECRET: "__TG_SECRET__",
+  OPENAI_KEY: "__OPENAI_KEY__",
+
+  // Telegram-Sprachnachricht herunterladen und per Whisper transkribieren
+  transcribe: function (fileId) {
+    var meta = $http.send({
+      url: "https://api.telegram.org/bot" + this.TG_TOKEN + "/getFile?file_id=" + fileId,
+      method: "GET", timeout: 30
+    });
+    if (meta.statusCode !== 200) throw new Error("Telegram getFile " + meta.statusCode);
+    var path = meta.json.result.file_path;
+    var dl = $http.send({
+      url: "https://api.telegram.org/file/bot" + this.TG_TOKEN + "/" + path,
+      method: "GET", timeout: 60
+    });
+    if (dl.statusCode !== 200) throw new Error("Telegram download " + dl.statusCode);
+    var form = new FormData();
+    form.append("model", "whisper-1");
+    form.append("language", "de");
+    form.append("file", $filesystem.fileFromBytes(dl.body, "voice.ogg"));
+    var res = $http.send({
+      url: "https://api.openai.com/v1/audio/transcriptions",
+      method: "POST",
+      headers: { "Authorization": "Bearer " + this.OPENAI_KEY },
+      body: form,
+      timeout: 120
+    });
+    if (res.statusCode !== 200) throw new Error("Whisper " + res.statusCode + ": " + res.raw);
+    return (res.json.text || "").trim();
+  },
 
   persons: function () {
     try {

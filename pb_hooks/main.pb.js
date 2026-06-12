@@ -4,7 +4,7 @@
 
 // ── Lebenszeichen (zum Testen der Installation) ──
 routerAdd("GET", "/api/hh-ping", function (e) {
-  return e.json(200, { ok: true, hooks: "v3" });
+  return e.json(200, { ok: true, hooks: "v4" });
 });
 
 // ── Endpunkt fuer den Mikrofon-Button der App (nur angemeldete Nutzer) ──
@@ -34,21 +34,29 @@ routerAdd("POST", "/api/telegram-webhook", function (e) {
     if (!msg) return e.json(200, { skip: true });
     var chatId = msg.chat.id;
     var reply = "";
+    var text = "";
+    var prefix = "";
     if (msg.voice || msg.audio) {
-      reply = "🎤 Sprachnachrichten lerne ich gerade noch - bitte schick es mir als Text!";
+      try {
+        text = hh.transcribe((msg.voice || msg.audio).file_id);
+        prefix = "🎤 Verstanden: \"" + text + "\"\n\n";
+      } catch (terr) {
+        hh.tgReply(chatId, "❌ Konnte die Sprachnachricht nicht verstehen: " + terr);
+        return e.json(200, { ok: true });
+      }
     } else {
-      var text = (msg.text || "").trim();
-      if (!text) return e.json(200, { skip: true });
-      if (text === "/start") {
-        reply = "👋 Hallo! Ich bin Haushalts-Helpy. Schreib mir z.B.:\n- Termin Zahnarzt fuer Maxi am Donnerstag 9:30\n- Milch und Brot auf die Einkaufsliste\n- Neue Aufgabe: Jona raeumt Samstag sein Zimmer auf";
-      } else {
-        try {
-          var parsed = hh.parse(text);
-          var n = hh.apply(parsed);
-          reply = parsed.reply || ("OK, " + n + " Eintraege angelegt");
-        } catch (perr) {
-          reply = "❌ Da ging was schief: " + perr;
-        }
+      text = (msg.text || "").trim();
+    }
+    if (!text) return e.json(200, { skip: true });
+    if (text === "/start") {
+      reply = "👋 Hallo! Ich bin Haushalts-Helpy. Schick mir Text oder eine Sprachnachricht, z.B.:\n- Termin Zahnarzt fuer Maxi am Donnerstag 9:30\n- Milch und Brot auf die Einkaufsliste\n- Neue Aufgabe: Jona raeumt Samstag sein Zimmer auf";
+    } else {
+      try {
+        var parsed = hh.parse(text);
+        var n = hh.apply(parsed);
+        reply = prefix + (parsed.reply || ("OK, " + n + " Eintraege angelegt"));
+      } catch (perr) {
+        reply = "❌ Da ging was schief: " + perr;
       }
     }
     hh.tgReply(chatId, reply);
