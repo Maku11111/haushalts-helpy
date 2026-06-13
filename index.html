@@ -1293,6 +1293,29 @@ function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   loadAll();
+  setupAutoRefresh();
+}
+
+// Daten neu laden, wenn die App wieder in den Vordergrund kommt
+let autoRefreshArmed = false;
+let leftAt = 0;
+function refreshOnReturn() {
+  if (!pb.authStore.isValid) return;
+  // Nur neu laden, wenn die App mind. 5 Sek. im Hintergrund war
+  if (leftAt && Date.now() - leftAt > 5000) {
+    leftAt = 0;
+    loadAll();
+  }
+}
+function setupAutoRefresh() {
+  if (autoRefreshArmed) return;
+  autoRefreshArmed = true;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshOnReturn();
+    else leftAt = Date.now();
+  });
+  window.addEventListener('focus', refreshOnReturn);
+  window.addEventListener('blur', () => { if (!leftAt) leftAt = Date.now(); });
 }
 
 // ══════════════════════════════════════════════
