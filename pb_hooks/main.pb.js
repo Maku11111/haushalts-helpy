@@ -16,11 +16,14 @@ routerAdd("POST", "/api/news", function (e) {
     var recs = $app.findRecordsByFilter("interests", "owner = '" + ownerId + "'", "name", 8, 0);
     interests = recs.map(function (r) { return r.get("name"); });
   } catch (err) {}
+  // Duplikate (auch Groß/Klein) entfernen, damit 4 VERSCHIEDENE Themen geladen werden
+  var seen = {}, uniq = [];
+  interests.forEach(function (k) { var key = (k || "").toLowerCase().trim(); if (key && !seen[key]) { seen[key] = 1; uniq.push(k); } });
   var items = [];
-  interests.slice(0, 4).forEach(function (kw) {
+  uniq.slice(0, 4).forEach(function (kw) {
     try { items = items.concat(hh.fetchNews(kw, 3)); } catch (err) {}
   });
-  return e.json(200, { ok: true, interests: interests, items: items });
+  return e.json(200, { ok: true, interests: uniq, items: items });
 }, $apis.requireAuth());
 
 // ── Familie beitreten: authentifizierten Nutzer per Einladungscode zuordnen ──

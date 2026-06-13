@@ -3524,6 +3524,9 @@ async function loadNews() {
 }
 function renderNews(items) {
   const el = document.getElementById('me-news');
+  // Doppelte Schlagzeilen rausfiltern
+  const seen = new Set();
+  items = items.filter(n => { const k = (n.title||'').toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
   if (!items.length) { el.innerHTML = '<div class="dash-empty">Keine passenden Neuigkeiten gefunden</div>'; return; }
   const groups = {};
   items.forEach(n => { (groups[n.topic] = groups[n.topic] || []).push(n); });
@@ -3544,6 +3547,8 @@ async function addInterest() {
   const inp = document.getElementById('interest-input');
   const name = inp.value.trim();
   if (!name) return;
+  const mine = interestsData.filter(i => i.owner === myUserId());
+  if (mine.some(i => (i.name||'').toLowerCase() === name.toLowerCase())) { toast('Hast du schon 🙂'); inp.value=''; return; }
   try {
     const rec = await pb.collection('interests').create({ name, owner: myUserId(), household: currentHousehold });
     interestsData.push(rec); inp.value = ''; renderInterests();
