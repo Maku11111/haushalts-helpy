@@ -509,6 +509,29 @@
     .bento-li .ti { color: var(--text-muted); font-size: 0.95rem; }
     .bento-empty { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; }
 
+    /* ── Bento-Raster auf Inhalts-Reitern (nur bei Bento-Layout) ── */
+    body[data-layout="bento"] #persons-list,
+    body[data-layout="bento"] #inv-list,
+    body[data-layout="bento"] #doc-list,
+    body[data-layout="bento"] #allowance-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.6rem;
+      align-items: start;
+    }
+    body[data-layout="bento"] #persons-list > *,
+    body[data-layout="bento"] #inv-list > *,
+    body[data-layout="bento"] #doc-list > *,
+    body[data-layout="bento"] #allowance-list > * {
+      margin-bottom: 0 !important;
+    }
+    /* Personen-Karten im Raster vertikal stapeln (sonst überlappen die Buttons) */
+    body[data-layout="bento"] #persons-list .person-card-top { flex-direction: column; align-items: center; text-align: center; gap: 0.5rem; }
+    body[data-layout="bento"] #persons-list .person-name { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+    body[data-layout="bento"] #persons-list .person-stats { justify-content: center; }
+    body[data-layout="bento"] #persons-list .card-actions { justify-content: center; }
+    body[data-layout="bento"] #allowance-list .allowance-header { flex-wrap: wrap; }
+
     /* ── Toast ── */
     #toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 0.6rem 1.2rem; border-radius: 20px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 999; pointer-events: none; white-space: nowrap; }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -1233,6 +1256,7 @@ let dashLayout = (function(){ try { return localStorage.getItem('hh-dashlayout')
 
 (function init() {
   applyTheme(localStorage.getItem('hh-theme') || 'fresh');
+  document.body.setAttribute('data-layout', dashLayout);
   buildEmojiGrid();
   buildColorGrid();
   setDashboardGreeting();
@@ -1418,6 +1442,7 @@ function renderDashboard() {
 // ── Bento-Layout (umschaltbar) ──
 function applyDashLayout() {
   const bento = dashLayout === 'bento';
+  document.body.setAttribute('data-layout', dashLayout);
   const be = document.getElementById('dash-bento');
   const cl = document.getElementById('dash-classic');
   if (be) be.style.display = bento ? 'block' : 'none';
@@ -1429,6 +1454,7 @@ function applyDashLayout() {
 function setDashLayout(l) {
   dashLayout = l;
   try { localStorage.setItem('hh-dashlayout', l); } catch(e) {}
+  document.body.setAttribute('data-layout', l);
   renderDashboard();
 }
 
