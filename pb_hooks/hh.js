@@ -108,40 +108,126 @@ module.exports = {
     return JSON.parse(raw);
   },
 
-  // Helpy-Chat: unterhalten UND handeln (Eintraege anlegen)
+  // ── Helpy-Tools (Stufe 1): Lese-/Handlungswerkzeuge fuer den Chat ──
+  CHAT_FIELDS: {
+    calendar:  ["id", "title", "date", "date_end", "allday", "person", "note"],
+    todos:     ["id", "text", "person", "date", "done", "recurrence", "priority"],
+    shopping:  ["id", "name", "category", "quantity", "person", "done"],
+    inventory: ["id", "name", "category", "quantity", "min_stock", "location"],
+    invoices:  ["id", "description", "amount", "date", "category", "status", "note"],
+    documents: ["id", "name", "category", "expiry_date", "person", "note"],
+    allowance: ["id", "person", "type", "amount", "date", "description"],
+    persons:   ["id", "name", "emoji", "color", "birthday", "email", "notes"],
+    locations: ["id", "room", "shelf", "spot", "shelves"]
+  },
+  recToObj: function (col, rec) {
+    var fs = this.CHAT_FIELDS[col] || ["id"];
+    var o = {};
+    fs.forEach(function (f) { try { o[f] = rec.get(f); } catch (e) {} });
+    return o;
+  },
+  runTool: function (name, input, hid) {
+    var self = this;
+    var readable = ["calendar", "todos", "shopping", "inventory", "invoices", "documents", "allowance", "persons", "locations"];
+    var writable = ["calendar", "todos", "shopping", "inventory", "invoices", "documents", "allowance", "persons"];
+    var col = input ? input.collection : "";
+    if (name === "list_records") {
+      if (readable.indexOf(col) < 0) return { error: "Unbekannte Sammlung" };
+      var limit = Math.min((input.limit || 50), 100);
+      var recs = $app.findRecordsByFilter(col, "household = '" + hid + "'", "", limit, 0);
+      return { count: recs.length, records: recs.map(function (r) { return self.recToObj(col, r); }) };
+    }
+    if (name === "create_record") {
+      if (writable.indexOf(col) < 0) return { error: "Hier darf ich nichts anlegen" };
+      var c = $app.findCollectionByNameOrId(col);
+      var rec = new Record(c);
+      var d = input.data || {};
+      for (var k in d) rec.set(k, d[k]);
+      rec.set("household", hid);
+      $app.save(rec);
+      return { ok: true, id: rec.id };
+    }
+    if (name === "update_record") {
+      if (writable.indexOf(col) < 0) return { error: "Nicht erlaubt" };
+      var rec2 = $app.findRecordById(col, input.id);
+      if (rec2.get("household") !== hid) return { error: "Gehoert nicht zu deinem Haushalt" };
+      var d2 = input.data || {};
+      for (var k2 in d2) rec2.set(k2, d2[k2]);
+      $app.save(rec2);
+      return { ok: true };
+    }
+    if (name === "delete_record") {
+      if (writable.indexOf(col) < 0) return { error: "Nicht erlaubt" };
+      var rec3 = $app.findRecordById(col, input.id);
+      if (rec3.get("household") !== hid) return { error: "Gehoert nicht zu deinem Haushalt" };
+      $app.delete(rec3);
+      return { ok: true };
+    }
+    return { error: "Unbekanntes Werkzeug" };
+  },
+
+  // Helpy-Chat (Stufe 1): unterhalten + Daten LESEN und HANDELN via Tool-Use
   chat: function (messages, householdId) {
+    var self = this;
     var now = new Date();
     var weekdays = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-    var sys = "Du bist \"Helpy\", der herzliche, hilfsbereite Familien-Haushalts-Assistent der App Haushalts-Helpy. Du sprichst Deutsch in lockerer du-Form, freundlich, knapp und konkret. Antworte mit Emojis sparsam.\n"
-      + "Du kannst ZWEI Dinge: (1) ganz normal chatten - Fragen beantworten, Haushalts-/Familien-Tipps geben, beim Planen helfen, Rezepte/Ideen vorschlagen, motivieren. (2) die App im Auftrag verwalten, indem du Eintraege anlegst.\n"
+    var readable = ["calendar", "todos", "shopping", "inventory", "invoices", "documents", "allowance", "persons", "locations"];
+    var writable = ["calendar", "todos", "shopping", "inventory", "invoices", "documents", "allowance", "persons"];
+    var sys = "Du bist \"Helpy\", der herzliche Familien-Haushalts-Assistent der App Haushalts-Helpy. Du sprichst Deutsch in lockerer du-Form, freundlich, knapp und konkret, Emojis sparsam.\n"
       + "Heute ist " + weekdays[now.getDay()] + ", der " + now.toISOString().slice(0, 10) + ".\n"
-      + "Bekannte Personen im Haushalt: " + this.persons(householdId).join(", ") + ". Nutze exakt diese Namen.\n\n"
-      + "Wenn der Nutzer etwas eintragen/aendern moechte, fuege passende actions hinzu UND bestaetige es kurz im reply. Bei reiner Unterhaltung: actions leer lassen und einfach hilfreich antworten.\n"
-      + "Verfuegbare Collections und Felder fuer actions:\n"
-      + "- calendar: title, date (YYYY-MM-DD HH:MM:SS), date_end, allday (bool), person, note\n"
-      + "- todos: text, person, date (YYYY-MM-DD), done=false, recurrence (''|daily|weekly|monthly), priority (''|high|low)\n"
-      + "- shopping: name, category (z.B. Obst & Gemuese, Kuehlregal, Backwaren, Haushalt), quantity (Text), person, done=false\n"
-      + "- inventory: name, category, quantity (Zahl), min_stock (Zahl)\n"
-      + "- invoices: description, amount (Zahl), date, category (Einkauf|Energie|Versicherung|Miete|Mobilitaet|Gesundheit|Freizeit|Sonstiges), status (offen|bezahlt), note\n"
+      + "Bekannte Personen: " + this.persons(householdId).join(", ") + ". Nutze exakt diese Namen.\n\n"
+      + "Du hast WERKZEUGE, um die echten Familiendaten zu lesen und zu aendern:\n"
+      + "- list_records(collection, limit): zum Beantworten von Fragen ueber bestehende Daten IMMER zuerst die passende Sammlung lesen (niemals raten!).\n"
+      + "- create_record(collection, data): neuen Eintrag anlegen.\n"
+      + "- update_record(collection, id, data): Eintrag aendern (z.B. Aufgabe abhaken -> data {done:true}; Termin verschieben -> data {date:\"2026-..\"}). Hol die id vorher per list_records.\n"
+      + "- delete_record(collection, id): Eintrag loeschen (nur wenn klar gewuenscht).\n\n"
+      + "Sammlungen & Felder:\n"
+      + "- calendar: title, date (YYYY-MM-DD HH:MM:SS), date_end, allday(bool), person, note\n"
+      + "- todos: text, person, date (YYYY-MM-DD), done(bool), recurrence(''|daily|weekly|monthly), priority(''|high|low)\n"
+      + "- shopping: name, category, quantity(Text), person, done(bool)\n"
+      + "- inventory: name, category, quantity(Zahl), min_stock(Zahl)\n"
+      + "- invoices: description, amount(Zahl), date, category, status(offen|bezahlt), note\n"
       + "- documents: name, category, expiry_date, person, note\n"
-      + "- allowance: person, type (credit|debit|bonus), amount (Zahl), date, description\n\n"
-      + "Regeln: relative Datumsangaben (morgen, Donnerstag, naechste Woche) in echte Daten umrechnen; Termine ohne Uhrzeit allday=true.\n"
-      + "Antworte AUSSCHLIESSLICH mit kompaktem JSON, ohne Markdown: {\"reply\":\"deine Antwort auf Deutsch\",\"actions\":[{\"collection\":\"...\",\"data\":{...}}]}";
-    var res = $http.send({
-      url: "https://api.anthropic.com/v1/messages",
-      method: "POST",
-      headers: { "x-api-key": this.CLAUDE_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1500, system: sys, messages: messages }),
-      timeout: 60
-    });
-    if (res.statusCode !== 200) throw new Error("Claude API " + res.statusCode);
-    var raw = res.json.content[0].text.trim();
-    raw = raw.replace(/^```json/, "").replace(/^```/, "").replace(/```$/, "").trim();
-    var parsed;
-    try { parsed = JSON.parse(raw); } catch (e) { parsed = { reply: raw, actions: [] }; }
-    if (!parsed.reply) parsed.reply = "Okay!";
-    if (!parsed.actions) parsed.actions = [];
-    return parsed;
+      + "- allowance: person, type(credit|debit|bonus), amount(Zahl), date, description\n"
+      + "- persons: name, emoji, birthday, email, notes (lesen/aktualisieren)\n"
+      + "- locations: room, shelf, spot (nur lesen)\n\n"
+      + "Regeln: relative Datumsangaben in echte Daten umrechnen; Termine ohne Uhrzeit allday=true. Werkzeuge sparsam und gezielt nutzen. Antworte am Ende immer kurz und natuerlich auf Deutsch und fasse zusammen, was du gefunden/getan hast.";
+    var tools = [
+      { name: "list_records",   description: "Liest aktuelle Eintraege einer Sammlung des Haushalts (zum Beantworten von Fragen).", input_schema: { type: "object", properties: { collection: { type: "string", enum: readable }, limit: { type: "integer" } }, required: ["collection"] } },
+      { name: "create_record",  description: "Legt einen neuen Eintrag an.", input_schema: { type: "object", properties: { collection: { type: "string", enum: writable }, data: { type: "object" } }, required: ["collection", "data"] } },
+      { name: "update_record",  description: "Aendert einen bestehenden Eintrag.", input_schema: { type: "object", properties: { collection: { type: "string", enum: writable }, id: { type: "string" }, data: { type: "object" } }, required: ["collection", "id", "data"] } },
+      { name: "delete_record",  description: "Loescht einen Eintrag.", input_schema: { type: "object", properties: { collection: { type: "string", enum: writable }, id: { type: "string" } }, required: ["collection", "id"] } }
+    ];
+    var working = (messages || []).slice();
+    var reply = "", changes = 0;
+    for (var iter = 0; iter < 6; iter++) {
+      var res = $http.send({
+        url: "https://api.anthropic.com/v1/messages",
+        method: "POST",
+        headers: { "x-api-key": this.CLAUDE_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+        body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1500, system: sys, tools: tools, messages: working }),
+        timeout: 60
+      });
+      if (res.statusCode !== 200) throw new Error("Claude API " + res.statusCode);
+      var data = res.json;
+      var content = data.content || [];
+      var toolUses = [], textParts = [];
+      content.forEach(function (c) { if (c.type === "text") textParts.push(c.text); else if (c.type === "tool_use") toolUses.push(c); });
+      if (data.stop_reason === "tool_use" && toolUses.length) {
+        working.push({ role: "assistant", content: content });
+        var results = toolUses.map(function (tu) {
+          var out;
+          try { out = self.runTool(tu.name, tu.input, householdId); } catch (e) { out = { error: "" + e }; }
+          if ((tu.name === "create_record" || tu.name === "update_record" || tu.name === "delete_record") && out && out.error === undefined) changes++;
+          return { type: "tool_result", tool_use_id: tu.id, content: JSON.stringify(out) };
+        });
+        working.push({ role: "user", content: results });
+        continue;
+      }
+      reply = textParts.join("\n").trim();
+      break;
+    }
+    return { reply: reply || "Okay!", changes: changes };
   },
 
   apply: function (parsed, householdId) {

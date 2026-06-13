@@ -4,7 +4,7 @@
 
 // ── Lebenszeichen (zum Testen der Installation) ──
 routerAdd("GET", "/api/hh-ping", function (e) {
-  return e.json(200, { ok: true, hooks: "v7" });
+  return e.json(200, { ok: true, hooks: "v8" });
 });
 
 // ── Helpy-Chat: unterhalten + handeln ──
@@ -16,9 +16,8 @@ routerAdd("POST", "/api/chat", function (e) {
   var hid = e.auth ? e.auth.get("household") : "";
   if (!hid) return e.json(400, { error: "Kein Haushalt zugeordnet" });
   try {
-    var parsed = hh.chat(messages, hid);
-    var n = hh.apply(parsed, hid);
-    return e.json(200, { ok: true, reply: parsed.reply, created: n });
+    var result = hh.chat(messages, hid);
+    return e.json(200, { ok: true, reply: result.reply, created: result.changes });
   } catch (err) {
     return e.json(500, { error: "" + err });
   }

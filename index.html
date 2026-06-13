@@ -3565,7 +3565,7 @@ async function sendChat(textArg) {
     if (!res.ok) throw new Error(data.error || res.status);
     appendChatMsg('bot', data.reply || 'Okay!');
     chatHistory.push({ role:'assistant', content: data.reply || 'Okay!' });
-    if (data.created > 0) { appendChatMsg('bot', '✅ ' + data.created + ' Eintrag' + (data.created>1?'e':'') + ' angelegt', 'chat-done'); loadAll(); }
+    if (data.created > 0) { appendChatMsg('bot', '✅ ' + data.created + ' Änderung' + (data.created>1?'en':'') + ' übernommen', 'chat-done'); loadAll(); }
   } catch(e) {
     typing.remove();
     appendChatMsg('bot', '❌ Sorry, da ging was schief: ' + e.message);
