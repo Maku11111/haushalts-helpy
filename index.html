@@ -1064,6 +1064,10 @@ let filterInvRoom     = '';
 const EMOJIS = ['😊','😎','🧑','👩','👨','🧒','👧','👦','🧔','👩‍🦰','👩‍🦱','🧑‍🦳','🦸','🧙','🐱','🐶','🦊','🐼','🦁','🐻','🌟','💪','🎯','🏃'];
 const COLORS = ['#52b788','#e63946','#457b9d','#f4a261','#a8dadc','#9b5de5','#f15bb5','#00bbf9','#fee440','#00f5d4','#fb5607','#8338ec'];
 
+// Auto-Refresh-Zustand (muss vor init()/showApp() initialisiert sein)
+let autoRefreshArmed = false;
+let leftAt = 0;
+
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
@@ -1305,8 +1309,8 @@ function showApp() {
 }
 
 // Daten neu laden, wenn die App wieder in den Vordergrund kommt
-let autoRefreshArmed = false;
-let leftAt = 0;
+// (Zustandsvariablen autoRefreshArmed/leftAt stehen oben im State-Block,
+//  da showApp() bereits beim Session-Restore in init() aufgerufen wird)
 function refreshOnReturn() {
   if (!pb.authStore.isValid) return;
   // Nur neu laden, wenn die App mind. 5 Sek. im Hintergrund war
