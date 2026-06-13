@@ -509,21 +509,22 @@
     .bento-li .ti { color: var(--text-muted); font-size: 0.95rem; }
     .bento-empty { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; }
 
-    /* ── Bento-Raster auf Inhalts-Reitern (nur bei Bento-Layout) ── */
+    /* ── Bento-Raster auf Inhalts-Reitern (Masonry: überall gleiche Abstände) ── */
     body[data-layout="bento"] #persons-list,
     body[data-layout="bento"] #inv-list,
     body[data-layout="bento"] #doc-list,
     body[data-layout="bento"] #allowance-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 0.6rem;
-      align-items: start;
+      columns: 160px;
+      column-gap: 0.6rem;
     }
     body[data-layout="bento"] #persons-list > *,
     body[data-layout="bento"] #inv-list > *,
     body[data-layout="bento"] #doc-list > *,
     body[data-layout="bento"] #allowance-list > * {
-      margin-bottom: 0 !important;
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+      margin: 0 0 0.6rem 0 !important;
+      width: 100%;
     }
     /* Personen-Karten im Raster vertikal stapeln (sonst überlappen die Buttons) */
     body[data-layout="bento"] #persons-list .person-card-top { flex-direction: column; align-items: center; text-align: center; gap: 0.5rem; }
