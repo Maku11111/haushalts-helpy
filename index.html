@@ -174,6 +174,18 @@
     .schematic .sch-label { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-size: 0.72rem; font-weight: 700; color: #7a5c30; letter-spacing: 0.03em; text-transform: uppercase; }
     .where-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center; }
     .where-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem; }
+    /* Nummerierte Fächer (Overlay auf Foto + Schema), Fach 1 = oben */
+    .fach-overlay { position: absolute; inset: 0; pointer-events: none; }
+    .fach-divider { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed rgba(255,255,255,0.7); }
+    .fach-num {
+      position: absolute; left: 5px; transform: translateY(-50%);
+      width: 19px; height: 19px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 800;
+      color: #fff; background: rgba(0,0,0,0.5);
+    }
+    .schematic .fach-divider { border-top: 6px solid #b08d5a; box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
+    .schematic .fach-num { color: #7a5c30; background: rgba(255,255,255,0.78); }
     .loc-badge:hover { opacity: 0.8; }
     .loc-thumb-wrap { position: relative; display: inline-block; width: 48px; height: 48px; flex-shrink: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
     .loc-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
@@ -674,7 +686,10 @@
           <div><label>Raum *</label><input id="loc-room" placeholder="Küche, Keller, Wohnzimmer …" list="room-suggestions" /><datalist id="room-suggestions"></datalist></div>
           <div><label>Regal / Schrank *</label><input id="loc-shelf" placeholder="Regal links, Schrank oben …" /></div>
         </div>
-        <div><label>Fach / Platz</label><input id="loc-spot" placeholder="Fach 2, hinten rechts, obere Reihe …" /></div>
+        <div class="form-row">
+          <div><label>Fach / Platz</label><input id="loc-spot" placeholder="hinten rechts, obere Reihe …" /></div>
+          <div><label>Anzahl Fächer</label><input id="loc-shelves" type="number" min="1" max="12" placeholder="z.B. 4" /></div>
+        </div>
         <div>
           <label>Foto hochladen</label>
           <input type="file" id="loc-photo" accept="image/*" onchange="previewLocPhoto(this)" />
@@ -1714,6 +1729,8 @@ async function saveLocation() {
   fd.append('room',  room);
   fd.append('shelf', shelf);
   fd.append('spot',  document.getElementById('loc-spot').value.trim());
+  const shelvesVal = parseInt(document.getElementById('loc-shelves').value);
+  if (shelvesVal) fd.append('shelves', shelvesVal);
   const mx = document.getElementById('loc-marker-x').value;
   const my = document.getElementById('loc-marker-y').value;
   if (mx) fd.append('marker_x', parseFloat(mx));
@@ -1724,7 +1741,7 @@ async function saveLocation() {
   try {
     await pb.collection('locations').create(fd);
     toast('✅ Ort gespeichert');
-    clearForm(['loc-room','loc-shelf','loc-spot']);
+    clearForm(['loc-room','loc-shelf','loc-spot','loc-shelves']);
     document.getElementById('loc-photo').value = '';
     document.getElementById('loc-photo-preview-wrap').style.display = 'none';
     document.getElementById('loc-marker-x').value = '';
@@ -1745,7 +1762,10 @@ function openEditLocation(id) {
       <div><label>Raum</label><input id="em-room" value="${esc(l.room||'')}" /></div>
       <div><label>Regal / Schrank</label><input id="em-shelf" value="${esc(l.shelf||'')}" /></div>
     </div>
-    <label>Fach / Platz</label><input id="em-spot" value="${esc(l.spot||'')}" />
+    <div class="form-row">
+      <div><label>Fach / Platz</label><input id="em-spot" value="${esc(l.spot||'')}" /></div>
+      <div><label>Anzahl Fächer</label><input id="em-shelves" type="number" min="1" max="12" value="${l.shelves||''}" placeholder="z.B. 4" /></div>
+    </div>
     <label>Neues Foto (leer lassen = behalten)</label>
     <input type="file" id="em-photo" accept="image/*" onchange="previewEditLocPhoto(this)" />
     ${photoUrl ? `
@@ -1761,6 +1781,7 @@ function openEditLocation(id) {
     room:     document.getElementById('em-room').value.trim(),
     shelf:    document.getElementById('em-shelf').value.trim(),
     spot:     document.getElementById('em-spot').value.trim(),
+    shelves:  parseInt(document.getElementById('em-shelves').value)||null,
     marker_x: parseFloat(document.getElementById('em-marker-x')?.value)||null,
     marker_y: parseFloat(document.getElementById('em-marker-y')?.value)||null,
   });
@@ -1873,7 +1894,7 @@ function renderInventory() {
           ${photoUrl ? `
             <div class="loc-thumb-wrap" onclick="openItemLocation('${r.id}')" style="cursor:zoom-in">
               <img src="${photoUrl}" />
-              ${(r.pos_x!=null&&r.pos_x!=='') ? `<div class="loc-thumb-dot" style="left:${r.pos_x}%;top:${r.pos_y}%"></div>` : (loc.marker_x ? `<div class="loc-thumb-dot" style="left:${loc.marker_x}%;top:${loc.marker_y}%;opacity:0.4"></div>` : '')}
+              ${(r.pos_x!=null&&r.pos_x!==''&&r.pos_y!=null) ? `<div class="loc-thumb-dot" style="left:${r.pos_x}%;top:${shelfDotTop(loc,r.pos_y)}%"></div>` : (loc.marker_x ? `<div class="loc-thumb-dot" style="left:${loc.marker_x}%;top:${loc.marker_y}%;opacity:0.4"></div>` : '')}
             </div>` : ''}
           <div class="card-actions">
             <button class="btn btn-ghost btn-sm" onclick="openEditInventory('${r.id}')">✏️</button>
@@ -1899,25 +1920,45 @@ async function adjustQty(id,current,delta) {
 // ══════════════════════════════════════════════
 let itemLocState = null;
 
+// Anzahl Fächer eines Regals (Standard 4)
+function shelfCount(loc) { return Math.max(1, parseInt(loc && loc.shelves) || 4); }
+// Vertikale %-Position der Fachmitte (Fach 1 = oben)
+function shelfDotTop(loc, posY) {
+  const s = shelfCount(loc);
+  const n = Math.min(s, Math.max(1, Math.round(posY)));
+  return (n - 0.5) / s * 100;
+}
+
 function buildLocationVisual(loc, posX, posY, editable) {
-  const hasDot = posX !== undefined && posX !== null && posX !== '' && !isNaN(posX);
-  const dotHtml = `<div class="loc-dot" id="where-dot" style="${hasDot?`left:${posX}%;top:${posY}%`:'display:none'}"></div>`;
+  const shelves = shelfCount(loc);
+  const hasDot = posX !== undefined && posX !== null && posX !== '' && !isNaN(posX)
+              && posY !== undefined && posY !== null && posY !== '' && !isNaN(posY);
+  const shelfNo = hasDot ? Math.min(shelves, Math.max(1, Math.round(posY))) : null;
+  const dotTop  = hasDot ? shelfDotTop(loc, posY) : 0;
+  const dotHtml = `<div class="loc-dot" id="where-dot" style="${hasDot?`left:${posX}%;top:${dotTop}%`:'display:none'}"></div>`;
+
+  // Fach-Trennlinien + Nummern (Fach 1 oben)
+  let guides = '';
+  for (let i = 0; i < shelves; i++) {
+    if (i > 0) guides += `<div class="fach-divider" style="top:${i/shelves*100}%"></div>`;
+    guides += `<div class="fach-num" style="top:${(i+0.5)/shelves*100}%">${i+1}</div>`;
+  }
+  const overlay = `<div class="fach-overlay">${guides}</div>`;
+
   const photoUrl = loc && loc.photo ? pb.getFileUrl(loc, loc.photo) : null;
   let inner;
   if (photoUrl) {
-    inner = `<img src="${photoUrl}" alt="Regal" />${dotHtml}`;
+    inner = `<img src="${photoUrl}" alt="Regal" />${overlay}${dotHtml}`;
   } else {
-    // Generiertes Schema: Regal mit Fachbrettern
-    let boards = '';
-    for (let i=1;i<=3;i++) boards += `<div class="sch-board" style="top:${18+i*20}%"></div>`;
     const label = esc(loc ? (loc.shelf||loc.room||'Regal') : 'Regal');
-    inner = `<div class="schematic"><div class="sch-label">${label}</div>${boards}${dotHtml}</div>`;
+    inner = `<div class="schematic"><div class="sch-label">${label}</div>${overlay}${dotHtml}</div>`;
   }
   const cls = 'where-wrap' + (editable ? ' editable' : '');
   const clickAttr = editable ? ' onclick="onWhereClick(event)"' : '';
   let html = `<div class="${cls}" id="where-area"${clickAttr}>${inner}</div>`;
-  if (editable) html += `<div class="where-hint">👆 Tippe an, wo das Produkt steht</div>`;
-  else if (!hasDot) html += `<div class="where-empty">Noch kein Standort markiert – tippe auf „Position festlegen".</div>`;
+  if (editable) html += `<div class="where-hint">👆 Tippe an: oberstes Fach = 1, dann abwärts · links/rechts frei</div>`;
+  else if (hasDot) html += `<div class="where-hint">📦 Fach ${shelfNo} von ${shelves}</div>`;
+  else html += `<div class="where-empty">Noch kein Standort markiert – tippe auf „Position festlegen".</div>`;
   return html;
 }
 
@@ -1961,12 +2002,16 @@ function onWhereClick(ev) {
   const area = document.getElementById('where-area');
   const target = area.querySelector('img') || area.querySelector('.schematic') || area;
   const rect = target.getBoundingClientRect();
-  const x = Math.max(0, Math.min(100, (ev.clientX - rect.left) / rect.width * 100));
-  const y = Math.max(0, Math.min(100, (ev.clientY - rect.top) / rect.height * 100));
-  itemLocState.posX = Math.round(x*10)/10;
-  itemLocState.posY = Math.round(y*10)/10;
+  const xPct = Math.max(0, Math.min(100, (ev.clientX - rect.left) / rect.width * 100));
+  const yPct = Math.max(0, Math.min(100, (ev.clientY - rect.top) / rect.height * 100));
+  const shelves = shelfCount(itemLocState.loc);
+  const shelfNo = Math.min(shelves, Math.max(1, Math.ceil(yPct / (100/shelves))));
+  itemLocState.posX = Math.round(xPct*10)/10;
+  itemLocState.posY = shelfNo;
   const dot = document.getElementById('where-dot');
-  dot.style.display = 'block'; dot.style.left = itemLocState.posX+'%'; dot.style.top = itemLocState.posY+'%';
+  dot.style.display = 'block';
+  dot.style.left = itemLocState.posX+'%';
+  dot.style.top  = ((shelfNo-0.5)/shelves*100)+'%';
 }
 
 async function saveItemPosition() {
