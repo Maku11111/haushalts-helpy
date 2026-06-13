@@ -108,6 +108,42 @@ module.exports = {
     return JSON.parse(raw);
   },
 
+  // Helpy-Chat: unterhalten UND handeln (Eintraege anlegen)
+  chat: function (messages, householdId) {
+    var now = new Date();
+    var weekdays = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+    var sys = "Du bist \"Helpy\", der herzliche, hilfsbereite Familien-Haushalts-Assistent der App Haushalts-Helpy. Du sprichst Deutsch in lockerer du-Form, freundlich, knapp und konkret. Antworte mit Emojis sparsam.\n"
+      + "Du kannst ZWEI Dinge: (1) ganz normal chatten - Fragen beantworten, Haushalts-/Familien-Tipps geben, beim Planen helfen, Rezepte/Ideen vorschlagen, motivieren. (2) die App im Auftrag verwalten, indem du Eintraege anlegst.\n"
+      + "Heute ist " + weekdays[now.getDay()] + ", der " + now.toISOString().slice(0, 10) + ".\n"
+      + "Bekannte Personen im Haushalt: " + this.persons(householdId).join(", ") + ". Nutze exakt diese Namen.\n\n"
+      + "Wenn der Nutzer etwas eintragen/aendern moechte, fuege passende actions hinzu UND bestaetige es kurz im reply. Bei reiner Unterhaltung: actions leer lassen und einfach hilfreich antworten.\n"
+      + "Verfuegbare Collections und Felder fuer actions:\n"
+      + "- calendar: title, date (YYYY-MM-DD HH:MM:SS), date_end, allday (bool), person, note\n"
+      + "- todos: text, person, date (YYYY-MM-DD), done=false, recurrence (''|daily|weekly|monthly), priority (''|high|low)\n"
+      + "- shopping: name, category (z.B. Obst & Gemuese, Kuehlregal, Backwaren, Haushalt), quantity (Text), person, done=false\n"
+      + "- inventory: name, category, quantity (Zahl), min_stock (Zahl)\n"
+      + "- invoices: description, amount (Zahl), date, category (Einkauf|Energie|Versicherung|Miete|Mobilitaet|Gesundheit|Freizeit|Sonstiges), status (offen|bezahlt), note\n"
+      + "- documents: name, category, expiry_date, person, note\n"
+      + "- allowance: person, type (credit|debit|bonus), amount (Zahl), date, description\n\n"
+      + "Regeln: relative Datumsangaben (morgen, Donnerstag, naechste Woche) in echte Daten umrechnen; Termine ohne Uhrzeit allday=true.\n"
+      + "Antworte AUSSCHLIESSLICH mit kompaktem JSON, ohne Markdown: {\"reply\":\"deine Antwort auf Deutsch\",\"actions\":[{\"collection\":\"...\",\"data\":{...}}]}";
+    var res = $http.send({
+      url: "https://api.anthropic.com/v1/messages",
+      method: "POST",
+      headers: { "x-api-key": this.CLAUDE_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1500, system: sys, messages: messages }),
+      timeout: 60
+    });
+    if (res.statusCode !== 200) throw new Error("Claude API " + res.statusCode);
+    var raw = res.json.content[0].text.trim();
+    raw = raw.replace(/^```json/, "").replace(/^```/, "").replace(/```$/, "").trim();
+    var parsed;
+    try { parsed = JSON.parse(raw); } catch (e) { parsed = { reply: raw, actions: [] }; }
+    if (!parsed.reply) parsed.reply = "Okay!";
+    if (!parsed.actions) parsed.actions = [];
+    return parsed;
+  },
+
   apply: function (parsed, householdId) {
     var n = 0;
     (parsed.actions || []).forEach(function (a) {

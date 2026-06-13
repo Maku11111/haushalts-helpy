@@ -4,8 +4,25 @@
 
 // ── Lebenszeichen (zum Testen der Installation) ──
 routerAdd("GET", "/api/hh-ping", function (e) {
-  return e.json(200, { ok: true, hooks: "v6" });
+  return e.json(200, { ok: true, hooks: "v7" });
 });
+
+// ── Helpy-Chat: unterhalten + handeln ──
+routerAdd("POST", "/api/chat", function (e) {
+  var hh = require(__hooks + "/hh.js");
+  var body = e.requestInfo().body;
+  var messages = (body && body.messages) || [];
+  if (!messages.length) return e.json(400, { error: "messages fehlt" });
+  var hid = e.auth ? e.auth.get("household") : "";
+  if (!hid) return e.json(400, { error: "Kein Haushalt zugeordnet" });
+  try {
+    var parsed = hh.chat(messages, hid);
+    var n = hh.apply(parsed, hid);
+    return e.json(200, { ok: true, reply: parsed.reply, created: n });
+  } catch (err) {
+    return e.json(500, { error: "" + err });
+  }
+}, $apis.requireAuth());
 
 // ── News zu den Hobbys des angemeldeten Nutzers ──
 routerAdd("POST", "/api/news", function (e) {
