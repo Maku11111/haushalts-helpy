@@ -6,17 +6,51 @@
   <title>Haushalts-Helpy – Der smarte Haushalts-Helfer für die ganze Familie</title>
   <meta name="description" content="Haushalts-Helpy bündelt Inventar, Kalender, To-dos, Rechnungen, Einkauf, Dokumente und Taschengeld in einer App. Mit KI-Spracheingabe und Telegram-Bot. Für die ganze Familie." />
   <meta name="theme-color" content="#2d6a4f" />
-  <link rel="icon" href="../icon-192.png" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://maku11111.github.io/haushalts-helpy/landing/" />
+
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="../icon-512.png" />
+  <link rel="apple-touch-icon" href="../icon-180.png" />
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Haushalts-Helpy – Der smarte Haushalts-Helfer" />
-  <meta property="og:description" content="Alles für den Familienhaushalt in einer App. Mit KI-Spracheingabe und Telegram-Bot." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="../icon-512.png" />
+  <meta property="og:site_name" content="Haushalts-Helpy" />
+  <meta property="og:locale" content="de_DE" />
+  <meta property="og:url" content="https://maku11111.github.io/haushalts-helpy/landing/" />
+  <meta property="og:title" content="Haushalts-Helpy – Der smarte Haushalts-Helfer für die ganze Familie" />
+  <meta property="og:description" content="Alles für den Familienalltag in einer App. Sagt einfach, was ansteht – die KI legt Termine, To-dos und Einkäufe automatisch an." />
+  <meta property="og:image" content="https://maku11111.github.io/haushalts-helpy/icon-512.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:image:alt" content="Haushalts-Helpy App-Logo" />
+
+  <!-- Twitter (Logo ist quadratisch -> summary statt large) -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Haushalts-Helpy – Der smarte Haushalts-Helfer" />
+  <meta name="twitter:description" content="Alles für den Familienalltag in einer App. Mit KI-Spracheingabe und Telegram-Bot." />
+  <meta name="twitter:image" content="https://maku11111.github.io/haushalts-helpy/icon-512.png" />
+
+  <!-- Strukturierte Daten -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Haushalts-Helpy",
+    "description": "Schlanke Haushalts-Verwaltungs-App für Familien: Inventar, Kalender, To-dos, Rechnungen, Einkauf, Dokumente, Taschengeld und Statistiken – mit KI-Spracheingabe und Telegram-Bot.",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Web",
+    "inLanguage": "de",
+    "url": "https://maku11111.github.io/haushalts-helpy/",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" /></noscript>
 
   <style>
     :root {
@@ -28,9 +62,12 @@
       --primary-light: #52b788;
       --primary-dim: #e3f4ea;
       --warn: #f4a261;
+      --warn-dim: #fff3e0;
       --info: #457b9d;
+      --info-dim: #e8f4f8;
+      --danger-dim: #fde8ea;
       --text: #1a1f1c;
-      --text-muted: #6b7280;
+      --text-muted: #586068;
       --radius: 18px;
       --radius-sm: 12px;
       --shadow-sm: 0 1px 2px rgba(16,24,40,0.04), 0 2px 6px rgba(16,24,40,0.06);
@@ -54,7 +91,25 @@
 
     a { color: inherit; text-decoration: none; }
 
+    /* Sichtbarer Fokus für Tastatur-Nutzer (WCAG 2.4.7) */
+    a:focus-visible, .btn:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--primary-dark);
+      outline-offset: 3px;
+      border-radius: 8px;
+    }
+    .ai a:focus-visible { outline-color: #fff; }
+
+    /* Skip-Link (WCAG 2.4.1) */
+    .skip-link {
+      position: absolute; left: 12px; top: -64px; z-index: 100;
+      background: var(--primary); color: #fff; padding: 11px 18px;
+      border-radius: 10px; font-weight: 700; box-shadow: var(--shadow);
+      transition: top .15s ease;
+    }
+    .skip-link:focus { top: 12px; }
+
     .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
+    @media (max-width: 400px) { .wrap { padding: 0 16px; } }
 
     /* ---------- Header ---------- */
     header {
@@ -80,13 +135,13 @@
     }
     .brand .logo svg { width: 22px; height: 22px; }
     .nav-links { display: flex; align-items: center; gap: 28px; }
-    .nav-links a.link { color: var(--text-muted); font-weight: 600; font-size: .95rem; transition: color .15s; }
+    .nav-links a.link { color: var(--text-muted); font-weight: 600; font-size: .95rem; transition: color .15s; padding: 8px 0; }
     .nav-links a.link:hover { color: var(--primary); }
 
     .btn {
-      display: inline-flex; align-items: center; gap: 8px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       font-family: inherit; font-weight: 700; font-size: .97rem;
-      padding: 12px 22px; border-radius: 12px; border: none; cursor: pointer;
+      padding: 12px 22px; min-height: 44px; border-radius: 12px; border: none; cursor: pointer;
       transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
       white-space: nowrap;
     }
@@ -97,6 +152,27 @@
     .btn-lg { padding: 15px 30px; font-size: 1.05rem; }
 
     @media (max-width: 720px) { .nav-links .link { display: none; } }
+
+    /* ---------- Mobile Abschnitts-Navigation (Chip-Leiste) ---------- */
+    .mobile-nav { display: none; }
+    @media (max-width: 720px) {
+      .mobile-nav {
+        display: flex; gap: 8px; overflow-x: auto;
+        padding: 10px 16px;
+        position: sticky; top: 66px; z-index: 49;
+        background: rgba(243,244,241,0.92);
+        backdrop-filter: saturate(180%) blur(12px);
+        border-bottom: 1px solid var(--border);
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      }
+      .mobile-nav::-webkit-scrollbar { display: none; }
+      .mobile-nav a {
+        flex: none; font-size: .85rem; font-weight: 600;
+        color: var(--primary-dark); background: var(--primary-dim);
+        padding: 8px 15px; border-radius: 999px; white-space: nowrap;
+        min-height: 36px; display: inline-flex; align-items: center;
+      }
+    }
 
     /* ---------- Hero ---------- */
     .hero { position: relative; padding: 78px 0 56px; overflow: hidden; }
@@ -138,11 +214,16 @@
       border: 1px solid var(--border);
       position: relative;
     }
+    /* Notch / Lautsprecher-Pille */
+    .phone::before {
+      content: ""; position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+      width: 78px; height: 6px; border-radius: 999px; background: rgba(0,0,0,0.22); z-index: 3;
+    }
     .phone-screen {
       background: var(--bg); border-radius: 28px; overflow: hidden;
       aspect-ratio: 9 / 18.5;
     }
-    .ps-top { background: var(--primary); color: #fff; padding: 20px 18px 16px; }
+    .ps-top { background: var(--primary); color: #fff; padding: 28px 18px 16px; }
     .ps-top .ps-hi { font-size: .78rem; opacity: .82; }
     .ps-top .ps-title { font-weight: 800; font-size: 1.18rem; margin-top: 2px; }
     .ps-stats { display: flex; gap: 8px; margin-top: 16px; }
@@ -178,6 +259,9 @@
     .fb-1 { top: 14%; left: -6%; animation: float 5s ease-in-out infinite; }
     .fb-2 { bottom: 16%; right: -8%; animation: float 5s ease-in-out infinite 1.5s; }
     @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    @media (max-width: 900px) {
+      .fb-1 { left: 2%; } .fb-2 { right: 2%; }
+    }
     @media (max-width: 540px) { .float-badge { display: none; } }
 
     @media (max-width: 900px) {
@@ -187,17 +271,22 @@
       .hero-grid .hero-text { text-align: center; }
       .hero-cta { justify-content: center; }
       .hero-note { justify-content: center; }
+      .hide-mobile { display: none; }
     }
 
     /* ---------- Trust bar ---------- */
     .trust { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); }
-    .trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding: 30px 0; text-align: center; }
-    .trust-grid .t-num { font-size: 1.9rem; font-weight: 800; color: var(--primary); line-height: 1; }
-    .trust-grid .t-lbl { font-size: .85rem; color: var(--text-muted); margin-top: 6px; }
-    @media (max-width: 620px) { .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 26px 18px; } }
+    .trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 26px 0; }
+    .t-item { display: flex; align-items: center; gap: 12px; justify-content: center; }
+    .t-item .t-ic { width: 42px; height: 42px; border-radius: 11px; background: var(--primary-dim); display: grid; place-items: center; flex: none; }
+    .t-item .t-ic svg { width: 21px; height: 21px; color: var(--primary); }
+    .t-item .t-tx b { display: block; font-size: 1rem; font-weight: 800; color: var(--text); line-height: 1.15; }
+    .t-item .t-tx span { font-size: .82rem; color: var(--text-muted); }
+    @media (max-width: 620px) { .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 20px 14px; } }
+    @media (max-width: 380px) { .trust-grid { grid-template-columns: 1fr; } }
 
     /* ---------- Sections ---------- */
-    section.block { padding: 80px 0; }
+    section.block { padding: 72px 0; }
     .sec-head { text-align: center; max-width: 640px; margin: 0 auto 50px; }
     .sec-tag { color: var(--primary); font-weight: 700; font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; }
     .sec-head h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); letter-spacing: -0.02em; margin: 10px 0 12px; line-height: 1.12; }
@@ -213,6 +302,7 @@
       box-shadow: var(--shadow-sm); transition: transform .18s ease, box-shadow .25s ease, border-color .2s;
     }
     .feat:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--primary-light); }
+    .feat--key { border-color: var(--primary-light); box-shadow: var(--shadow-sm), 0 0 0 1px var(--primary-light); }
     .feat .fic {
       width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center;
       font-size: 23px; margin-bottom: 15px; background: var(--primary-dim);
@@ -230,15 +320,15 @@
       background: radial-gradient(500px 300px at 85% 20%, rgba(82,183,136,0.4), transparent 60%);
     }
     .ai-grid { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center; padding: 54px 48px; }
-    .ai .sec-tag { color: var(--primary-light); }
+    .ai .sec-tag { color: #b7e4c7; }
     .ai h2 { font-size: clamp(1.7rem, 3.2vw, 2.4rem); letter-spacing: -0.02em; margin: 10px 0 16px; line-height: 1.13; }
-    .ai p.ai-lead { color: rgba(255,255,255,0.86); font-size: 1.08rem; margin-bottom: 24px; }
+    .ai p.ai-lead { color: rgba(255,255,255,0.88); font-size: 1.08rem; margin-bottom: 24px; }
     .ai-list { display: flex; flex-direction: column; gap: 13px; }
     .ai-list .it { display: flex; gap: 12px; align-items: flex-start; }
     .ai-list .chk { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.18); display: grid; place-items: center; flex: none; margin-top: 1px; }
     .ai-list .chk svg { width: 14px; height: 14px; }
     .ai-list b { font-weight: 700; }
-    .ai-list span { color: rgba(255,255,255,0.8); font-size: .94rem; }
+    .ai-list span { color: rgba(255,255,255,0.9); font-size: .94rem; }
 
     .chat { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); border-radius: 20px; padding: 20px; backdrop-filter: blur(6px); }
     .bubble { max-width: 86%; padding: 11px 15px; border-radius: 16px; font-size: .92rem; margin-bottom: 11px; line-height: 1.45; }
@@ -259,6 +349,22 @@
     .step h3 { font-size: 1.12rem; margin-bottom: 6px; }
     .step p { color: var(--text-muted); font-size: .95rem; }
 
+    /* ---------- FAQ ---------- */
+    .faq { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .faq details {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+    .faq summary {
+      cursor: pointer; list-style: none; padding: 18px 20px;
+      font-weight: 700; font-size: 1.02rem; color: var(--text);
+      display: flex; justify-content: space-between; align-items: center; gap: 14px;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: "+"; font-size: 1.5rem; color: var(--primary); font-weight: 700; line-height: 1; flex: none; transition: transform .2s ease; }
+    .faq details[open] summary::after { transform: rotate(45deg); }
+    .faq .faq-a { padding: 0 20px 18px; color: var(--text-muted); font-size: .96rem; }
+
     /* ---------- CTA ---------- */
     .cta-final { text-align: center; }
     .cta-card {
@@ -275,42 +381,57 @@
     .cta-card .logo-big svg { width: 40px; height: 40px; }
     .cta-card h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); letter-spacing: -0.02em; margin-bottom: 12px; }
     .cta-card p { color: var(--text-muted); font-size: 1.1rem; max-width: 480px; margin: 0 auto 28px; }
+    .cta-trust { margin-top: 18px; font-size: .88rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 8px; }
+    .cta-trust svg { width: 16px; height: 16px; color: var(--primary); flex: none; }
 
     /* ---------- Footer ---------- */
-    footer { border-top: 1px solid var(--border); padding: 34px 0; margin-top: 20px; }
+    footer { border-top: 1px solid var(--border); padding: 32px 0; margin-top: 20px; }
     .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--text-muted); font-size: .9rem; }
     .foot .brand { font-size: 1rem; }
     .foot .logo { width: 30px; height: 30px; }
     .foot .logo svg { width: 17px; height: 17px; }
+    .foot-privacy { width: 100%; font-size: .82rem; color: var(--text-muted); opacity: .9; }
 
     /* reveal on scroll */
     .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
     .reveal.in { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
       .reveal { opacity: 1; transform: none; transition: none; }
       .ps-mic, .float-badge, .typing i { animation: none; }
     }
   </style>
+  <noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
 </head>
 <body>
+  <a href="#top" class="skip-link">Zum Inhalt springen</a>
 
   <!-- ===== Header ===== -->
   <header>
     <div class="wrap nav">
       <a href="#top" class="brand">
-        <span class="logo">
+        <span class="logo" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M3 11.5 12 4l9 7.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5V19a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-8.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20v-5h4v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
         Haushalts-Helpy
       </a>
-      <nav class="nav-links">
-        <a class="link" href="#features">Funktionen</a>
+      <nav class="nav-links" aria-label="Hauptnavigation">
         <a class="link" href="#ki">KI &amp; Sprache</a>
+        <a class="link" href="#features">Funktionen</a>
         <a class="link" href="#start">So geht's</a>
+        <a class="link" href="#faq">FAQ</a>
         <a class="btn btn-primary" href="https://maku11111.github.io/haushalts-helpy/">App öffnen</a>
       </nav>
     </div>
   </header>
+
+  <!-- Mobile Abschnitts-Navigation -->
+  <nav class="mobile-nav" aria-label="Abschnitte">
+    <a href="#ki">KI &amp; Sprache</a>
+    <a href="#features">Funktionen</a>
+    <a href="#start">So geht's</a>
+    <a href="#faq">FAQ</a>
+  </nav>
 
   <main id="top">
 
@@ -319,26 +440,25 @@
       <div class="wrap hero-grid">
         <div class="hero-text">
           <span class="pill"><span class="dot"></span> Für die ganze Familie · 100 % kostenlos</span>
-          <h1>Euer Zuhause,<br><span class="grad">endlich organisiert.</span></h1>
+          <h1>Euer Zuhause,<br class="hide-mobile"><span class="grad"> endlich organisiert.</span></h1>
           <p class="lead">
-            Inventar, Kalender, To-dos, Rechnungen, Einkauf, Dokumente und Taschengeld –
-            alles in einer App. Einfach reinsprechen oder dem Telegram-Bot schreiben,
-            den Rest erledigt die KI.
+            Alles für den Familienalltag in einer App. Sagt einfach, was ansteht –
+            die KI legt Termine, To-dos und Einkäufe automatisch an.
           </p>
           <div class="hero-cta">
-            <a class="btn btn-primary btn-lg" href="https://maku11111.github.io/haushalts-helpy/">Jetzt loslegen →</a>
+            <a class="btn btn-primary btn-lg" href="https://maku11111.github.io/haushalts-helpy/">Jetzt kostenlos loslegen →</a>
             <a class="btn btn-ghost btn-lg" href="#features">Funktionen ansehen</a>
           </div>
           <p class="hero-note">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M9 12.5l2 2 4-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12.5l2 2 4-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>
             Als App installierbar · Funktioniert auf Handy, Tablet &amp; PC
           </p>
         </div>
 
-        <div class="phone-wrap">
-          <div class="float-badge fb-1"><span class="em">🛒</span> Milch fehlt</div>
-          <div class="float-badge fb-2"><span class="em">🎂</span> Lisa hat morgen Geburtstag</div>
-          <div class="phone">
+        <div class="phone-wrap" role="img" aria-label="Vorschau der Haushalts-Helpy App: ein Dashboard mit Begrüßung, To-dos, Terminen und einem Sprach-Button.">
+          <div class="float-badge fb-1" aria-hidden="true"><span class="em">🛒</span> Milch fehlt</div>
+          <div class="float-badge fb-2" aria-hidden="true"><span class="em">🎂</span> Lisa hat morgen Geburtstag</div>
+          <div class="phone" aria-hidden="true">
             <div class="phone-screen">
               <div class="ps-top">
                 <div class="ps-hi">Guten Morgen 👋</div>
@@ -350,10 +470,10 @@
                 </div>
               </div>
               <div class="ps-body">
-                <div class="ps-card"><span class="ic" style="background:var(--warn-dim,#fff3e0)">📅</span><span class="tx"><b>Zahnarzt – Tom</b><span>Heute, 14:30 Uhr</span></span></div>
-                <div class="ps-card"><span class="ic" style="background:#e8f4f8">✅</span><span class="tx"><b>Müll rausbringen</b><span>Wiederkehrend · Mittwoch</span></span></div>
+                <div class="ps-card"><span class="ic" style="background:var(--warn-dim)">📅</span><span class="tx"><b>Zahnarzt – Tom</b><span>Heute, 14:30 Uhr</span></span></div>
+                <div class="ps-card"><span class="ic" style="background:var(--info-dim)">✅</span><span class="tx"><b>Müll rausbringen</b><span>Wiederkehrend · Mittwoch</span></span></div>
                 <div class="ps-card"><span class="ic" style="background:var(--primary-dim)">🧴</span><span class="tx"><b>Spülmittel</b><span>Keller, Regal 2 · fast leer</span></span></div>
-                <div class="ps-card"><span class="ic" style="background:#fde8ea">💶</span><span class="tx"><b>Stromrechnung</b><span>89,90 € · offen</span></span></div>
+                <div class="ps-card"><span class="ic" style="background:var(--danger-dim)">💶</span><span class="tx"><b>Stromrechnung</b><span>89,90 € · offen</span></span></div>
               </div>
             </div>
             <div class="ps-mic">
@@ -367,12 +487,56 @@
     <!-- ===== Trust bar ===== -->
     <div class="trust">
       <div class="wrap trust-grid">
-        <div><div class="t-num">10</div><div class="t-lbl">Bereiche in einer App</div></div>
-        <div><div class="t-num">🎤</div><div class="t-lbl">Per Sprache steuerbar</div></div>
-        <div><div class="t-num">∞</div><div class="t-lbl">Familienmitglieder</div></div>
-        <div><div class="t-num">0 €</div><div class="t-lbl">Keine Kosten</div></div>
+        <div class="t-item">
+          <span class="t-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18" stroke-linecap="round"/></svg></span>
+          <span class="t-tx"><b>Kein Download</b><span>Läuft direkt im Browser</span></span>
+        </div>
+        <div class="t-item">
+          <span class="t-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0 1 13.7-5.7L20 8M20 4v4h-4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12a8 8 0 0 1-13.7 5.7L4 16M4 20v-4h4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="t-tx"><b>Geräteübergreifend</b><span>Immer synchron für alle</span></span>
+        </div>
+        <div class="t-item">
+          <span class="t-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="t-tx"><b>Privat</b><span>Daten bleiben in der Familie</span></span>
+        </div>
+        <div class="t-item">
+          <span class="t-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 7.5a5 5 0 1 0 0 9M4 10.5h8M4 13.5h7" stroke-linecap="round"/></svg></span>
+          <span class="t-tx"><b>0 €</b><span>Keine versteckten Kosten</span></span>
+        </div>
       </div>
     </div>
+
+    <!-- ===== KI Highlight (stärkster Beweis -> direkt nach dem Hero) ===== -->
+    <section class="block" id="ki">
+      <div class="wrap">
+        <div class="ai reveal">
+          <div class="ai-grid">
+            <div>
+              <span class="sec-tag">Das Herzstück</span>
+              <h2>Sagt einfach, was zu tun ist.</h2>
+              <p class="ai-lead">
+                Tippt auf das Mikro oder schreibt dem Telegram-Bot in normalem Deutsch.
+                Eine KI versteht den Satz und legt den richtigen Eintrag automatisch an.
+              </p>
+              <div class="ai-list">
+                <div class="it"><span class="chk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Spracheingabe</b> – „Tom hat am Freitag um drei Zahnarzt“ wird sofort zum Kalendertermin.</span></div>
+                <div class="it"><span class="chk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Telegram-Bot</b> – unterwegs eine Nachricht schicken, sogar als Sprachnachricht. Helpy erledigt den Rest.</span></div>
+                <div class="it"><span class="chk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Versteht den Zusammenhang</b> – ob To-do, Einkauf oder Termin, die KI ordnet es richtig ein.</span></div>
+              </div>
+            </div>
+            <div class="chat">
+              <div class="bubble user"><span aria-hidden="true">🎤</span> „Wir brauchen noch Milch und Butter, und Lisa muss morgen ihre Hausaufgaben machen.“</div>
+              <div class="bubble bot">
+                Erledigt! <span aria-hidden="true">✅</span> Ich habe <b>Milch</b> und <b>Butter</b> auf die Einkaufsliste gesetzt und ein To-do <b>„Hausaufgaben“</b> für Lisa morgen angelegt.
+                <span class="tg">▾ via Telegram &amp; Spracheingabe</span>
+              </div>
+              <div class="bubble user"><span aria-hidden="true">🎤</span> „Stromrechnung 89,90 € bis Ende des Monats.“</div>
+              <div class="bubble bot"><span class="typing" aria-hidden="true"><i></i><i></i><i></i></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- ===== Features ===== -->
     <section class="block" id="features">
@@ -383,56 +547,24 @@
           <p>Schluss mit Zetteln, Apps und Gruppenchats. Haushalts-Helpy bündelt alles, was eine Familie organisieren muss.</p>
         </div>
         <div class="features">
-          <div class="feat reveal"><div class="fic">🏠</div><h3>Übersichts-Dashboard</h3><p>Termine, offene To-dos und Erinnerungen auf einen Blick – sobald ihr die App öffnet.</p></div>
-          <div class="feat reveal"><div class="fic">👨‍👩‍👧‍👦</div><h3>Personen</h3><p>Jedes Familienmitglied mit Emoji, Farbe, Geburtstag und Notizen. Termine und Aufgaben sauber zuordnen.</p></div>
-          <div class="feat reveal"><div class="fic">📦</div><h3>Inventar &amp; Lagerorte</h3><p>Was habt ihr wo? Mit Foto vom Regal und rotem Punkt, der genau zeigt: „Hier liegt das Produkt.“</p></div>
-          <div class="feat reveal"><div class="fic">📅</div><h3>Familienkalender</h3><p>Monats-, Wochen- und Tagesansicht. Ganztägige Termine, Notizen und farbige Zuordnung pro Person.</p></div>
-          <div class="feat reveal"><div class="fic">✅</div><h3>To-dos</h3><p>Aufgaben verteilen, mit Priorität versehen und wiederkehrend planen – täglich, wöchentlich, monatlich.</p></div>
-          <div class="feat reveal"><div class="fic">💶</div><h3>Rechnungen</h3><p>Beträge, Fälligkeiten und Status (offen / bezahlt) im Griff. Belege als Datei anhängen.</p></div>
-          <div class="feat reveal"><div class="fic">🛒</div><h3>Einkaufsliste</h3><p>Gemeinsame Liste für alle. Was abgehakt wird, sehen sofort alle Geräte.</p></div>
-          <div class="feat reveal"><div class="fic">📄</div><h3>Dokumente</h3><p>Verträge, Versicherungen &amp; Co. mit Ablaufdatum – Helpy erinnert euch rechtzeitig.</p></div>
-          <div class="feat reveal"><div class="fic">📊</div><h3>Statistiken</h3><p>Übersichtliche Diagramme zu Ausgaben und Haushalt – damit ihr den Überblick behaltet.</p></div>
-          <div class="feat reveal"><div class="fic">🐷</div><h3>Taschengeld</h3><p>Guthaben, Ausgaben und Boni pro Kind verwalten – transparent und fair.</p></div>
-          <div class="feat reveal"><div class="fic">📲</div><h3>Als App installierbar</h3><p>Direkt auf den Homescreen legen. Fühlt sich an wie eine echte App – ohne App Store.</p></div>
-          <div class="feat reveal"><div class="fic">🔄</div><h3>Immer synchron</h3><p>Alle Familienmitglieder sehen dieselben Daten in Echtzeit – Handy, Tablet und PC.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== KI Highlight ===== -->
-    <section class="block" id="ki" style="padding-top:20px">
-      <div class="wrap">
-        <div class="ai reveal">
-          <div class="ai-grid">
-            <div>
-              <span class="sec-tag">Das Herzstück</span>
-              <h2>Einfach sagen, was zu tun ist.</h2>
-              <p class="ai-lead">
-                Tippe auf 🎤 oder schreib dem Telegram-Bot in normalem Deutsch.
-                Eine KI versteht den Satz und legt den richtigen Eintrag automatisch an.
-              </p>
-              <div class="ai-list">
-                <div class="it"><span class="chk"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Spracheingabe</b> – „Tom hat am Freitag um drei Zahnarzt“ wird sofort zum Kalendertermin.</span></div>
-                <div class="it"><span class="chk"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Telegram-Bot</b> – unterwegs eine Nachricht schicken, sogar als Sprachnachricht. Helpy erledigt den Rest.</span></div>
-                <div class="it"><span class="chk"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Versteht den Zusammenhang</b> – ob To-do, Einkauf oder Termin, die KI ordnet es richtig ein.</span></div>
-              </div>
-            </div>
-            <div class="chat">
-              <div class="bubble user">🎤 „Wir brauchen noch Milch und Butter, und Lisa muss morgen ihre Hausaufgaben machen.“</div>
-              <div class="bubble bot">
-                Erledigt! ✅ Ich habe <b>Milch</b> und <b>Butter</b> auf die Einkaufsliste gesetzt und ein To-do <b>„Hausaufgaben“</b> für Lisa morgen angelegt.
-                <span class="tg">▾ via Telegram &amp; 🎤 Spracheingabe</span>
-              </div>
-              <div class="bubble user">🎤 „Stromrechnung 89,90 € bis Ende des Monats.“</div>
-              <div class="bubble bot"><span class="typing"><i></i><i></i><i></i></span></div>
-            </div>
-          </div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">🏠</div><h3>Übersichts-Dashboard</h3><p>Termine, offene To-dos und Erinnerungen auf einen Blick – sobald ihr die App öffnet.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">👨‍👩‍👧‍👦</div><h3>Personen</h3><p>Wer gehört zur Familie? Jede Person mit Emoji, Farbe und Geburtstag – Termine und Aufgaben sauber zugeordnet.</p></div>
+          <div class="feat reveal feat--key"><div class="fic" aria-hidden="true">📦</div><h3>Inventar &amp; Lagerorte</h3><p>Nie wieder suchen: mit Foto vom Regal und rotem Punkt, der genau zeigt: „Hier liegt das Produkt.“</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">📅</div><h3>Familienkalender</h3><p>Nie wieder einen Termin verpassen – Monats-, Wochen- und Tagesansicht, farbig pro Person.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">✅</div><h3>To-dos</h3><p>Aufgaben fair verteilen, mit Priorität versehen und wiederkehrend planen – täglich, wöchentlich, monatlich.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">💶</div><h3>Rechnungen</h3><p>Behaltet Beträge, Fälligkeiten und Status (offen / bezahlt) im Griff. Belege als Datei anhängen.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">🛒</div><h3>Einkaufsliste</h3><p>Gemeinsame Liste für alle. Hakt einer etwas ab, ist es sofort auf allen Geräten weg.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">📄</div><h3>Dokumente</h3><p>Verträge, Versicherungen &amp; Co. mit Ablaufdatum – Helpy erinnert euch rechtzeitig.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">📊</div><h3>Statistiken</h3><p>Übersichtliche Diagramme zu Ausgaben und Haushalt – damit ihr den Überblick behaltet.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">🐷</div><h3>Taschengeld</h3><p>Schluss mit Diskussionen ums Taschengeld – Guthaben, Ausgaben und Boni pro Kind, transparent und fair.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">📲</div><h3>Als App installierbar</h3><p>Direkt auf den Homescreen legen. Fühlt sich an wie eine echte App – ohne App Store.</p></div>
+          <div class="feat reveal"><div class="fic" aria-hidden="true">🔄</div><h3>Immer synchron</h3><p>Alle Familienmitglieder sehen dieselben Daten in Echtzeit – Handy, Tablet und PC.</p></div>
         </div>
       </div>
     </section>
 
     <!-- ===== Steps ===== -->
-    <section class="block" id="start" style="padding-top:20px">
+    <section class="block" id="start">
       <div class="wrap">
         <div class="sec-head reveal">
           <span class="sec-tag">In 3 Schritten startklar</span>
@@ -440,22 +572,58 @@
         </div>
         <div class="steps">
           <div class="step reveal"><div class="num">1</div><h3>App öffnen</h3><p>Einfach den Link öffnen – kein Download nötig. Optional auf den Homescreen legen.</p></div>
-          <div class="step reveal"><div class="num">2</div><h3>Familie anlegen</h3><p>Einloggen, Personen mit Emoji und Farbe hinzufügen – fertig ist die Familie.</p></div>
-          <div class="step reveal"><div class="num">3</div><h3>Loslegen</h3><p>Tippen oder reinsprechen. Helpy hält Inventar, Termine und Aufgaben für alle synchron.</p></div>
+          <div class="step reveal"><div class="num">2</div><h3>Anmelden &amp; Familie anlegen</h3><p>Meldet euch an und legt Personen mit Emoji und Farbe an – fertig ist die Familie.</p></div>
+          <div class="step reveal"><div class="num">3</div><h3>Loslegen</h3><p>Tippt es ein oder sagt es einfach – Helpy hält Inventar, Termine und Aufgaben für alle synchron.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="block" id="faq">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <span class="sec-tag">Fragen &amp; Antworten</span>
+          <h2>Häufige Fragen</h2>
+        </div>
+        <div class="faq reveal">
+          <details>
+            <summary>Kostet Haushalts-Helpy wirklich nichts?</summary>
+            <div class="faq-a">Ja. Haushalts-Helpy ist komplett kostenlos – keine Abos, keine versteckten Kosten und keine Werbung.</div>
+          </details>
+          <details>
+            <summary>Brauche ich zwingend Telegram?</summary>
+            <div class="faq-a">Nein. Telegram ist optional und praktisch für unterwegs. Alles geht genauso direkt in der App – per Tippen oder über den Mikro-Button.</div>
+          </details>
+          <details>
+            <summary>Funktioniert es, wenn nicht alle mitmachen?</summary>
+            <div class="faq-a">Klar. Schon eine Person hat den vollen Nutzen. Je mehr mitmachen, desto mehr bleibt automatisch für alle synchron.</div>
+          </details>
+          <details>
+            <summary>Was passiert mit unseren Daten?</summary>
+            <div class="faq-a">Eure Familiendaten liegen auf einem eigenen Server – keine Werbung, kein Verkauf an Dritte.</div>
+          </details>
+          <details>
+            <summary>Auf welchen Geräten läuft die App?</summary>
+            <div class="faq-a">Auf jedem Gerät mit Browser – Handy, Tablet und PC. Optional lässt sie sich als App auf den Homescreen legen.</div>
+          </details>
         </div>
       </div>
     </section>
 
     <!-- ===== CTA ===== -->
-    <section class="block cta-final" style="padding-top:20px">
+    <section class="block cta-final">
       <div class="wrap">
         <div class="cta-card reveal">
-          <div class="logo-big">
+          <div class="logo-big" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M3 11.5 12 4l9 7.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5V19a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-8.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20v-5h4v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           <h2>Bereit für weniger Chaos?</h2>
           <p>Probiert Haushalts-Helpy aus und organisiert euren Familienalltag an einem einzigen Ort.</p>
-          <a class="btn btn-primary btn-lg" href="https://maku11111.github.io/haushalts-helpy/">App jetzt öffnen →</a>
+          <a class="btn btn-primary btn-lg" href="https://maku11111.github.io/haushalts-helpy/">Jetzt kostenlos loslegen →</a>
+          <div class="cta-trust">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/></svg>
+            Eure Familiendaten liegen auf einem eigenen Server – keine Werbung, kein Datenverkauf.
+          </div>
         </div>
       </div>
     </section>
@@ -465,21 +633,35 @@
   <footer>
     <div class="wrap foot">
       <a href="#top" class="brand">
-        <span class="logo">
+        <span class="logo" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M3 11.5 12 4l9 7.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5V19a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-8.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20v-5h4v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
         Haushalts-Helpy
       </a>
-      <span>Der Haushalts-Helfer für die ganze Familie · mit ❤️ gebaut</span>
+      <span>Der Haushalts-Helfer für die ganze Familie · mit <span aria-hidden="true">❤️</span> gebaut</span>
+      <span class="foot-privacy">Eure Familiendaten liegen auf einem eigenen Server – keine Werbung, kein Datenverkauf.</span>
     </div>
   </footer>
 
   <script>
-    // Reveal-on-scroll
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+    // Reveal-on-scroll mit Fallback: Inhalt darf nie unsichtbar hängen bleiben.
+    (function () {
+      var els = document.querySelectorAll('.reveal');
+      var reveal = function (el) { el.classList.add('in'); };
+      if (!('IntersectionObserver' in window)) { els.forEach(reveal); return; }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) { reveal(e.target); io.unobserve(e.target); } });
+      }, { threshold: 0.12, rootMargin: '0px 0px -5% 0px' });
+      els.forEach(function (el) { io.observe(el); });
+      // Sicherheitsnetz: Falls der Observer nicht feuert, alle aktuell
+      // sichtbaren Elemente nach kurzer Zeit dennoch einblenden.
+      setTimeout(function () {
+        els.forEach(function (el) {
+          var r = el.getBoundingClientRect();
+          if (r.top < window.innerHeight && r.bottom > 0) reveal(el);
+        });
+      }, 1200);
+    })();
   </script>
 </body>
 </html>
