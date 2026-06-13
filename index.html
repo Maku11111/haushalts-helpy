@@ -186,6 +186,10 @@
     }
     .schematic .fach-divider { border-top: 6px solid #b08d5a; box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
     .schematic .fach-num { color: #7a5c30; background: rgba(255,255,255,0.78); }
+    /* Foto als Hintergrund im Schema: Foto leicht abgedunkelt, Linien/Nummern klar darüber */
+    .where-wrap.has-photo img { filter: brightness(0.88) contrast(1.03); }
+    .where-wrap.has-photo .fach-divider { border-top: 3px solid rgba(255,255,255,0.92); box-shadow: 0 1px 3px rgba(0,0,0,0.65); }
+    .where-wrap.has-photo .fach-num { background: rgba(0,0,0,0.62); box-shadow: 0 1px 3px rgba(0,0,0,0.55); }
     .loc-badge:hover { opacity: 0.8; }
     .loc-thumb-wrap { position: relative; display: inline-block; width: 48px; height: 48px; flex-shrink: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
     .loc-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
@@ -1893,7 +1897,7 @@ function renderInventory() {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
           ${photoUrl ? `
             <div class="loc-thumb-wrap" onclick="openItemLocation('${r.id}')" style="cursor:zoom-in">
-              <img src="${photoUrl}" />
+              <img src="${pb.getFileUrl(loc, loc.photo, {thumb:'160x160'})}" />
               ${(r.pos_x!=null&&r.pos_x!==''&&r.pos_y!=null) ? `<div class="loc-thumb-dot" style="left:${r.pos_x}%;top:${shelfDotTop(loc,r.pos_y)}%"></div>` : (loc.marker_x ? `<div class="loc-thumb-dot" style="left:${loc.marker_x}%;top:${loc.marker_y}%;opacity:0.4"></div>` : '')}
             </div>` : ''}
           <div class="card-actions">
@@ -1945,15 +1949,16 @@ function buildLocationVisual(loc, posX, posY, editable) {
   }
   const overlay = `<div class="fach-overlay">${guides}</div>`;
 
-  const photoUrl = loc && loc.photo ? pb.getFileUrl(loc, loc.photo) : null;
+  const photoUrl = loc && loc.photo ? pb.getFileUrl(loc, loc.photo, {thumb:'900x0'}) : null;
   let inner;
   if (photoUrl) {
+    // Foto als Hintergrund, nummerierte Fächer als Overlay darüber
     inner = `<img src="${photoUrl}" alt="Regal" />${overlay}${dotHtml}`;
   } else {
     const label = esc(loc ? (loc.shelf||loc.room||'Regal') : 'Regal');
     inner = `<div class="schematic"><div class="sch-label">${label}</div>${overlay}${dotHtml}</div>`;
   }
-  const cls = 'where-wrap' + (editable ? ' editable' : '');
+  const cls = 'where-wrap' + (editable ? ' editable' : '') + (photoUrl ? ' has-photo' : '');
   const clickAttr = editable ? ' onclick="onWhereClick(event)"' : '';
   let html = `<div class="${cls}" id="where-area"${clickAttr}>${inner}</div>`;
   if (editable) html += `<div class="where-hint">👆 Tippe an: oberstes Fach = 1, dann abwärts · links/rechts frei</div>`;
