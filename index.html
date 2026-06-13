@@ -533,6 +533,27 @@
     body[data-layout="bento"] #persons-list .card-actions { justify-content: center; }
     body[data-layout="bento"] #allowance-list .allowance-header { flex-wrap: wrap; }
 
+    /* ── Mein Bereich: Wunschliste, Familien-Wünsche, Board ── */
+    .wish-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary-light); border-radius: var(--radius-sm); padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: var(--shadow-sm); }
+    .wish-card.prio-high { border-left-color: var(--danger); }
+    .wish-card.prio-low  { border-left-color: var(--info); }
+    .wish-card .wh { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+    .wish-title { font-weight: 600; font-size: 0.95rem; }
+    .wish-meta  { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; }
+    .wish-meta a { color: var(--primary); }
+    .shared-tag { font-size: 0.68rem; background: var(--primary-dim); color: var(--primary); border-radius: 20px; padding: 0.1rem 0.5rem; font-weight: 600; }
+    .priv-tag   { font-size: 0.68rem; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); border-radius: 20px; padding: 0.1rem 0.5rem; }
+    .fam-wish { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.6rem 0.85rem; margin-bottom: 0.45rem; display: flex; align-items: center; gap: 0.7rem; box-shadow: var(--shadow-sm); }
+    .fam-wish .av { font-size: 1.5rem; flex-shrink: 0; }
+    .board-grid { columns: 158px; column-gap: 0.6rem; }
+    .board-note { break-inside: avoid; -webkit-column-break-inside: avoid; margin: 0 0 0.6rem 0; border-radius: var(--radius-sm); padding: 0.7rem 0.8rem; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.06); color: #2a2620; }
+    .board-note .bn-title { font-weight: 600; font-size: 0.9rem; word-break: break-word; }
+    .board-note .bn-note  { font-size: 0.82rem; margin-top: 0.3rem; opacity: 0.82; word-break: break-word; }
+    .board-note .bn-link  { font-size: 0.78rem; color: #1f5038; display: inline-block; margin-top: 0.35rem; word-break: break-all; }
+    .board-note .bn-actions { margin-top: 0.5rem; display: flex; gap: 0.3rem; }
+    .board-note .bn-actions button { background: rgba(255,255,255,0.5); border: none; border-radius: 6px; padding: 0.2rem 0.45rem; cursor: pointer; font-size: 0.78rem; }
+    .bn-yellow { background: #fff7cf; } .bn-pink { background: #ffe0ec; } .bn-blue { background: #d8e9ff; } .bn-green { background: #d8f1de; } .bn-purple { background: #eadcff; }
+
     /* ── Toast ── */
     #toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 0.6rem 1.2rem; border-radius: 20px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 999; pointer-events: none; white-space: nowrap; }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -655,6 +676,7 @@
     <button class="tab-btn"        data-tab="documents"  onclick="switchTab('documents',this)"><span class="icon">📄</span>Dokumente</button>
     <button class="tab-btn"        data-tab="stats"      onclick="switchTab('stats',this)"><span class="icon">📊</span>Statistiken</button>
     <button class="tab-btn"        data-tab="allowance"  onclick="switchTab('allowance',this)"><span class="icon">💰</span>Taschengeld</button>
+    <button class="tab-btn"        data-tab="me"         onclick="switchTab('me',this)"><span class="icon">✨</span>Mein Bereich</button>
   </nav>
 
   <main>
@@ -1131,6 +1153,76 @@
         </div>
       </div>
       <div id="allowance-list"><div class="loading">Lade …</div></div>
+    </section>
+
+    <!-- ══════════════ MEIN BEREICH (privat pro Login) ══════════════ -->
+    <section id="section-me" class="section">
+      <div class="dash-greeting">
+        <h2 id="me-greeting">✨ Mein Bereich</h2>
+        <p id="me-sub">Dein privater Bereich – nur du siehst das hier.</p>
+      </div>
+
+      <!-- Hobbys -->
+      <div class="dash-section-hdr"><h3>🎯 Meine Hobbys & Interessen</h3></div>
+      <div id="me-interests" class="filter-chips" style="margin-bottom:0.6rem"></div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.4rem">
+        <input id="interest-input" placeholder="z.B. Fußball, Lesen, Klavier …" onkeydown="if(event.key==='Enter')addInterest()" style="flex:1" />
+        <button class="btn btn-primary btn-sm" onclick="addInterest()">+ Hinzufügen</button>
+      </div>
+
+      <!-- Wunschliste -->
+      <div class="dash-section-hdr"><h3>🎁 Meine Wunschliste</h3><a onclick="toggleForm('wish-form')">+ Wunsch</a></div>
+      <div class="form-panel" id="wish-form">
+        <div><label>Wunsch *</label><input id="wish-title" placeholder="Was wünschst du dir?" /></div>
+        <div class="form-row">
+          <div><label>Link (optional)</label><input id="wish-url" placeholder="https://…" /></div>
+          <div><label>Preis (optional)</label><input id="wish-price" placeholder="z.B. ca. 30 €" /></div>
+        </div>
+        <div class="form-row">
+          <div><label>Priorität</label>
+            <select id="wish-priority">
+              <option value="">– normal –</option>
+              <option value="high">🔥 Sehr gerne</option>
+              <option value="low">🙂 Nice-to-have</option>
+            </select>
+          </div>
+          <div><label>Mit Familie teilen</label><input id="wish-shared" type="checkbox" checked style="width:auto;margin-top:0.5rem" /></div>
+        </div>
+        <div><label>Notiz</label><textarea id="wish-note" rows="2" placeholder="Farbe, Größe, Variante …"></textarea></div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveWish()">Speichern</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('wish-form')">Abbrechen</button>
+        </div>
+      </div>
+      <div id="me-wishlist"><div class="loading">Lade …</div></div>
+
+      <!-- Familien-Wünsche -->
+      <div class="dash-section-hdr"><h3>👀 Familien-Wünsche</h3><span style="font-size:0.74rem;color:var(--text-muted)">Geschenkideen der anderen</span></div>
+      <div id="me-family-wishes"><div class="dash-empty">Noch keine geteilten Wünsche</div></div>
+
+      <!-- Board -->
+      <div class="dash-section-hdr"><h3>📌 Mein Board</h3><a onclick="toggleForm('board-form')">+ Notiz</a></div>
+      <div class="form-panel" id="board-form">
+        <div><label>Titel *</label><input id="board-title" placeholder="Idee, Link, Erinnerung …" /></div>
+        <div class="form-row">
+          <div><label>Link (optional)</label><input id="board-url" placeholder="https://…" /></div>
+          <div><label>Farbe</label>
+            <select id="board-color">
+              <option value="yellow">🟡 Gelb</option>
+              <option value="pink">🌸 Rosa</option>
+              <option value="blue">🔵 Blau</option>
+              <option value="green">🟢 Grün</option>
+              <option value="purple">🟣 Lila</option>
+            </select>
+          </div>
+        </div>
+        <div><label>Notiz</label><textarea id="board-note" rows="2" placeholder="Details …"></textarea></div>
+        <div class="form-panel-footer">
+          <button class="btn btn-primary" onclick="saveBoardItem()">Speichern</button>
+          <button class="btn btn-ghost"   onclick="toggleForm('board-form')">Abbrechen</button>
+        </div>
+      </div>
+      <div id="me-board"><div class="dash-empty">Noch nichts gepinnt – füge deine erste Notiz hinzu 📌</div></div>
     </section>
   </main>
 </div>
@@ -1731,6 +1823,7 @@ function switchTab(tab, btn) {
   document.getElementById('section-'+tab).classList.add('active');
   btn.classList.add('active');
   if (tab==='dashboard') renderDashboard();
+  if (tab==='me') loadMe();
 }
 
 function switchTabByName(tab) {
@@ -3374,6 +3467,165 @@ function shareInvite() {
   if (navigator.share) navigator.share({ title: 'Haushalts-Helpy – Familie beitreten', text }).catch(()=>{});
   else if (navigator.clipboard) navigator.clipboard.writeText(text).then(()=>toast('🔗 Einladung kopiert')).catch(()=>toast('Einladung: '+inviteCode));
   else toast('Einladung: '+inviteCode);
+}
+
+// ══════════════════════════════════════════════
+//  MEIN BEREICH (privat pro Login: Hobbys, Wunschliste, Board)
+// ══════════════════════════════════════════════
+let interestsData = [], wishData = [], boardData = [];
+const BOARD_COLORS = { yellow:'bn-yellow', pink:'bn-pink', blue:'bn-blue', green:'bn-green', purple:'bn-purple' };
+
+function myUserId() { return pb.authStore.model?.id || ''; }
+function myPersonObj() {
+  const e = (pb.authStore.model?.email || '').toLowerCase();
+  return personsData.find(p => p.email && p.email.toLowerCase() === e) || null;
+}
+
+async function loadMe() {
+  const mp = myPersonObj();
+  document.getElementById('me-greeting').textContent = '✨ ' + (mp ? (mp.emoji||'') + ' ' + mp.name : 'Mein Bereich');
+  try {
+    const [ints, wishes, board] = await Promise.all([
+      pb.collection('interests').getFullList({ sort:'name' }),
+      pb.collection('wishlist').getFullList(),
+      pb.collection('board').getFullList()
+    ]);
+    interestsData = ints; wishData = wishes; boardData = board;
+    renderInterests(); renderWishlist(); renderFamilyWishes(); renderBoard();
+  } catch(e) {
+    document.getElementById('me-wishlist').innerHTML = '<p class="loading">Fehler beim Laden</p>';
+  }
+}
+
+function renderInterests() {
+  const el = document.getElementById('me-interests');
+  const mine = interestsData.filter(i => i.owner === myUserId());
+  el.innerHTML = mine.length
+    ? mine.map(i => `<span class="chip chip-active" style="cursor:default">${esc(i.name)} <span style="cursor:pointer;opacity:0.65;margin-left:2px" onclick="removeInterest('${i.id}')">✕</span></span>`).join('')
+    : '<span style="font-size:0.82rem;color:var(--text-muted)">Noch keine – füg deine Hobbys hinzu 🎯</span>';
+}
+async function addInterest() {
+  const inp = document.getElementById('interest-input');
+  const name = inp.value.trim();
+  if (!name) return;
+  try {
+    const rec = await pb.collection('interests').create({ name, owner: myUserId(), household: currentHousehold });
+    interestsData.push(rec); inp.value = ''; renderInterests();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+async function removeInterest(id) {
+  try { await pb.collection('interests').delete(id); interestsData = interestsData.filter(i=>i.id!==id); renderInterests(); }
+  catch(e) { toast('Fehler: '+e.message); }
+}
+
+function renderWishlist() {
+  const el = document.getElementById('me-wishlist');
+  const mine = wishData.filter(w => w.owner === myUserId());
+  if (!mine.length) { el.innerHTML = '<div class="dash-empty">Noch keine Wünsche – trag deinen ersten ein 🎁</div>'; return; }
+  el.innerHTML = mine.map(w => {
+    const prio = w.priority==='high'?'prio-high':w.priority==='low'?'prio-low':'';
+    return `<div class="wish-card ${prio}">
+      <div class="wh">
+        <div style="flex:1;min-width:0">
+          <div class="wish-title">${w.priority==='high'?'🔥 ':''}${esc(w.title)}</div>
+          <div class="wish-meta">
+            ${w.price?`<span>💶 ${esc(w.price)}</span>`:''}
+            ${w.url?`<a href="${esc(w.url)}" target="_blank" rel="noopener">🔗 Link</a>`:''}
+            ${w.shared?'<span class="shared-tag">👀 geteilt</span>':'<span class="priv-tag">🔒 privat</span>'}
+          </div>
+          ${w.note?`<div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.3rem">${esc(w.note)}</div>`:''}
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" title="${w.shared?'privat machen':'mit Familie teilen'}" onclick="toggleWishShared('${w.id}',${w.shared?'true':'false'})">${w.shared?'🔒':'👀'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteWish('${w.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function saveWish() {
+  const title = document.getElementById('wish-title').value.trim();
+  if (!title) { toast('Wunsch ist Pflicht'); return; }
+  const mp = myPersonObj();
+  try {
+    const rec = await pb.collection('wishlist').create({
+      title,
+      url: document.getElementById('wish-url').value.trim(),
+      price: document.getElementById('wish-price').value.trim(),
+      priority: document.getElementById('wish-priority').value,
+      note: document.getElementById('wish-note').value.trim(),
+      shared: document.getElementById('wish-shared').checked,
+      person: mp ? mp.name : (pb.authStore.model?.email||''),
+      owner: myUserId(), household: currentHousehold
+    });
+    wishData.push(rec);
+    toast('🎁 Wunsch gespeichert');
+    clearForm(['wish-title','wish-url','wish-price','wish-note']);
+    document.getElementById('wish-priority').value=''; document.getElementById('wish-shared').checked=true;
+    toggleForm('wish-form'); renderWishlist(); renderFamilyWishes();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+async function toggleWishShared(id, cur) {
+  try {
+    const r = await pb.collection('wishlist').update(id, { shared: !cur });
+    const i = wishData.findIndex(w=>w.id===id); if(i!==-1) wishData[i]=r;
+    renderWishlist(); toast(cur?'🔒 jetzt privat':'👀 mit Familie geteilt');
+  } catch(e){ toast('Fehler: '+e.message); }
+}
+async function deleteWish(id) {
+  try { await pb.collection('wishlist').delete(id); wishData = wishData.filter(w=>w.id!==id); renderWishlist(); renderFamilyWishes(); }
+  catch(e){ toast('Fehler: '+e.message); }
+}
+
+function renderFamilyWishes() {
+  const el = document.getElementById('me-family-wishes');
+  const others = wishData.filter(w => w.owner !== myUserId() && w.shared);
+  if (!others.length) { el.innerHTML = '<div class="dash-empty">Noch keine geteilten Wünsche der anderen</div>'; return; }
+  el.innerHTML = others.map(w => {
+    const p = personsData.find(x => x.name===w.person);
+    return `<div class="fam-wish">
+      <span class="av">${p?(p.emoji||'🎁'):'🎁'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:0.9rem">${esc(w.title)}${w.priority==='high'?' 🔥':''}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted)">${esc(w.person||'Familie')}${w.price?' · '+esc(w.price):''}${w.note?' · '+esc(w.note):''}</div>
+      </div>
+      ${w.url?`<a href="${esc(w.url)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">🔗</a>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderBoard() {
+  const el = document.getElementById('me-board');
+  const mine = boardData.filter(b => b.owner === myUserId());
+  if (!mine.length) { el.innerHTML = '<div class="dash-empty">Noch nichts gepinnt – füge deine erste Notiz hinzu 📌</div>'; return; }
+  el.innerHTML = '<div class="board-grid">' + mine.map(b => `
+    <div class="board-note ${BOARD_COLORS[b.color]||'bn-yellow'}">
+      <div class="bn-title">${esc(b.title)}</div>
+      ${b.note?`<div class="bn-note">${esc(b.note)}</div>`:''}
+      ${b.url?`<a class="bn-link" href="${esc(b.url)}" target="_blank" rel="noopener">🔗 ${esc(b.url.replace(/^https?:\/\//,'').slice(0,28))}</a>`:''}
+      <div class="bn-actions"><button onclick="deleteBoardItem('${b.id}')">🗑 löschen</button></div>
+    </div>`).join('') + '</div>';
+}
+async function saveBoardItem() {
+  const title = document.getElementById('board-title').value.trim();
+  if (!title) { toast('Titel ist Pflicht'); return; }
+  try {
+    const rec = await pb.collection('board').create({
+      title,
+      url: document.getElementById('board-url').value.trim(),
+      note: document.getElementById('board-note').value.trim(),
+      color: document.getElementById('board-color').value,
+      owner: myUserId(), household: currentHousehold
+    });
+    boardData.push(rec);
+    toast('📌 Notiz gepinnt');
+    clearForm(['board-title','board-url','board-note']);
+    toggleForm('board-form'); renderBoard();
+  } catch(e){ toast('Fehler: '+e.message); }
+}
+async function deleteBoardItem(id) {
+  try { await pb.collection('board').delete(id); boardData = boardData.filter(b=>b.id!==id); renderBoard(); }
+  catch(e){ toast('Fehler: '+e.message); }
 }
 
 // ══════════════════════════════════════════════

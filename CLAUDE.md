@@ -53,6 +53,16 @@ Felder (alle Daten-Collections zusätzlich mit `household`):
 | `shopping`   | name, category, quantity (text), person, done (bool) |
 | `documents`  | name, category, expiry_date, person, note, file |
 | `allowance`  | person, type (credit/debit/bonus), amount (num), date, description |
+| `interests`  | name, owner→users, household (privat pro Login: owner = @request.auth.id) |
+| `wishlist`   | title, person, url, price, note, priority, shared (bool), owner→users, household |
+| `board`      | title, url, note, color, owner→users, household (privat pro Login) |
+
+**Mein Bereich** (Reiter "me", privat pro Login): Hobbys (`interests`), Wunschliste
+(`wishlist`), Familien-Wünsche (geteilte Wünsche anderer) und Pinnwand (`board`).
+`interests`/`board` sind owner-privat; `wishlist` zusätzlich household-sichtbar wenn
+`shared=true` (Regel: `owner = @request.auth.id || (shared = true && household =
+@request.auth.household)`). owner = pb.authStore.model.id; `wishlist.person` = Anzeigename
+des Wünschenden (aus persons via E-Mail-Match). loadMe() lädt beim Tab-Wechsel.
 
 **Wichtig:** Manuell angelegte Collections haben in neueren PocketBase-Versionen
 KEIN automatisches `created`-Feld. Nicht nach `created` sortieren (führt zu
