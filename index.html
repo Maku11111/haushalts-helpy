@@ -751,6 +751,7 @@
     <section id="section-persons" class="section">
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('person-form')">+ Person hinzufügen</button>
+        <button class="btn btn-ghost" onclick="openInvite()">👋 Mitglied einladen</button>
       </div>
       <div class="form-panel" id="person-form">
         <div class="form-row">
@@ -1193,6 +1194,22 @@
   </div>
 </div>
 
+<!-- ══ EINLADUNGS-MODAL ══ -->
+<div class="modal-backdrop" id="invite-modal" onclick="if(event.target===this)closeInvite()">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <h2>👋 Familie einladen</h2>
+    <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Teile diesen Code mit deiner Familie. Damit treten sie <strong id="invite-hhname">eurem Haushalt</strong> bei.</p>
+    <div id="invite-code-box" style="font-size:1.8rem;font-weight:800;letter-spacing:0.25em;background:var(--primary-dim);color:var(--primary);border-radius:var(--radius);padding:0.7rem 0.5rem;margin-bottom:0.6rem">––––––</div>
+    <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="copyInviteCode()">📋 Code kopieren</button>
+      <button class="btn btn-primary btn-sm" onclick="shareInvite()">🔗 Einladung teilen</button>
+    </div>
+    <div id="invite-qr-wrap" style="display:flex;justify-content:center;margin-bottom:0.6rem"></div>
+    <p style="font-size:0.74rem;color:var(--text-muted);line-height:1.5">So geht's: App öffnen → „<strong>Beitreten</strong>" → diesen Code eingeben. Oder den QR-Code scannen.</p>
+    <div class="modal-footer" style="justify-content:center"><button class="btn btn-ghost" onclick="closeInvite()">Schließen</button></div>
+  </div>
+</div>
+
 <!-- ══ DESIGN / THEME MODAL ══ -->
 <div class="modal-backdrop" id="theme-modal" onclick="if(event.target===this)closeThemeMenu()">
   <div class="modal" style="max-width:360px">
@@ -1254,6 +1271,9 @@ const THEMES = {
 };
 // Start-Layout (klassisch | bento)
 let dashLayout = (function(){ try { return localStorage.getItem('hh-dashlayout') || 'classic'; } catch(e) { return 'classic'; } })();
+// Auth-Zustand (muss vor init() initialisiert sein, da init() setAuthMode nutzen kann)
+let authMode = 'login';        // 'login' | 'register' | 'join'
+let currentHousehold = '';     // id des Haushalts des angemeldeten Nutzers
 
 (function init() {
   applyTheme(localStorage.getItem('hh-theme') || 'fresh');
@@ -1261,6 +1281,15 @@ let dashLayout = (function(){ try { return localStorage.getItem('hh-dashlayout')
   buildEmojiGrid();
   buildColorGrid();
   setDashboardGreeting();
+  // Einladungs-Deep-Link (?join=CODE): Beitritts-Formular vorausfüllen
+  try {
+    const joinParam = new URLSearchParams(window.location.search).get('join');
+    if (joinParam) {
+      setAuthMode('join');
+      const jc = document.getElementById('join-code');
+      if (jc) jc.value = joinParam.toUpperCase();
+    }
+  } catch(e) {}
   if (pb.authStore.isValid) showApp();
   document.getElementById('bill-date').valueAsDate = new Date();
   document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
@@ -1550,8 +1579,7 @@ function calPersonEmoji(name) {
 // ══════════════════════════════════════════════
 //  AUTH (Mehr-Familien: Anmelden / Neue Familie / Beitreten)
 // ══════════════════════════════════════════════
-let authMode = 'login';        // 'login' | 'register' | 'join'
-let currentHousehold = '';     // id des Haushalts des angemeldeten Nutzers
+// authMode & currentHousehold stehen oben vor init() (init nutzt setAuthMode)
 
 function setAuthMode(m) {
   authMode = m;
@@ -3311,6 +3339,42 @@ function buildQR(url) {
   catch(e) { wrap.innerHTML='<p style="color:var(--danger)">Ungültige URL</p>'; }
 }
 function closeQR() { document.getElementById('qr-modal-backdrop').classList.remove('open'); }
+
+// ── Einladungscode / Familie einladen ──
+let inviteCode = '', inviteLink = '';
+async function openInvite() {
+  if (!currentHousehold) { toast('Kein Haushalt zugeordnet'); return; }
+  const box = document.getElementById('invite-code-box');
+  box.textContent = '…';
+  document.getElementById('invite-qr-wrap').innerHTML = '';
+  document.getElementById('invite-modal').classList.add('open');
+  try {
+    const hh = await pb.collection('households').getOne(currentHousehold);
+    inviteCode = (hh.invite_code || '').toString();
+    document.getElementById('invite-hhname').textContent = hh.name || 'eurem Haushalt';
+    box.textContent = inviteCode || '—';
+    const base = (localStorage.getItem('helpy_qr_url') || (window.location.origin + window.location.pathname)).split('?')[0];
+    inviteLink = base + '?join=' + encodeURIComponent(inviteCode);
+    const qw = document.getElementById('invite-qr-wrap');
+    if (inviteCode) { try { new QRCode(qw, { text: inviteLink, width:160, height:160, colorDark:'#1a1a1a', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch(e) {} }
+  } catch(e) {
+    box.textContent = 'Fehler';
+    toast('Konnte Code nicht laden: ' + e.message);
+  }
+}
+function closeInvite() { document.getElementById('invite-modal').classList.remove('open'); }
+function copyInviteCode() {
+  if (!inviteCode) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(inviteCode).then(()=>toast('📋 Code kopiert')).catch(()=>toast('Code: '+inviteCode));
+  else toast('Code: '+inviteCode);
+}
+function shareInvite() {
+  if (!inviteCode) return;
+  const text = `Tritt unserer Familie in Haushalts-Helpy bei!\nEinladungscode: ${inviteCode}\n${inviteLink}`;
+  if (navigator.share) navigator.share({ title: 'Haushalts-Helpy – Familie beitreten', text }).catch(()=>{});
+  else if (navigator.clipboard) navigator.clipboard.writeText(text).then(()=>toast('🔗 Einladung kopiert')).catch(()=>toast('Einladung: '+inviteCode));
+  else toast('Einladung: '+inviteCode);
+}
 
 // ══════════════════════════════════════════════
 //  UTILITIES
