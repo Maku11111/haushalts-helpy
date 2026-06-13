@@ -87,6 +87,17 @@ Der Parser ruft die **Claude API** (Modell `claude-haiku-4-5`) auf und gibt
 `{actions:[{collection, data}], reply}` zurück. Sprachnachrichten werden per
 **OpenAI Whisper** transkribiert.
 
+**Helpy-Chat (`/api/chat`)**: `hh.chat()` nutzt echtes Claude **Tool-Use**
+(list_records/create_record/update_record/delete_record, haushalts-sicher) in
+einem Tool-Loop → Helpy liest Daten & handelt, nicht nur anlegen.
+**Stufe 2 – proaktiv**: `hh.buildBriefing(hid)` baut ein Morgen-Briefing
+(Termine/To-dos/Vorräte/Dokumente/Geburtstage). `cronAdd("morning_briefing",
+"0 5 * * *")` versendet es per Telegram an alle verknüpften Chats; `/api/briefing`
+(auth) liefert es on-demand (Knopf 📋 im Chat). **Telegram pro Familie**: Collection
+`telegram_links` (chat_id, household) — Verknüpfung via `/start CODE` oder 6-Zeichen-Code
+an den Bot (Deep-Link `t.me/Haushaltshelpybot?start=CODE`); der Webhook nutzt dann
+`hh.householdForChat(chatId)` statt DEFAULT_HOUSEHOLD.
+
 ### Secrets (NICHT im Repo!)
 
 `hh.js` im Repo enthält Platzhalter `__CLAUDE_KEY__`, `__TG_TOKEN__`,

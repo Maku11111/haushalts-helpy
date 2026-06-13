@@ -4,7 +4,7 @@
 
 // ── Lebenszeichen (zum Testen der Installation) ──
 routerAdd("GET", "/api/hh-ping", function (e) {
-  return e.json(200, { ok: true, hooks: "v8" });
+  return e.json(200, { ok: true, hooks: "v9" });
 });
 
 // ── Helpy-Chat: unterhalten + handeln ──
@@ -99,20 +99,61 @@ routerAdd("POST", "/api/telegram-webhook", function (e) {
       text = (msg.text || "").trim();
     }
     if (!text) return e.json(200, { skip: true });
-    if (text === "/start") {
-      reply = "👋 Hallo! Ich bin Haushalts-Helpy. Schick mir Text oder eine Sprachnachricht, z.B.:\n- Termin Zahnarzt fuer Maxi am Donnerstag 9:30\n- Milch und Brot auf die Einkaufsliste\n- Neue Aufgabe: Jona raeumt Samstag sein Zimmer auf";
-    } else {
-      try {
-        var parsed = hh.parse(text, hh.DEFAULT_HOUSEHOLD);
-        var n = hh.apply(parsed, hh.DEFAULT_HOUSEHOLD);
-        reply = prefix + (parsed.reply || ("OK, " + n + " Eintraege angelegt"));
-      } catch (perr) {
-        reply = "❌ Da ging was schief: " + perr;
+    var fromName = (msg.from && (msg.from.first_name || msg.from.username)) || "";
+
+    // /start [CODE] – Begruessung oder Verknuepfung per Deep-Link
+    if (text === "/start" || text.indexOf("/start ") === 0) {
+      var param = text.length > 7 ? text.slice(7).trim() : "";
+      if (param) {
+        try { var r0 = hh.linkChatToCode(chatId, param, fromName); hh.tgReply(chatId, "✅ Verbunden mit „" + r0.householdName + "\"! Ab jetzt landen deine Nachrichten dort – und du bekommst jeden Morgen das Briefing. 🌅"); }
+        catch (le0) { hh.tgReply(chatId, "❌ Dieser Code passt nicht. Den Familien-Code findest du in der App unter „👋 Mitglied einladen"."); }
+        return e.json(200, { ok: true });
       }
+      hh.tgReply(chatId, "👋 Hallo! Verbinde mich zuerst mit deiner Familie: schick mir deinen 6-stelligen Familien-Code (App → „Mitglied einladen") oder oeffne den Einladungslink. Danach kannst du mir Aufgaben/Termine/Einkaeufe diktieren.");
+      return e.json(200, { ok: true });
     }
-    hh.tgReply(chatId, reply);
+    // Reiner 6-Zeichen-Code -> Verknuepfung versuchen
+    if (/^[A-Za-z0-9]{6}$/.test(text)) {
+      try { var r1 = hh.linkChatToCode(chatId, text, fromName); hh.tgReply(chatId, "✅ Verbunden mit „" + r1.householdName + "\"! 🌅"); return e.json(200, { ok: true }); }
+      catch (le1) { /* kein gueltiger Code -> normal weiter unten */ }
+    }
+    // Haushalt dieses Chats ermitteln (pro Familie)
+    var hid = hh.householdForChat(chatId);
+    if (!hid) {
+      hh.tgReply(chatId, "🔗 Bitte zuerst verbinden: schick mir deinen 6-stelligen Familien-Code aus der App („👋 Mitglied einladen").");
+      return e.json(200, { ok: true });
+    }
+    try {
+      var parsed = hh.parse(text, hid);
+      var n = hh.apply(parsed, hid);
+      hh.tgReply(chatId, prefix + (parsed.reply || ("OK, " + n + " Eintraege angelegt")));
+    } catch (perr) {
+      hh.tgReply(chatId, "❌ Da ging was schief: " + perr);
+    }
     return e.json(200, { ok: true });
   } catch (err) {
     return e.json(200, { error: "" + err });
   }
+});
+
+// ── Morgen-Briefing: auf Anfrage (zum Testen + fuer die App) ──
+routerAdd("POST", "/api/briefing", function (e) {
+  var hh = require(__hooks + "/hh.js");
+  var hid = e.auth ? e.auth.get("household") : "";
+  if (!hid) return e.json(400, { error: "Kein Haushalt zugeordnet" });
+  var text = hh.buildBriefing(hid);
+  var body = e.requestInfo().body || {};
+  var sent = 0;
+  if (body.send) {
+    try {
+      var links = $app.findRecordsByFilter("telegram_links", "household = '" + hid + "'", "", 100, 0);
+      links.forEach(function (l) { hh.tgReply(l.get("chat_id"), text); sent++; });
+    } catch (err) {}
+  }
+  return e.json(200, { ok: true, briefing: text, sentToTelegram: sent });
+}, $apis.requireAuth());
+
+// ── Taeglicher Morgen-Briefing-Versand via Telegram (05:00 UTC ~ 07:00 MESZ) ──
+cronAdd("morning_briefing", "0 5 * * *", function () {
+  try { require(__hooks + "/hh.js").sendTelegramBriefings(); } catch (e) {}
 });

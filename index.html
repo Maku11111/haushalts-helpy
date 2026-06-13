@@ -1304,7 +1304,10 @@
         <strong>Helpy</strong>
         <span style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">dein Familien-Assistent</span>
       </div>
-      <button onclick="closeChat()" class="chat-close">✕</button>
+      <div style="display:flex;gap:0.4rem;flex-shrink:0">
+        <button onclick="getBriefing()" class="chat-close" title="Tages-Briefing" style="width:auto;padding:0 0.5rem">📋</button>
+        <button onclick="closeChat()" class="chat-close">✕</button>
+      </div>
     </div>
     <div class="chat-body" id="chat-body"></div>
     <div class="chat-input-bar">
@@ -1340,10 +1343,11 @@
     <h2>👋 Familie einladen</h2>
     <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:0.8rem">Teile diesen Code mit deiner Familie. Damit treten sie <strong id="invite-hhname">eurem Haushalt</strong> bei.</p>
     <div id="invite-code-box" style="font-size:1.8rem;font-weight:800;letter-spacing:0.25em;background:var(--primary-dim);color:var(--primary);border-radius:var(--radius);padding:0.7rem 0.5rem;margin-bottom:0.6rem">––––––</div>
-    <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:1rem;flex-wrap:wrap">
+    <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:0.6rem;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="copyInviteCode()">📋 Code kopieren</button>
       <button class="btn btn-primary btn-sm" onclick="shareInvite()">🔗 Einladung teilen</button>
     </div>
+    <a id="invite-tg" class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noopener" style="display:inline-flex;margin-bottom:1rem;text-decoration:none">📲 Telegram-Bot verbinden (Morgen-Briefing)</a>
     <div id="invite-qr-wrap" style="display:flex;justify-content:center;margin-bottom:0.6rem"></div>
     <p style="font-size:0.74rem;color:var(--text-muted);line-height:1.5">So geht's: App öffnen → „<strong>Beitreten</strong>" → diesen Code eingeben. Oder den QR-Code scannen.</p>
     <div class="modal-footer" style="justify-content:center"><button class="btn btn-ghost" onclick="closeInvite()">Schließen</button></div>
@@ -3496,6 +3500,8 @@ async function openInvite() {
     box.textContent = inviteCode || '—';
     const base = (localStorage.getItem('helpy_qr_url') || (window.location.origin + window.location.pathname)).split('?')[0];
     inviteLink = base + '?join=' + encodeURIComponent(inviteCode);
+    const tg = document.getElementById('invite-tg');
+    if (tg) tg.href = 'https://t.me/Haushaltshelpybot?start=' + encodeURIComponent(inviteCode);
     const qw = document.getElementById('invite-qr-wrap');
     if (inviteCode) { try { new QRCode(qw, { text: inviteLink, width:160, height:160, colorDark:'#1a1a1a', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M }); } catch(e) {} }
   } catch(e) {
@@ -3586,6 +3592,20 @@ function chatMic() {
   chatRecognition.onerror  = () => btn.classList.remove('rec');
   chatRecognition.onend    = () => { btn.classList.remove('rec'); if (finalText.trim()) sendChat(finalText); };
   try { chatRecognition.start(); } catch(e) {}
+}
+async function getBriefing() {
+  if (!document.getElementById('chat-modal').classList.contains('open')) openChat();
+  const typing = appendChatMsg('bot', 'Helpy stellt dein Briefing zusammen …', 'typing');
+  try {
+    const res = await fetch(pb.baseUrl + '/api/briefing', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': pb.authStore.token }, body:'{}' });
+    const data = await res.json();
+    typing.remove();
+    if (!res.ok) throw new Error(data.error || res.status);
+    appendChatMsg('bot', data.briefing || 'Heute ist alles entspannt 😌');
+  } catch(e) {
+    typing.remove();
+    appendChatMsg('bot', '❌ Konnte das Briefing nicht laden: ' + e.message);
+  }
 }
 
 // ══════════════════════════════════════════════

@@ -251,5 +251,75 @@ module.exports = {
       body: JSON.stringify({ chat_id: chatId, text: text }),
       timeout: 30
     });
+  },
+
+  // ── Stufe 2: Telegram-Verknuepfung pro Familie ──
+  householdForChat: function (chatId) {
+    try { var r = $app.findFirstRecordByData("telegram_links", "chat_id", "" + chatId); return r ? r.get("household") : ""; }
+    catch (e) { return ""; }
+  },
+  linkChatToCode: function (chatId, code, name) {
+    var h;
+    try { h = $app.findFirstRecordByData("households", "invite_code", (code || "").toString().trim().toUpperCase()); }
+    catch (e) { throw new Error("Code ungueltig"); }
+    if (!h) throw new Error("Code ungueltig");
+    var link = null;
+    try { link = $app.findFirstRecordByData("telegram_links", "chat_id", "" + chatId); } catch (e) { link = null; }
+    if (!link) { link = new Record($app.findCollectionByNameOrId("telegram_links")); link.set("chat_id", "" + chatId); }
+    link.set("household", h.id);
+    if (name) link.set("name", name);
+    $app.save(link);
+    return { householdName: h.get("name") };
+  },
+
+  // ── Stufe 2: Morgen-Briefing ──
+  buildBriefing: function (hid) {
+    var now = new Date();
+    var todayStr = now.toISOString().slice(0, 10);
+    function fdate(d) { return ("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "."; }
+    var out = [];
+    try {
+      var cals = $app.findRecordsByFilter("calendar", "household = '" + hid + "'", "date", 300, 0);
+      var todays = cals.filter(function (c) { return ("" + (c.get("date") || "")).slice(0, 10) === todayStr; });
+      if (todays.length) out.push("📅 Heute:\n" + todays.map(function (c) { var d = "" + c.get("date"); var t = c.get("allday") ? "" : (" " + d.slice(11, 16)); return "• " + c.get("title") + t + (c.get("person") ? " (" + c.get("person") + ")" : ""); }).join("\n"));
+    } catch (e) {}
+    try {
+      var todos = $app.findRecordsByFilter("todos", "household = '" + hid + "' && done = false", "", 300, 0);
+      var overdue = [], due = [];
+      todos.forEach(function (t) { var ds = ("" + (t.get("date") || "")).slice(0, 10); if (ds && ds < todayStr) overdue.push(t); else if (ds === todayStr) due.push(t); });
+      if (overdue.length) out.push("⚠️ Überfällig:\n" + overdue.map(function (t) { return "• " + t.get("text") + (t.get("person") ? " (" + t.get("person") + ")" : ""); }).join("\n"));
+      if (due.length) out.push("✅ Heute fällig:\n" + due.map(function (t) { return "• " + t.get("text") + (t.get("person") ? " (" + t.get("person") + ")" : ""); }).join("\n"));
+    } catch (e) {}
+    try {
+      var inv = $app.findRecordsByFilter("inventory", "household = '" + hid + "'", "", 400, 0);
+      var low = inv.filter(function (i) { return (i.get("quantity") || 0) <= (i.get("min_stock") || 0); });
+      if (low.length) out.push("📦 Knapp:\n" + low.map(function (i) { return "• " + i.get("name") + " (" + i.get("quantity") + "/" + i.get("min_stock") + ")"; }).join("\n"));
+    } catch (e) {}
+    try {
+      var docs = $app.findRecordsByFilter("documents", "household = '" + hid + "'", "", 200, 0);
+      var exp = docs.filter(function (d) { var ed = d.get("expiry_date"); if (!ed) return false; var days = Math.round((new Date(ed) - now) / 86400000); return days >= 0 && days <= 14; });
+      if (exp.length) out.push("📄 Läuft bald ab:\n" + exp.map(function (d) { var days = Math.round((new Date(d.get("expiry_date")) - now) / 86400000); return "• " + d.get("name") + " (in " + days + " T.)"; }).join("\n"));
+    } catch (e) {}
+    try {
+      var pers = $app.findRecordsByFilter("persons", "household = '" + hid + "'", "", 100, 0);
+      var bd = [];
+      pers.forEach(function (p) { var b = p.get("birthday"); if (!b) return; var x = new Date(b); var t = new Date(now.getFullYear(), x.getMonth(), x.getDate()); var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()); if (t < t0) t.setFullYear(t.getFullYear() + 1); var days = Math.round((t - t0) / 86400000); if (days <= 7) bd.push("• " + p.get("name") + (days === 0 ? " 🎉 HEUTE!" : " (in " + days + " T.)")); });
+      if (bd.length) out.push("🎂 Geburtstage:\n" + bd.join("\n"));
+    } catch (e) {}
+    var header = "☀️ Guten Morgen! Dein Helpy-Briefing für " + fdate(now) + "\n";
+    if (!out.length) return header + "\nHeute ist alles entspannt – nichts Dringendes. 😌";
+    return header + "\n" + out.join("\n\n");
+  },
+  sendTelegramBriefings: function () {
+    var self = this;
+    var links;
+    try { links = $app.findRecordsByFilter("telegram_links", "chat_id != ''", "", 500, 0); } catch (e) { return; }
+    var cache = {};
+    links.forEach(function (l) {
+      var hid = l.get("household");
+      if (!hid) return;
+      if (!cache[hid]) cache[hid] = self.buildBriefing(hid);
+      self.tgReply(l.get("chat_id"), cache[hid]);
+    });
   }
 };
