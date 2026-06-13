@@ -33,7 +33,7 @@ Nutzer). Felder:
 | `users`      | (Standard PocketBase Auth) |
 | `persons`    | name, emoji, color, birthday, email, notes |
 | `locations`  | room, shelf, photo (file), marker_x, marker_y, description |
-| `inventory`  | name, category, quantity (num), min_stock (num), location_id, location |
+| `inventory`  | name, category, quantity (num), min_stock (num), location_id, location, pos_x (num), pos_y (num) |
 | `calendar`   | title, date, date_end, allday (bool), person, note |
 | `todos`      | text, person, date, done (bool), recurrence (''/daily/weekly/monthly), priority (''/high/low) |
 | `invoices`   | description, amount (num), date, category, status (offen/bezahlt), note, file, items (JSON-String) |

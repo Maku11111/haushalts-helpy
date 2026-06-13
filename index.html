@@ -163,6 +163,17 @@
 
     /* Inline location badge on inventory cards */
     .loc-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--primary); background: var(--primary-dim); border-radius: 6px; padding: 0.1rem 0.5rem; margin-top: 0.3rem; cursor: pointer; }
+
+    /* ── Wo-ist-das: Foto/Schema mit Produkt-Punkt ── */
+    .where-wrap { position: relative; width: 100%; user-select: none; border-radius: 10px; overflow: hidden; }
+    .where-wrap.editable { cursor: crosshair; }
+    .where-wrap img { display: block; width: 100%; max-height: 60vh; object-fit: contain; background: #111; }
+    /* Schema (generiertes Regal, wenn kein Foto) */
+    .schematic { position: relative; width: 100%; aspect-ratio: 4 / 3; background: linear-gradient(160deg,#f3ede3,#e7dcc8); border: 3px solid #b08d5a; border-radius: 10px; box-shadow: inset 0 0 0 2px #cdb487; overflow: hidden; }
+    .schematic .sch-board { position: absolute; left: 0; right: 0; height: 7px; background: linear-gradient(#c9a877,#a87f4d); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .schematic .sch-label { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-size: 0.72rem; font-weight: 700; color: #7a5c30; letter-spacing: 0.03em; text-transform: uppercase; }
+    .where-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center; }
+    .where-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem; }
     .loc-badge:hover { opacity: 0.8; }
     .loc-thumb-wrap { position: relative; display: inline-block; width: 48px; height: 48px; flex-shrink: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
     .loc-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
@@ -1015,6 +1026,21 @@
   </div>
 </div>
 
+<!-- ══ WO-IST-DAS MODAL (Produkt-Standort) ══ -->
+<div class="modal-backdrop" id="item-loc-modal" onclick="if(event.target===this)closeItemLoc()">
+  <div class="modal" style="max-width:560px;padding:0">
+    <div style="padding:0.85rem 1rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+      <div style="min-width:0">
+        <div id="item-loc-title" style="font-weight:700;font-size:0.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        <div id="item-loc-sub" style="font-size:0.78rem;color:var(--text-muted);margin-top:0.1rem"></div>
+      </div>
+      <button onclick="closeItemLoc()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);flex-shrink:0">✕</button>
+    </div>
+    <div id="item-loc-visual" style="padding:1rem"></div>
+    <div id="item-loc-actions" style="padding:0 1rem 1rem;display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end"></div>
+  </div>
+</div>
+
 <!-- ══ EDIT MODAL ══ -->
 <div class="modal-backdrop" id="edit-modal">
   <div class="modal">
@@ -1833,8 +1859,8 @@ function renderInventory() {
         <div style="flex:1;min-width:0">
           <div class="card-title">${esc(r.name)} ${low?'<span class="badge badge-warn">⚠ Niedrig</span>':''}</div>
           <div class="card-meta">${r.category?'🏷 '+esc(r.category):'&nbsp;'}</div>
-          ${locLabel ? `<div class="loc-badge" onclick="${loc?`openLocPhoto('${loc.id}')`:'void(0)'}">
-            📍 ${esc(locLabel)}${photoUrl?' 🖼':''}
+          ${locLabel ? `<div class="loc-badge" onclick="${loc?`openItemLocation('${r.id}')`:'void(0)'}">
+            📍 ${esc(locLabel)}${(r.pos_x!=null&&r.pos_x!=='')?' 🔴':(photoUrl?' 🖼':'')}
           </div>` : ''}
           <div class="qty-ctrl">
             <button class="qty-btn" onclick="adjustQty('${r.id}',${r.quantity},-1)">−</button>
@@ -1845,9 +1871,9 @@ function renderInventory() {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
           ${photoUrl ? `
-            <div class="loc-thumb-wrap" onclick="openLocPhoto('${loc.id}')" style="cursor:zoom-in">
+            <div class="loc-thumb-wrap" onclick="openItemLocation('${r.id}')" style="cursor:zoom-in">
               <img src="${photoUrl}" />
-              ${loc.marker_x ? `<div class="loc-thumb-dot" style="left:${loc.marker_x}%;top:${loc.marker_y}%"></div>` : ''}
+              ${(r.pos_x!=null&&r.pos_x!=='') ? `<div class="loc-thumb-dot" style="left:${r.pos_x}%;top:${r.pos_y}%"></div>` : (loc.marker_x ? `<div class="loc-thumb-dot" style="left:${loc.marker_x}%;top:${loc.marker_y}%;opacity:0.4"></div>` : '')}
             </div>` : ''}
           <div class="card-actions">
             <button class="btn btn-ghost btn-sm" onclick="openEditInventory('${r.id}')">✏️</button>
@@ -1867,6 +1893,96 @@ async function adjustQty(id,current,delta) {
     renderInventory(); renderDashboard();
   } catch(e) { toast('Fehler: '+e.message); }
 }
+
+// ══════════════════════════════════════════════
+//  WO IST DAS? – Produkt-Standort (Foto oder Schema + roter Punkt)
+// ══════════════════════════════════════════════
+let itemLocState = null;
+
+function buildLocationVisual(loc, posX, posY, editable) {
+  const hasDot = posX !== undefined && posX !== null && posX !== '' && !isNaN(posX);
+  const dotHtml = `<div class="loc-dot" id="where-dot" style="${hasDot?`left:${posX}%;top:${posY}%`:'display:none'}"></div>`;
+  const photoUrl = loc && loc.photo ? pb.getFileUrl(loc, loc.photo) : null;
+  let inner;
+  if (photoUrl) {
+    inner = `<img src="${photoUrl}" alt="Regal" />${dotHtml}`;
+  } else {
+    // Generiertes Schema: Regal mit Fachbrettern
+    let boards = '';
+    for (let i=1;i<=3;i++) boards += `<div class="sch-board" style="top:${18+i*20}%"></div>`;
+    const label = esc(loc ? (loc.shelf||loc.room||'Regal') : 'Regal');
+    inner = `<div class="schematic"><div class="sch-label">${label}</div>${boards}${dotHtml}</div>`;
+  }
+  const cls = 'where-wrap' + (editable ? ' editable' : '');
+  const clickAttr = editable ? ' onclick="onWhereClick(event)"' : '';
+  let html = `<div class="${cls}" id="where-area"${clickAttr}>${inner}</div>`;
+  if (editable) html += `<div class="where-hint">👆 Tippe an, wo das Produkt steht</div>`;
+  else if (!hasDot) html += `<div class="where-empty">Noch kein Standort markiert – tippe auf „Position festlegen".</div>`;
+  return html;
+}
+
+function openItemLocation(itemId) {
+  const item = invData.find(r=>r.id===itemId); if(!item) return;
+  const loc = locationsData.find(l=>l.id===item.location_id);
+  itemLocState = { itemId, loc, posX: item.pos_x, posY: item.pos_y, editable:false };
+  renderItemLocModal(item);
+  document.getElementById('item-loc-modal').classList.add('open');
+}
+
+function renderItemLocModal(item) {
+  const st = itemLocState;
+  document.getElementById('item-loc-title').textContent = '📍 ' + item.name;
+  document.getElementById('item-loc-sub').textContent = st.loc ? `${st.loc.room} › ${st.loc.shelf}` : 'Kein Lagerort zugewiesen';
+  const visual = document.getElementById('item-loc-visual');
+  const actions = document.getElementById('item-loc-actions');
+  if (!st.loc) {
+    visual.innerHTML = `<div class="where-empty">Diesem Artikel ist noch kein Lagerort zugewiesen.<br>Weise ihn zuerst über ✏️ einem Raum/Regal zu.</div>`;
+    actions.innerHTML = `<button class="btn btn-ghost" onclick="closeItemLoc()">Schließen</button>`;
+    return;
+  }
+  visual.innerHTML = buildLocationVisual(st.loc, st.posX, st.posY, st.editable);
+  if (st.editable) {
+    actions.innerHTML = `<button class="btn btn-ghost" onclick="cancelWhereEdit()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveItemPosition()">Speichern</button>`;
+  } else {
+    actions.innerHTML = `<button class="btn btn-ghost" onclick="closeItemLoc()">Schließen</button>
+      <button class="btn btn-primary" onclick="enableWhereEdit()">📍 Position festlegen</button>`;
+  }
+}
+
+function enableWhereEdit() { itemLocState.editable = true; renderItemLocModal(invData.find(r=>r.id===itemLocState.itemId)); }
+function cancelWhereEdit() {
+  const it = invData.find(r=>r.id===itemLocState.itemId);
+  itemLocState.editable = false; itemLocState.posX = it.pos_x; itemLocState.posY = it.pos_y;
+  renderItemLocModal(it);
+}
+
+function onWhereClick(ev) {
+  const area = document.getElementById('where-area');
+  const target = area.querySelector('img') || area.querySelector('.schematic') || area;
+  const rect = target.getBoundingClientRect();
+  const x = Math.max(0, Math.min(100, (ev.clientX - rect.left) / rect.width * 100));
+  const y = Math.max(0, Math.min(100, (ev.clientY - rect.top) / rect.height * 100));
+  itemLocState.posX = Math.round(x*10)/10;
+  itemLocState.posY = Math.round(y*10)/10;
+  const dot = document.getElementById('where-dot');
+  dot.style.display = 'block'; dot.style.left = itemLocState.posX+'%'; dot.style.top = itemLocState.posY+'%';
+}
+
+async function saveItemPosition() {
+  const st = itemLocState;
+  if (st.posX === undefined || st.posX === null) { toast('Bitte zuerst die Stelle antippen'); return; }
+  try {
+    await pb.collection('inventory').update(st.itemId, { pos_x: st.posX, pos_y: st.posY });
+    const i = invData.findIndex(r=>r.id===st.itemId); if(i!==-1){ invData[i].pos_x=st.posX; invData[i].pos_y=st.posY; }
+    st.editable = false;
+    toast('✅ Standort gespeichert');
+    renderItemLocModal(invData.find(r=>r.id===st.itemId));
+    renderInventory();
+  } catch(e) { toast('Fehler: '+e.message+' – Felder pos_x/pos_y in PocketBase anlegen?'); }
+}
+
+function closeItemLoc() { document.getElementById('item-loc-modal').classList.remove('open'); itemLocState = null; }
 
 async function saveInventory() {
   const name = document.getElementById('inv-name').value.trim();
