@@ -484,6 +484,31 @@
     /* Empty state */
     .dash-empty { text-align: center; padding: 1.2rem; font-size: 0.85rem; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); }
 
+    /* ── Dashboard-Layout-Umschalter ── */
+    .dash-layout-sw { display: flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+    .dash-layout-sw button { padding: 0.3rem 0.6rem; border: none; background: var(--surface); cursor: pointer; font-size: 0.74rem; font-weight: 600; color: var(--text-muted); border-right: 1px solid var(--border); }
+    .dash-layout-sw button:last-child { border-right: none; }
+    .dash-layout-sw button.active { background: var(--primary); color: #fff; }
+
+    /* ── Bento-Grid ── */
+    .bento-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .bento { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 0.95rem; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform 0.14s, box-shadow 0.14s; min-height: 76px; }
+    .bento:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .bento:active { transform: translateY(0) scale(0.99); }
+    .bento.wide { grid-column: 1 / 3; }
+    .bento-k { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; font-weight: 600; }
+    .bento-k .ti { font-size: 0.95rem; color: var(--primary); }
+    .bento-v { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-top: 0.35rem; letter-spacing: -0.02em; }
+    .bento-v small { font-size: 0.72rem; font-weight: 500; color: var(--text-muted); letter-spacing: 0; }
+    .bento-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; margin-top: 0.5rem; }
+    .bento-row .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .bento-row .when { margin-left: auto; font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+    .bento-chips { display: flex; gap: 0.55rem; margin-top: 0.6rem; flex-wrap: wrap; }
+    .bento-av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; border-top: 3px solid var(--primary-light); background: var(--bg); }
+    .bento-li { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; margin-top: 0.4rem; color: var(--text); }
+    .bento-li .ti { color: var(--text-muted); font-size: 0.95rem; }
+    .bento-empty { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; }
+
     /* ── Toast ── */
     #toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 0.6rem 1.2rem; border-radius: 20px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 999; pointer-events: none; white-space: nowrap; }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -612,11 +637,22 @@
 
     <!-- ══════════════ DASHBOARD ══════════════ -->
     <section id="section-dashboard" class="section active">
-      <div class="dash-greeting">
-        <h2 id="dash-greeting-text">Guten Tag! 👋</h2>
-        <p id="dash-date-text"></p>
+      <div class="dash-greeting" style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.6rem">
+        <div>
+          <h2 id="dash-greeting-text">Guten Tag! 👋</h2>
+          <p id="dash-date-text"></p>
+        </div>
+        <div class="dash-layout-sw">
+          <button id="dlsw-classic" class="active" onclick="setDashLayout('classic')">Klassisch</button>
+          <button id="dlsw-bento" onclick="setDashLayout('bento')">Bento</button>
+        </div>
       </div>
 
+      <!-- Bento-Layout (umschaltbar) -->
+      <div id="dash-bento" style="display:none"></div>
+
+      <!-- Klassisches Layout -->
+      <div id="dash-classic">
       <!-- KPI tiles -->
       <div class="kpi-grid">
         <div class="kpi-tile kpi-danger" onclick="switchTabByName('todos')" title="Zu To-dos">
@@ -684,6 +720,7 @@
         <a onclick="switchTabByName('persons')">Alle →</a>
       </div>
       <div id="dash-birthdays"><div class="dash-empty">Keine Geburtstage hinterlegt</div></div>
+      </div><!-- /dash-classic -->
     </section>
 
     <!-- ══════════════ PERSONEN ══════════════ -->
@@ -1191,6 +1228,8 @@ const THEMES = {
   play:  { name: 'Verspielt & Bunt', emoji: '🎈', desc: 'Warm, rund, fröhlich',         color: '#f4733f' },
   dark:  { name: 'Dark & Modern',    emoji: '🌙', desc: 'Dunkel, edel, augenschonend',  color: '#1b2127' }
 };
+// Start-Layout (klassisch | bento)
+let dashLayout = (function(){ try { return localStorage.getItem('hh-dashlayout') || 'classic'; } catch(e) { return 'classic'; } })();
 
 (function init() {
   applyTheme(localStorage.getItem('hh-theme') || 'fresh');
@@ -1371,6 +1410,87 @@ function renderDashboard() {
         <div class="dash-card-right" style="color:var(--danger);font-weight:700">${fmtEuro(b.amount)}</div>
       </div>`).join('');
   }
+
+  renderBento();
+  applyDashLayout();
+}
+
+// ── Bento-Layout (umschaltbar) ──
+function applyDashLayout() {
+  const bento = dashLayout === 'bento';
+  const be = document.getElementById('dash-bento');
+  const cl = document.getElementById('dash-classic');
+  if (be) be.style.display = bento ? 'block' : 'none';
+  if (cl) cl.style.display = bento ? 'none' : 'block';
+  const bc = document.getElementById('dlsw-classic'), bb = document.getElementById('dlsw-bento');
+  if (bc) bc.classList.toggle('active', !bento);
+  if (bb) bb.classList.toggle('active', bento);
+}
+function setDashLayout(l) {
+  dashLayout = l;
+  try { localStorage.setItem('hh-dashlayout', l); } catch(e) {}
+  renderDashboard();
+}
+
+function renderBento() {
+  const el = document.getElementById('dash-bento');
+  if (!el) return;
+  const now = new Date();
+  const pc = n => { const p = personsData.find(x => x.name===n); return (p && p.color) ? p.color : '#457b9d'; };
+
+  const openTodos  = todoData.filter(t => !t.done);
+  const nextEvents = calData.filter(c => c.date && parsePBDate(c.date) >= now).sort((a,b) => parsePBDate(a.date)-parsePBDate(b.date));
+  const lowItems   = invData.filter(i => i.quantity <= i.min_stock);
+  const openBills  = billData.filter(b => b.status==='offen');
+  const openTotal  = openBills.reduce((s,b) => s+(parseFloat(b.amount)||0), 0);
+  const shopOpen   = (typeof shopData!=='undefined' ? shopData : []).filter(s => !s.done);
+
+  const evHtml = nextEvents.length
+    ? nextEvents.slice(0,3).map(c => `<div class="bento-row"><span class="dot" style="background:${pc(c.person)}"></span>${esc(c.title)}<span class="when">${daysUntil(c.date)}</span></div>`).join('')
+    : '<div class="bento-empty">Keine bevorstehenden Termine</div>';
+
+  let nextB = null;
+  personsData.filter(p => p.birthday).forEach(p => {
+    const b = new Date(p.birthday);
+    const t = new Date(now.getFullYear(), b.getMonth(), b.getDate());
+    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (t < today0) t.setFullYear(t.getFullYear()+1);
+    const days = Math.round((t - today0)/86400000);
+    if (!nextB || days < nextB.days) nextB = { name:p.name, emoji:p.emoji, days };
+  });
+  const bdayHtml = nextB
+    ? `<div class="bento-v" style="font-size:1.05rem">${nextB.emoji||'🎂'} ${esc(nextB.name)}</div><div class="bento-empty">${nextB.days===0?'heute! 🎉':nextB.days===1?'morgen':'in '+nextB.days+' Tagen'}</div>`
+    : '<div class="bento-empty">Keine hinterlegt</div>';
+
+  el.innerHTML = `
+    <div class="bento-grid">
+      <div class="bento wide" onclick="switchTabByName('calendar')">
+        <div class="bento-k">📅 Nächste Termine</div>${evHtml}
+      </div>
+      <div class="bento" onclick="switchTabByName('todos')">
+        <div class="bento-k">✅ Aufgaben</div>
+        <div class="bento-v">${openTodos.length}<small> offen</small></div>
+      </div>
+      <div class="bento" onclick="switchTabByName('inventory')">
+        <div class="bento-k">📦 Bestand</div>
+        <div class="bento-v" style="${lowItems.length?'color:var(--warn)':''}">${lowItems.length}<small> ${lowItems.length?'niedrig':'ok'}</small></div>
+      </div>
+      <div class="bento wide" onclick="switchTabByName('shopping')">
+        <div class="bento-k">🛒 Einkauf · ${shopOpen.length}</div>
+        ${shopOpen.length ? shopOpen.slice(0,3).map(s => `<div class="bento-li">▢ ${esc(s.name)}${s.quantity?' · '+esc(s.quantity):''}</div>`).join('') : '<div class="bento-empty">Liste ist leer</div>'}
+      </div>
+      <div class="bento wide" onclick="switchTabByName('persons')">
+        <div class="bento-k">👥 Familie</div>
+        <div class="bento-chips">${personsData.length ? personsData.map(p => `<div class="bento-av" style="border-top-color:${p.color||'var(--primary-light)'}">${p.emoji||'😊'}</div>`).join('') : '<div class="bento-empty">Noch keine Personen</div>'}</div>
+      </div>
+      <div class="bento" onclick="switchTabByName('invoices')">
+        <div class="bento-k">🧾 Offen</div>
+        <div class="bento-v">${fmtEuroShort(openTotal)}</div>
+      </div>
+      <div class="bento" onclick="switchTabByName('persons')">
+        <div class="bento-k">🎂 Geburtstag</div>${bdayHtml}
+      </div>
+    </div>`;
 }
 
 function filterByPerson(name) {
