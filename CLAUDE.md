@@ -25,8 +25,21 @@ kein npm, alles inline (HTML + CSS + JS).
 
 ## PocketBase Collections
 
-Alle Collections haben API-Regeln `@request.auth.id != ""` (nur eingeloggte
-Nutzer). Felder:
+**Mandantenfähigkeit (Multi-Tenant, seit 2026-06):** Es gibt eine Collection
+`households` (name, owner→users, invite_code). Jeder Nutzer (`users`) hat
+`household`→households + `role` (parent/child). JEDE Daten-Collection hat ein
+`household`→households Feld. API-Regeln scopen pro Haushalt:
+`household = @request.auth.household` (list/view/update/delete),
+create zusätzlich `@request.auth.household != ""`. So sieht keine Familie die
+Daten einer anderen. Registrierung/Beitritt: Login-Screen hat 3 Modi
+(Anmelden/Neue Familie/Beitreten). "Neue Familie" legt clientseitig users+household
+an; "Beitreten" ruft `POST /api/hh-join` {code} (pb_hooks, superuser-Lookup).
+App-State: `currentHousehold` = pb.authStore.model.household; JEDER create()
+muss `household: currentHousehold` mitsenden. Telegram-Bot schreibt interim in
+`DEFAULT_HOUSEHOLD` (hh.js) bis pro-Familie-Verknüpfung (offene Phase 6).
+Migrations-Haushalt der Ursprungsfamilie: "Familie Kurth" (id ibfskr2fu9siez7).
+
+Felder (alle Daten-Collections zusätzlich mit `household`):
 
 | Collection   | Felder |
 |--------------|--------|

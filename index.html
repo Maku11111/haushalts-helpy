@@ -50,8 +50,11 @@
     /* ── Login ── */
     #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
     .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 2.5rem 2rem; width: 100%; max-width: 380px; }
-    .login-card h1 { font-size: 1.6rem; margin-bottom: 0.3rem; color: var(--primary); }
-    .login-card p  { color: var(--text-muted); margin-bottom: 1.8rem; font-size: 0.9rem; }
+    .login-card h1 { font-size: 1.6rem; margin-bottom: 0.8rem; color: var(--primary); }
+    .login-card p  { color: var(--text-muted); margin-bottom: 1.2rem; font-size: 0.88rem; }
+    .auth-tabs { display: flex; gap: 0.25rem; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 3px; margin-bottom: 1rem; }
+    .auth-tab { flex: 1; padding: 0.45rem 0.3rem; border: none; background: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); transition: background 0.15s, color 0.15s; }
+    .auth-tab.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
 
     /* ── App shell ── */
     #app { display: none; flex-direction: column; min-height: 100vh; }
@@ -531,13 +534,28 @@
 <div id="login-screen">
   <div class="login-card">
     <h1>🏠 Haushalts-Helpy</h1>
-    <p>Bitte einloggen</p>
+    <div class="auth-tabs">
+      <button id="atab-login"    class="auth-tab active" onclick="setAuthMode('login')">Anmelden</button>
+      <button id="atab-register" class="auth-tab"        onclick="setAuthMode('register')">Neue Familie</button>
+      <button id="atab-join"     class="auth-tab"        onclick="setAuthMode('join')">Beitreten</button>
+    </div>
+    <p id="auth-hint">Mit deinem Konto anmelden.</p>
     <div id="login-error" class="error-msg"></div>
+
+    <div id="field-family" style="display:none">
+      <label>Familienname</label>
+      <input type="text" id="reg-family" placeholder="z.B. Familie Müller" />
+    </div>
+    <div id="field-code" style="display:none">
+      <label>Einladungscode</label>
+      <input type="text" id="join-code" placeholder="z.B. BJC2NE" style="text-transform:uppercase" />
+    </div>
+
     <label>E-Mail</label>
     <input type="email" id="login-email" placeholder="name@example.com" />
     <label>Passwort</label>
     <input type="password" id="login-password" placeholder="••••••••" />
-    <button class="btn btn-primary" style="width:100%;margin-top:1.2rem" onclick="doLogin()">Einloggen</button>
+    <button class="btn btn-primary" id="auth-submit" style="width:100%;margin-top:1.2rem" onclick="doAuth()">Einloggen</button>
   </div>
 </div>
 
@@ -1340,29 +1358,123 @@ function calPersonEmoji(name) {
 }
 
 // ══════════════════════════════════════════════
-//  AUTH
+//  AUTH (Mehr-Familien: Anmelden / Neue Familie / Beitreten)
 // ══════════════════════════════════════════════
+let authMode = 'login';        // 'login' | 'register' | 'join'
+let currentHousehold = '';     // id des Haushalts des angemeldeten Nutzers
+
+function setAuthMode(m) {
+  authMode = m;
+  ['login','register','join'].forEach(x => document.getElementById('atab-'+x).classList.toggle('active', x===m));
+  document.getElementById('field-family').style.display = (m==='register') ? 'block' : 'none';
+  document.getElementById('field-code').style.display   = (m==='join')     ? 'block' : 'none';
+  document.getElementById('login-error').classList.remove('show');
+  const btn  = document.getElementById('auth-submit');
+  const hint = document.getElementById('auth-hint');
+  if (m==='login')    { btn.textContent='Einloggen';        hint.textContent='Mit deinem Konto anmelden.'; }
+  if (m==='register') { btn.textContent='Familie anlegen';  hint.textContent='Lege deine Familie neu an – du wirst Verwalter.'; }
+  if (m==='join')     { btn.textContent='Beitreten';        hint.textContent='Tritt einer bestehenden Familie per Einladungscode bei.'; }
+}
+
+function authError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.classList.add('show');
+}
+
+function genInviteCode() {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i=0;i<6;i++) s += A[Math.floor(Math.random()*A.length)];
+  return s;
+}
+
+function doAuth() {
+  if (authMode==='register') return doRegister();
+  if (authMode==='join')     return doJoin();
+  return doLogin();
+}
+
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pw    = document.getElementById('login-password').value;
-  const errEl = document.getElementById('login-error');
-  errEl.classList.remove('show');
+  document.getElementById('login-error').classList.remove('show');
   try {
     await pb.collection('users').authWithPassword(email, pw);
     showApp();
   } catch(e) {
-    errEl.textContent = 'Login fehlgeschlagen: '+(e.message||'Unbekannter Fehler');
-    errEl.classList.add('show');
+    authError('Login fehlgeschlagen: '+(e.message||'Unbekannter Fehler'));
   }
+}
+
+async function doRegister() {
+  const family = document.getElementById('reg-family').value.trim();
+  const email  = document.getElementById('login-email').value.trim();
+  const pw     = document.getElementById('login-password').value;
+  document.getElementById('login-error').classList.remove('show');
+  if (!family) return authError('Bitte einen Familiennamen eingeben.');
+  if (!email || pw.length < 8) return authError('E-Mail und Passwort (min. 8 Zeichen) nötig.');
+  const btn = document.getElementById('auth-submit'); btn.disabled = true;
+  try {
+    await pb.collection('users').create({ email, password: pw, passwordConfirm: pw });
+    await pb.collection('users').authWithPassword(email, pw);
+    const hh = await pb.collection('households').create({ name: family, owner: pb.authStore.model.id, invite_code: genInviteCode() });
+    await pb.collection('users').update(pb.authStore.model.id, { household: hh.id, role: 'parent' });
+    await pb.collection('users').authRefresh();
+    toast('🎉 Familie „'+family+'" angelegt');
+    showApp();
+  } catch(e) {
+    const m = (e.data && e.data.data && e.data.data.email) ? 'Diese E-Mail ist schon registriert.' : (e.message||'Fehler');
+    authError('Registrierung fehlgeschlagen: '+m);
+  } finally { btn.disabled = false; }
+}
+
+async function doJoin() {
+  const code  = document.getElementById('join-code').value.trim().toUpperCase();
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-password').value;
+  document.getElementById('login-error').classList.remove('show');
+  if (!code) return authError('Bitte den Einladungscode eingeben.');
+  if (!email || pw.length < 8) return authError('E-Mail und Passwort (min. 8 Zeichen) nötig.');
+  const btn = document.getElementById('auth-submit'); btn.disabled = true;
+  try {
+    await pb.collection('users').create({ email, password: pw, passwordConfirm: pw });
+    await pb.collection('users').authWithPassword(email, pw);
+    const res = await fetch(pb.baseUrl + '/api/hh-join', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': pb.authStore.token },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Beitritt fehlgeschlagen');
+    await pb.collection('users').authRefresh();
+    toast('🎉 Beigetreten: '+(data.householdName||'Familie'));
+    showApp();
+  } catch(e) {
+    const m = (e.data && e.data.data && e.data.data.email) ? 'Diese E-Mail ist schon registriert.' : (e.message||'Fehler');
+    authError('Beitritt fehlgeschlagen: '+m);
+  } finally { btn.disabled = false; }
 }
 
 function doLogout() {
   pb.authStore.clear();
+  currentHousehold = '';
   document.getElementById('app').style.display   = 'none';
   document.getElementById('login-screen').style.display = 'flex';
 }
 
-function showApp() {
+async function showApp() {
+  // Haushalt des Nutzers laden (Session-Restore kann veraltet sein -> refresh)
+  try {
+    if (pb.authStore.isValid && !pb.authStore.model?.household) await pb.collection('users').authRefresh();
+  } catch(e) {}
+  currentHousehold = pb.authStore.model?.household || '';
+  if (!currentHousehold) {
+    authError('Dein Konto ist keiner Familie zugeordnet. Bitte „Neue Familie" anlegen oder „Beitreten".');
+    pb.authStore.clear();
+    document.getElementById('app').style.display='none';
+    document.getElementById('login-screen').style.display='flex';
+    return;
+  }
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   loadAll();
@@ -1535,6 +1647,7 @@ async function savePerson() {
       email:    document.getElementById('p-email').value.trim(),
       birthday: document.getElementById('p-birthday').value || null,
       notes:    document.getElementById('p-notes').value.trim(),
+      household: currentHousehold,
     });
     toast('✅ Person gespeichert');
     clearForm(['p-name','p-email','p-birthday','p-notes']);
@@ -1741,6 +1854,7 @@ async function saveLocation() {
   if (my) fd.append('marker_y', parseFloat(my));
   const photoFile = document.getElementById('loc-photo').files[0];
   if (photoFile) fd.append('photo', photoFile);
+  fd.append('household', currentHousehold);
 
   try {
     await pb.collection('locations').create(fd);
@@ -2043,6 +2157,7 @@ async function saveInventory() {
     quantity:    parseFloat(document.getElementById('inv-quantity').value)||0,
     min_stock:   parseFloat(document.getElementById('inv-min_stock').value)||0,
     location_id: document.getElementById('inv-location-select').value || '',
+    household:   currentHousehold,
   };
   try {
     await pb.collection('inventory').create(data);
@@ -2480,7 +2595,8 @@ async function saveCalendar() {
     date_end: document.getElementById('cal-date-end').value || null,
     person: document.getElementById('cal-person').value,
     note: document.getElementById('cal-note').value.trim(),
-    allday: document.getElementById('cal-allday').checked
+    allday: document.getElementById('cal-allday').checked,
+    household: currentHousehold
   };
   try {
     await pb.collection('calendar').create(data);
@@ -2583,7 +2699,7 @@ async function saveTodo() {
   const text=document.getElementById('todo-text').value.trim();
   if (!text) { toast('Aufgabe ist Pflicht'); return; }
   try {
-    await pb.collection('todos').create({ text, person:document.getElementById('todo-person').value, date:document.getElementById('todo-due').value||null, done:false });
+    await pb.collection('todos').create({ text, person:document.getElementById('todo-person').value, date:document.getElementById('todo-due').value||null, done:false, household:currentHousehold });
     toast('✅ Aufgabe gespeichert');
     clearForm(['todo-text','todo-due']); document.getElementById('todo-person').value='';
     toggleForm('todo-form'); loadTodos();
@@ -2766,6 +2882,7 @@ async function saveInvoice() {
   fd.append('status',document.getElementById('bill-status').value);
   fd.append('note',document.getElementById('bill-note').value.trim());
   if (items.length) fd.append('items', JSON.stringify(items));
+  fd.append('household', currentHousehold);
   const f=document.getElementById('bill-file');
   if (f.files[0]) fd.append('file',f.files[0]);
 
@@ -2850,7 +2967,8 @@ async function doImportToInventory() {
         quantity: items[i].qty,
         category: r.category||'Einkauf',
         location_id: loc||null,
-        min_stock: 0
+        min_stock: 0,
+        household: currentHousehold
       });
       count++;
     } catch(e) { console.warn('Import failed for',items[i].name,e.message); }
@@ -3101,7 +3219,8 @@ async function saveShopItem() {
       category: document.getElementById('shop-cat').value.trim()||'Sonstiges',
       quantity: document.getElementById('shop-qty').value.trim(),
       person:   document.getElementById('shop-person').value,
-      done:     false
+      done:     false,
+      household: currentHousehold
     });
     toast('✅ Hinzugefügt');
     clearForm(['shop-name','shop-cat','shop-qty']);
@@ -3135,7 +3254,7 @@ async function fillFromLowStock() {
   for (var item of low) {
     var already = shopData.some(function(s){ return s.name.toLowerCase()===item.name.toLowerCase()&&!s.done; });
     if (already) continue;
-    try { await pb.collection('shopping').create({ name:item.name, category:item.category||'Inventar', done:false }); added++; } catch(e){}
+    try { await pb.collection('shopping').create({ name:item.name, category:item.category||'Inventar', done:false, household:currentHousehold }); added++; } catch(e){}
   }
   toast('✅ '+added+' Artikel hinzugefügt'); loadShopping();
 }
@@ -3167,7 +3286,8 @@ saveTodo = async function() {
       date:       document.getElementById('todo-due').value||null,
       done:       false,
       recurrence: recEl?recEl.value:'',
-      priority:   prEl?prEl.value:''
+      priority:   prEl?prEl.value:'',
+      household:  currentHousehold
     });
     toast('✅ Aufgabe gespeichert');
     clearForm(['todo-text','todo-due']);
@@ -3191,7 +3311,8 @@ toggleTodo = async function(id, currentDone) {
       try {
         await pb.collection('todos').create({
           text:todo.text, person:todo.person, date:nextDate,
-          done:false, recurrence:todo.recurrence, priority:todo.priority||''
+          done:false, recurrence:todo.recurrence, priority:todo.priority||'',
+          household: todo.household || currentHousehold
         });
         toast('✅ Erledigt — nächste: '+fmtDate(nextDate));
       } catch(e2){ toast('✅ Erledigt'); }
@@ -3309,6 +3430,7 @@ async function saveDocument() {
   if(exp) fd.append('expiry_date',exp);
   var f=document.getElementById('doc-file');
   if(f.files[0]) fd.append('file',f.files[0]);
+  fd.append('household', currentHousehold);
   try{
     await pb.collection('documents').create(fd);
     toast('✅ Dokument gespeichert');
@@ -3407,7 +3529,8 @@ async function saveAllowance() {
       person:person, type:document.getElementById('alw-type').value,
       amount:parseFloat(amount),
       date:document.getElementById('alw-date').value||new Date().toISOString().slice(0,10),
-      description:document.getElementById('alw-desc').value.trim()
+      description:document.getElementById('alw-desc').value.trim(),
+      household:currentHousehold
     });
     toast('✅ Buchung gespeichert');
     clearForm(['alw-amount','alw-desc']); document.getElementById('alw-date').value=''; document.getElementById('alw-person').value='';
