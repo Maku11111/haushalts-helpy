@@ -42,6 +42,27 @@
       --shadow-md: 0 4px 12px rgba(16,24,40,0.08), 0 12px 28px rgba(16,24,40,0.07);
     }
 
+    /* ── Theme: Verspielt & Bunt ── */
+    :root[data-theme="play"] {
+      --bg: #fff6ee; --surface: #ffffff; --border: #f0e2d6; --border-strong: #e7d2c2;
+      --primary: #f4733f; --primary-dark: #e0592a; --primary-light: #ff9e76; --primary-dim: #ffe9df;
+      --text: #3a2a22; --text-muted: #a17f6c;
+      --radius: 18px; --radius-sm: 12px;
+    }
+    /* ── Theme: Dark & Modern ── */
+    :root[data-theme="dark"] {
+      --bg: #14171c; --surface: #1e242d; --border: #2a313b; --border-strong: #3a434f;
+      --primary: #2fb182; --primary-dark: #1f7d5b; --primary-light: #46c896; --primary-dim: #16332a;
+      --danger: #f06a6a; --danger-dim: #3a2024; --warn: #e9a35e; --warn-dim: #3a2f1e; --info: #6aa6c8; --info-dim: #1d2a33;
+      --text: #eef2f6; --text-muted: #9aa4b2;
+    }
+    :root[data-theme="dark"] header { background: #1b2127; }
+    :root[data-theme="dark"] .modal-backdrop { background: rgba(0,0,0,0.62); }
+    :root[data-theme="dark"] input, :root[data-theme="dark"] select, :root[data-theme="dark"] textarea { background: #161b22; }
+    :root[data-theme="dark"] .cal-month td.today { background: #16332a; }
+    :root[data-theme="dark"] .cal-month td.today .cal-day-num .today-circle { color: #fff; }
+    :root[data-theme="dark"] #toast { background: #2fb182; color: #08130d; }
+
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 
     /* Sanftes Einblenden beim Tab-Wechsel */
@@ -478,6 +499,9 @@
     .modal { background: var(--surface); border-radius: var(--radius); padding: 1.4rem; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md); animation: sectionIn 0.2s ease; }
     .modal h2 { margin-bottom: 1rem; font-size: 1.05rem; }
     .modal-footer { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.1rem; flex-wrap: wrap; }
+    .theme-opt { display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.7rem 0.85rem; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .theme-opt:hover { background: var(--bg); }
+    .theme-opt-active { border-color: var(--primary); background: var(--primary-dim); }
 
     /* ── QR ── */
     #qr-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; }
@@ -565,6 +589,7 @@
     <h1>🏠 Haushalts-Helpy</h1>
     <div class="header-right">
       <button class="btn-hdr" onclick="openVoice()" title="Spracheingabe">🎤</button>
+      <button class="btn-hdr" onclick="openThemeMenu()" title="Design wählen">🎨</button>
       <button class="btn-hdr" onclick="openQR()">QR</button>
       <button class="btn-hdr" onclick="doLogout()">Abmelden</button>
     </div>
@@ -1107,6 +1132,16 @@
   </div>
 </div>
 
+<!-- ══ DESIGN / THEME MODAL ══ -->
+<div class="modal-backdrop" id="theme-modal" onclick="if(event.target===this)closeThemeMenu()">
+  <div class="modal" style="max-width:360px">
+    <h2>🎨 Design wählen</h2>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.9rem">Die Auswahl gilt nur auf diesem Gerät.</p>
+    <div id="theme-list" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeThemeMenu()">Schließen</button></div>
+  </div>
+</div>
+
 <!-- ══ QR MODAL ══ -->
 <div id="qr-modal-backdrop" onclick="closeQR()">
   <div id="qr-modal" onclick="event.stopPropagation()">
@@ -1150,7 +1185,15 @@ let leftAt = 0;
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
+// Design-Themes (muss vor init() initialisiert sein)
+const THEMES = {
+  fresh: { name: 'Frisch & Grün',    emoji: '🌿', desc: 'Ruhig, vertraut, familiär',   color: '#2d6a4f' },
+  play:  { name: 'Verspielt & Bunt', emoji: '🎈', desc: 'Warm, rund, fröhlich',         color: '#f4733f' },
+  dark:  { name: 'Dark & Modern',    emoji: '🌙', desc: 'Dunkel, edel, augenschonend',  color: '#1b2127' }
+};
+
 (function init() {
+  applyTheme(localStorage.getItem('hh-theme') || 'fresh');
   buildEmojiGrid();
   buildColorGrid();
   setDashboardGreeting();
@@ -3006,6 +3049,42 @@ async function deleteRecord(collection,id,reloadFn) {
 
 // ══════════════════════════════════════════════
 //  QR CODE
+// ══════════════════════════════════════════════
+//  DESIGN / THEMES  (THEMES-Konstante steht oben vor init())
+// ══════════════════════════════════════════════
+function applyTheme(t) {
+  if (!THEMES[t]) t = 'fresh';
+  if (t === 'fresh') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+  const meta = document.querySelector('meta[name=theme-color]');
+  if (meta) meta.content = THEMES[t].color;
+  try { localStorage.setItem('hh-theme', t); } catch(e) {}
+}
+
+function currentTheme() {
+  return document.documentElement.getAttribute('data-theme') || 'fresh';
+}
+
+function openThemeMenu() {
+  const cur = currentTheme();
+  document.getElementById('theme-list').innerHTML = Object.entries(THEMES).map(([k,v]) => `
+    <button class="theme-opt ${k===cur?'theme-opt-active':''}" onclick="setTheme('${k}')">
+      <span style="font-size:1.4rem">${v.emoji}</span>
+      <span style="flex:1;text-align:left">
+        <span style="display:block;font-weight:600;font-size:0.9rem">${v.name}</span>
+        <span style="display:block;font-size:0.75rem;color:var(--text-muted)">${v.desc}</span>
+      </span>
+      ${k===cur?'<span style="color:var(--primary);font-weight:700">✓</span>':''}
+    </button>`).join('');
+  document.getElementById('theme-modal').classList.add('open');
+}
+function closeThemeMenu() { document.getElementById('theme-modal').classList.remove('open'); }
+function setTheme(t) {
+  applyTheme(t);
+  openThemeMenu();
+  toast(THEMES[t].emoji + ' ' + THEMES[t].name);
+}
+
 // ══════════════════════════════════════════════
 // ══════════════════════════════════════════════
 //  SPRACHEINGABE (Voice Input)
