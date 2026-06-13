@@ -553,6 +553,12 @@
     .board-note .bn-actions { margin-top: 0.5rem; display: flex; gap: 0.3rem; }
     .board-note .bn-actions button { background: rgba(255,255,255,0.5); border: none; border-radius: 6px; padding: 0.2rem 0.45rem; cursor: pointer; font-size: 0.78rem; }
     .bn-yellow { background: #fff7cf; } .bn-pink { background: #ffe0ec; } .bn-blue { background: #d8e9ff; } .bn-green { background: #d8f1de; } .bn-purple { background: #eadcff; }
+    .news-topic { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0.8rem 0 0.4rem; }
+    .news-topic:first-child { margin-top: 0; }
+    .news-card { display: block; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--info); border-radius: var(--radius-sm); padding: 0.6rem 0.85rem; margin-bottom: 0.45rem; box-shadow: var(--shadow-sm); text-decoration: none; color: var(--text); transition: transform 0.12s, box-shadow 0.12s; }
+    .news-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .news-card .nt { font-size: 0.86rem; font-weight: 500; line-height: 1.35; }
+    .news-card .ns { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
 
     /* ── Toast ── */
     #toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%) translateY(60px); background: #1a1a1a; color: #fff; padding: 0.6rem 1.2rem; border-radius: 20px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 999; pointer-events: none; white-space: nowrap; }
@@ -1169,6 +1175,10 @@
         <input id="interest-input" placeholder="z.B. Fußball, Lesen, Klavier …" onkeydown="if(event.key==='Enter')addInterest()" style="flex:1" />
         <button class="btn btn-primary btn-sm" onclick="addInterest()">+ Hinzufügen</button>
       </div>
+
+      <!-- News zu den Hobbys -->
+      <div class="dash-section-hdr"><h3>📰 Neuigkeiten zu deinen Hobbys</h3><a onclick="loadNews()">↻ Aktualisieren</a></div>
+      <div id="me-news"><div class="dash-empty">Füge Hobbys hinzu, um passende Neuigkeiten zu sehen 📰</div></div>
 
       <!-- Wunschliste -->
       <div class="dash-section-hdr"><h3>🎁 Meine Wunschliste</h3><a onclick="toggleForm('wish-form')">+ Wunsch</a></div>
@@ -3492,9 +3502,35 @@ async function loadMe() {
     ]);
     interestsData = ints; wishData = wishes; boardData = board;
     renderInterests(); renderWishlist(); renderFamilyWishes(); renderBoard();
+    loadNews();
   } catch(e) {
     document.getElementById('me-wishlist').innerHTML = '<p class="loading">Fehler beim Laden</p>';
   }
+}
+
+async function loadNews() {
+  const el = document.getElementById('me-news');
+  const myInts = interestsData.filter(i => i.owner === myUserId());
+  if (!myInts.length) { el.innerHTML = '<div class="dash-empty">Füge Hobbys hinzu, um passende Neuigkeiten zu sehen 📰</div>'; return; }
+  el.innerHTML = '<div class="loading">Lade Neuigkeiten zu deinen Hobbys …</div>';
+  try {
+    const res = await fetch(pb.baseUrl + '/api/news', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': pb.authStore.token }, body:'{}' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+    renderNews(data.items || []);
+  } catch(e) {
+    el.innerHTML = '<div class="dash-empty">Neuigkeiten gerade nicht verfügbar 🙈</div>';
+  }
+}
+function renderNews(items) {
+  const el = document.getElementById('me-news');
+  if (!items.length) { el.innerHTML = '<div class="dash-empty">Keine passenden Neuigkeiten gefunden</div>'; return; }
+  const groups = {};
+  items.forEach(n => { (groups[n.topic] = groups[n.topic] || []).push(n); });
+  el.innerHTML = Object.entries(groups).map(([topic, list]) =>
+    `<div class="news-topic">🎯 ${esc(topic)}</div>` +
+    list.map(n => `<a class="news-card" href="${esc(n.link)}" target="_blank" rel="noopener"><div class="nt">${esc(n.title)}</div><div class="ns">${esc(n.source||'')}</div></a>`).join('')
+  ).join('');
 }
 
 function renderInterests() {

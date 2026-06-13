@@ -51,6 +51,26 @@ module.exports = {
     return (res.json.text || "").trim();
   },
 
+  // Schlagzeilen zu einem Stichwort via Google-News-RSS (kostenlos, kein Key)
+  fetchNews: function (keyword, max) {
+    max = max || 3;
+    var url = "https://news.google.com/rss/search?q=" + encodeURIComponent(keyword) + "&hl=de&gl=DE&ceid=DE:de";
+    var res;
+    try { res = $http.send({ url: url, method: "GET", timeout: 20 }); } catch (e) { return []; }
+    if (res.statusCode !== 200) return [];
+    var xml = res.raw || "";
+    var items = [], re = /<item>([\s\S]*?)<\/item>/g, m;
+    function clean(s) { return (s || "").replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim(); }
+    while ((m = re.exec(xml)) !== null && items.length < max) {
+      var b = m[1];
+      var t = clean((b.match(/<title>([\s\S]*?)<\/title>/) || [, ""])[1]);
+      var l = clean((b.match(/<link>([\s\S]*?)<\/link>/) || [, ""])[1]);
+      var s = clean((b.match(/<source[^>]*>([\s\S]*?)<\/source>/) || [, ""])[1]);
+      if (t) items.push({ title: t, link: l, source: s, topic: keyword });
+    }
+    return items;
+  },
+
   persons: function (householdId) {
     try {
       var filter = householdId ? ("household = '" + householdId + "'") : "id != ''";

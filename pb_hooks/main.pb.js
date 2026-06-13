@@ -4,8 +4,24 @@
 
 // ── Lebenszeichen (zum Testen der Installation) ──
 routerAdd("GET", "/api/hh-ping", function (e) {
-  return e.json(200, { ok: true, hooks: "v5" });
+  return e.json(200, { ok: true, hooks: "v6" });
 });
+
+// ── News zu den Hobbys des angemeldeten Nutzers ──
+routerAdd("POST", "/api/news", function (e) {
+  var hh = require(__hooks + "/hh.js");
+  var ownerId = e.auth ? e.auth.id : "";
+  var interests = [];
+  try {
+    var recs = $app.findRecordsByFilter("interests", "owner = '" + ownerId + "'", "name", 8, 0);
+    interests = recs.map(function (r) { return r.get("name"); });
+  } catch (err) {}
+  var items = [];
+  interests.slice(0, 4).forEach(function (kw) {
+    try { items = items.concat(hh.fetchNews(kw, 3)); } catch (err) {}
+  });
+  return e.json(200, { ok: true, interests: interests, items: items });
+}, $apis.requireAuth());
 
 // ── Familie beitreten: authentifizierten Nutzer per Einladungscode zuordnen ──
 routerAdd("POST", "/api/hh-join", function (e) {
