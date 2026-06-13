@@ -1597,7 +1597,7 @@ function renderLocations() {
       <div class="room-group-title">🏠 ${esc(room)}</div>
       ${locs.map(l => {
         const itemCount = invData.filter(i => i.location_id === l.id).length;
-        const photoUrl  = l.photo ? pb.files.getURL(l, l.photo) : null;
+        const photoUrl  = l.photo ? pb.getFileUrl(l, l.photo) : null;
         return `
         <div class="loc-card">
           <div class="loc-card-header" onclick="toggleLocBody('lb-${l.id}')">
@@ -1713,7 +1713,7 @@ function openEditLocation(id) {
   if (!l) return;
   editRecord = { collection:'locations', id, reload: loadLocations };
   document.getElementById('edit-modal-title').textContent = 'Ort bearbeiten';
-  const photoUrl = l.photo ? pb.files.getURL(l, l.photo) : null;
+  const photoUrl = l.photo ? pb.getFileUrl(l, l.photo) : null;
   document.getElementById('edit-modal-body').innerHTML = `
     <div class="form-row">
       <div><label>Raum</label><input id="em-room" value="${esc(l.room||'')}" /></div>
@@ -1778,7 +1778,7 @@ function setEditDot(e) {
 function openLocPhoto(id) {
   const l = locationsData.find(x => x.id===id);
   if (!l || !l.photo) return;
-  const url = pb.files.getURL(l, l.photo);
+  const url = pb.getFileUrl(l, l.photo);
   document.getElementById('loc-modal-title').textContent = `${l.room} › ${l.shelf}${l.spot ? ' › '+l.spot : ''}`;
   document.getElementById('loc-modal-img').src = url;
   const dot = document.getElementById('loc-modal-dot');
@@ -1826,7 +1826,7 @@ function renderInventory() {
     const low     = r.quantity <= r.min_stock;
     const loc     = locationsData.find(l => l.id === r.location_id);
     const locLabel = loc ? `${loc.room} › ${loc.shelf}${loc.spot?' › '+loc.spot:''}` : (r.location||'');
-    const photoUrl = loc?.photo ? pb.files.getURL(loc, loc.photo) : null;
+    const photoUrl = loc?.photo ? pb.getFileUrl(loc, loc.photo) : null;
     return `
     <div class="card ${low?'low-stock':''}">
       <div class="card-header">
@@ -3114,7 +3114,7 @@ function renderDocuments() {
   var filtered=docData.filter(function(r){return !filterDocCat||r.category===filterDocCat;});
   if(!filtered.length){list.innerHTML='<p class="loading">Keine Dokumente</p>';return;}
   list.innerHTML=filtered.map(function(r){
-    var fileUrl=r.file?pb.files.getURL(r,r.file):null;
+    var fileUrl=r.file?pb.getFileUrl(r,r.file):null;
     var isImg=fileUrl&&!r.file.endsWith('.pdf');
     var exp=expiryInfo(r.expiry_date);
     return '<div class="doc-card">'+
