@@ -4,8 +4,22 @@
 
 // ── Lebenszeichen (zum Testen der Installation) ──
 routerAdd("GET", "/api/hh-ping", function (e) {
-  return e.json(200, { ok: true, hooks: "v4" });
+  return e.json(200, { ok: true, hooks: "v5" });
 });
+
+// ── Familie beitreten: authentifizierten Nutzer per Einladungscode zuordnen ──
+routerAdd("POST", "/api/hh-join", function (e) {
+  var hh = require(__hooks + "/hh.js");
+  var body = e.requestInfo().body;
+  var code = (body.code || "").toString().trim();
+  if (!code) return e.json(400, { error: "Einladungscode fehlt" });
+  try {
+    var r = hh.linkUserToCode(e.auth.id, code);
+    return e.json(200, { ok: true, household: r.householdId, householdName: r.householdName });
+  } catch (err) {
+    return e.json(400, { error: "" + err });
+  }
+}, $apis.requireAuth());
 
 // ── Endpunkt fuer den Mikrofon-Button der App (nur angemeldete Nutzer) ──
 routerAdd("POST", "/api/voice-input", function (e) {
@@ -13,9 +27,11 @@ routerAdd("POST", "/api/voice-input", function (e) {
   var body = e.requestInfo().body;
   var text = (body.text || "").toString().trim();
   if (!text) return e.json(400, { error: "text fehlt" });
+  var hid = e.auth ? e.auth.get("household") : "";
+  if (!hid) return e.json(400, { error: "Kein Haushalt zugeordnet" });
   try {
-    var parsed = hh.parse(text);
-    var n = hh.apply(parsed);
+    var parsed = hh.parse(text, hid);
+    var n = hh.apply(parsed, hid);
     return e.json(200, { ok: true, created: n, reply: parsed.reply || ("OK, " + n + " Eintraege angelegt") });
   } catch (err) {
     return e.json(500, { error: "" + err });
@@ -52,8 +68,8 @@ routerAdd("POST", "/api/telegram-webhook", function (e) {
       reply = "👋 Hallo! Ich bin Haushalts-Helpy. Schick mir Text oder eine Sprachnachricht, z.B.:\n- Termin Zahnarzt fuer Maxi am Donnerstag 9:30\n- Milch und Brot auf die Einkaufsliste\n- Neue Aufgabe: Jona raeumt Samstag sein Zimmer auf";
     } else {
       try {
-        var parsed = hh.parse(text);
-        var n = hh.apply(parsed);
+        var parsed = hh.parse(text, hh.DEFAULT_HOUSEHOLD);
+        var n = hh.apply(parsed, hh.DEFAULT_HOUSEHOLD);
         reply = prefix + (parsed.reply || ("OK, " + n + " Eintraege angelegt"));
       } catch (perr) {
         reply = "❌ Da ging was schief: " + perr;

@@ -7,6 +7,21 @@ module.exports = {
   TG_TOKEN: "__TG_TOKEN__",
   TG_SECRET: "__TG_SECRET__",
   OPENAI_KEY: "__OPENAI_KEY__",
+  // Interim: in welchen Haushalt der Telegram-Bot schreibt, bis pro-Familie-Verknuepfung (Phase 6) steht.
+  DEFAULT_HOUSEHOLD: "ibfskr2fu9siez7",
+
+  // Authentifizierten Nutzer per Einladungscode einem Haushalt zuordnen
+  linkUserToCode: function (userId, code) {
+    var h;
+    try { h = $app.findFirstRecordByData("households", "invite_code", (code || "").toString().trim().toUpperCase()); }
+    catch (e) { throw new Error("Einladungscode ungueltig"); }
+    if (!h) throw new Error("Einladungscode ungueltig");
+    var u = $app.findRecordById("users", userId);
+    u.set("household", h.id);
+    if (!u.get("role")) u.set("role", "parent");
+    $app.save(u);
+    return { householdId: h.id, householdName: h.get("name") };
+  },
 
   // Telegram-Sprachnachricht herunterladen und per Whisper transkribieren
   transcribe: function (fileId) {
@@ -36,18 +51,19 @@ module.exports = {
     return (res.json.text || "").trim();
   },
 
-  persons: function () {
+  persons: function (householdId) {
     try {
-      return $app.findRecordsByFilter("persons", "id != ''", "name", 50, 0).map(function (r) { return r.get("name"); });
+      var filter = householdId ? ("household = '" + householdId + "'") : "id != ''";
+      return $app.findRecordsByFilter("persons", filter, "name", 50, 0).map(function (r) { return r.get("name"); });
     } catch (err) { return []; }
   },
 
-  parse: function (text) {
+  parse: function (text, householdId) {
     var now = new Date();
     var weekdays = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
     var sys = "Du bist der Eingabe-Parser einer Haushalts-App. Wandle den deutschen Satz des Nutzers in JSON-Aktionen um.\n"
       + "Heute ist " + weekdays[now.getDay()] + ", der " + now.toISOString().slice(0, 10) + ".\n"
-      + "Bekannte Personen: " + this.persons().join(", ") + ". Nutze exakt diese Namen. Ist keine Person genannt, lasse person leer.\n\n"
+      + "Bekannte Personen: " + this.persons(householdId).join(", ") + ". Nutze exakt diese Namen. Ist keine Person genannt, lasse person leer.\n\n"
       + "Verfuegbare Collections und Felder:\n"
       + "- calendar: title, date (YYYY-MM-DD HH:MM:SS), date_end, allday (bool), person, note\n"
       + "- todos: text, person, date (YYYY-MM-DD), done=false, recurrence (''|daily|weekly|monthly), priority (''|high|low)\n"
@@ -72,12 +88,13 @@ module.exports = {
     return JSON.parse(raw);
   },
 
-  apply: function (parsed) {
+  apply: function (parsed, householdId) {
     var n = 0;
     (parsed.actions || []).forEach(function (a) {
       var col = $app.findCollectionByNameOrId(a.collection);
       var rec = new Record(col);
       for (var k in a.data) rec.set(k, a.data[k]);
+      if (householdId) rec.set("household", householdId);
       $app.save(rec);
       n++;
     });
