@@ -2463,10 +2463,10 @@ function renderInvoices() {
     const catTotal = records.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
     const cards = records.map(r => {
       const paid    = r.status==='bezahlt';
-      const fileName = Array.isArray(r.file) ? r.file[0] : r.file;
+      const fileName = firstFileName(r.file);
       const fileUrl  = fileName ? pb.getFileUrl(r, fileName) : null;
       const isImg    = fileUrl && !fileName.endsWith('.pdf');
-      const items   = r.items ? JSON.parse(r.items) : [];
+      const items   = parseItems(r.items);
       const catClass= 'cat-'+CSS.escape(cat);
       return `
       <div class="card">
@@ -2623,7 +2623,7 @@ let importInvoiceId = null;
 function openImportModal(id) {
   importInvoiceId = id;
   const r = billData.find(x=>x.id===id); if(!r) return;
-  const items = r.items ? JSON.parse(r.items) : [];
+  const items = parseItems(r.items);
   if (!items.length) { toast('Keine Positionen hinterlegt'); return; }
 
   const locOpts = '<option value="">– Kein Ort –</option>' +
@@ -2644,8 +2644,9 @@ function closeImportModal() { document.getElementById('import-modal').style.disp
 
 async function doImportToInventory() {
   const r = billData.find(x=>x.id===importInvoiceId); if(!r) return;
-  const items = r.items ? JSON.parse(r.items) : [];
+  const items = parseItems(r.items);
   let count=0;
+  const failed=[];
   for (let i=0;i<items.length;i++) {
     const chk = document.getElementById('imp-chk-'+i);
     if (!chk?.checked) continue;
@@ -2659,10 +2660,17 @@ async function doImportToInventory() {
         min_stock: 0
       });
       count++;
-    } catch(e) { console.warn('Import failed for',items[i].name,e.message); }
+    } catch(e) {
+      console.warn('Import failed for',items[i].name,e.message);
+      failed.push(items[i].name);
+    }
   }
   closeImportModal();
-  toast(`✅ ${count} Artikel ins Inventar übernommen`);
+  if (failed.length) {
+    toast(`✅ ${count} übernommen · ⚠️ ${failed.length} fehlgeschlagen: ${failed.join(', ')}`, 4000);
+  } else {
+    toast(`✅ ${count} Artikel ins Inventar übernommen`);
+  }
   loadInventory();
 }
 
@@ -2781,6 +2789,24 @@ function toast(msg,dur=2200) {
   const el=document.getElementById('toast');
   el.textContent=msg; el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+// Robustes Parsen von Rechnungs-Positionen (items) – nie crashen bei kaputten Daten.
+function parseItems(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch(e) {
+    console.warn('Konnte Positionen nicht lesen:', e.message);
+    return [];
+  }
+}
+
+// Dateinamen aus einem PocketBase-Feld holen (kann String oder Array sein).
+function firstFileName(file) {
+  return Array.isArray(file) ? (file[0] || null) : (file || null);
 }
 
 function personBadge(name) {
@@ -3086,8 +3112,9 @@ function renderDocuments() {
   var filtered=docData.filter(function(r){return !filterDocCat||r.category===filterDocCat;});
   if(!filtered.length){list.innerHTML='<p class="loading">Keine Dokumente</p>';return;}
   list.innerHTML=filtered.map(function(r){
-    var fileUrl=r.file?pb.files.getURL(r,r.file):null;
-    var isImg=fileUrl&&!r.file.endsWith('.pdf');
+    var docFile=firstFileName(r.file);
+    var fileUrl=docFile?pb.files.getURL(r,docFile):null;
+    var isImg=fileUrl&&!docFile.endsWith('.pdf');
     var exp=expiryInfo(r.expiry_date);
     return '<div class="doc-card">'+
       '<div class="doc-icon">'+(DOC_ICONS[r.category]||'📄')+'</div>'+
