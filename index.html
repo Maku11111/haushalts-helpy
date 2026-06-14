@@ -1021,6 +1021,15 @@
             </select>
           </div>
         </div>
+        <div>
+          <label>🔁 Wiederholung</label>
+          <select id="bill-recurrence">
+            <option value="">– Einmalig –</option>
+            <option value="monthly">Monatlich</option>
+            <option value="quarterly">Vierteljährlich</option>
+            <option value="yearly">Jährlich</option>
+          </select>
+        </div>
         <div><label>Notiz</label><textarea id="bill-note" rows="2"></textarea></div>
         <div>
           <label>Anhang (PDF oder Foto/Scan)</label>
@@ -3154,6 +3163,7 @@ function renderInvoices() {
             <div class="card-meta">
               💶 <strong>${fmtEuro(r.amount)}</strong> &nbsp;📅 ${fmtDate(r.date)}
               ${r.category?`&nbsp;<span class="cat-badge cat-${r.category.replace(/[^a-zA-ZäöüÄÖÜ]/g,'')}">${CAT_ICONS[r.category]||'🏷'} ${esc(r.category)}</span>`:''}
+              ${r.recurrence?`&nbsp;<span class="recur-badge">🔁 ${RECURRENCE_LABELS[r.recurrence]||r.recurrence}</span>`:''}
             </div>
             ${r.note?`<div style="margin-top:0.3rem;font-size:0.82rem;color:var(--text-muted)">${esc(r.note)}</div>`:''}
             ${fileUrl?`<div style="margin-top:0.4rem">${isImg
@@ -3187,8 +3197,26 @@ function renderInvoices() {
 }
 
 async function markPaid(id) {
-  try { await pb.collection('invoices').update(id,{status:'bezahlt'}); toast('✅ Als bezahlt markiert'); loadInvoices(); renderDashboard(); }
-  catch(e) { toast('Fehler: '+e.message); }
+  const r = billData.find(x=>x.id===id);
+  try {
+    await pb.collection('invoices').update(id,{status:'bezahlt'});
+    if (r && r.recurrence) {
+      const nextDate = calcNextRecurrence(r.date, r.recurrence);
+      try {
+        const data = {
+          description: r.description, amount: r.amount, date: nextDate,
+          category: r.category||'', status: 'offen', note: r.note||'',
+          recurrence: r.recurrence, household: r.household||currentHousehold
+        };
+        if (r.items) data.items = r.items; // Positionen übernehmen (JSON-String)
+        await pb.collection('invoices').create(data);
+        toast('✅ Bezahlt — nächste: '+fmtDate(nextDate));
+      } catch(e2) { toast('✅ Als bezahlt markiert'); }
+    } else {
+      toast('✅ Als bezahlt markiert');
+    }
+    loadInvoices(); renderDashboard();
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
 // ── File preview in form ──
@@ -3246,6 +3274,7 @@ async function saveInvoice() {
   fd.append('category',document.getElementById('bill-category').value);
   fd.append('status',document.getElementById('bill-status').value);
   fd.append('note',document.getElementById('bill-note').value.trim());
+  fd.append('recurrence',document.getElementById('bill-recurrence').value);
   if (items.length) fd.append('items', JSON.stringify(items));
   fd.append('household', currentHousehold);
   const f=document.getElementById('bill-file');
@@ -3259,6 +3288,7 @@ async function saveInvoice() {
     document.getElementById('bill-file-preview').innerHTML='';
     document.getElementById('bill-date').valueAsDate=new Date();
     document.getElementById('bill-status').value='offen';
+    document.getElementById('bill-recurrence').value='';
     document.getElementById('bill-category').value='';
     document.getElementById('bill-items-list').innerHTML='';
     document.getElementById('bill-items-section').style.display='none';
@@ -3282,6 +3312,9 @@ function openEditInvoice(id) {
       <div><label>Kategorie</label><select id="em-category">${catOpts}</select></div>
       <div><label>Status</label><select id="em-status"><option value="offen" ${r.status==='offen'?'selected':''}>Offen</option><option value="bezahlt" ${r.status==='bezahlt'?'selected':''}>Bezahlt</option></select></div>
     </div>
+    <div><label>🔁 Wiederholung</label><select id="em-recurrence">
+      ${['','monthly','quarterly','yearly'].map(v=>`<option value="${v}" ${(r.recurrence||'')===v?'selected':''}>${v?RECURRENCE_LABELS[v]:'– Einmalig –'}</option>`).join('')}
+    </select></div>
     <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
   editRecord.getData=()=>({
     description: document.getElementById('em-description').value.trim(),
@@ -3289,6 +3322,7 @@ function openEditInvoice(id) {
     date: document.getElementById('em-date').value,
     category: document.getElementById('em-category').value,
     status: document.getElementById('em-status').value,
+    recurrence: document.getElementById('em-recurrence').value,
     note: document.getElementById('em-note').value.trim()
   });
   openModal();
@@ -3629,27 +3663,36 @@ function myPersonObj() {
   const e = (pb.authStore.model?.email || '').toLowerCase();
   return personsData.find(p => p.email && p.email.toLowerCase() === e) || null;
 }
+// Robuster Besitzer-Vergleich: owner kann als String oder (Multi-Relation) Array
+// zurückkommen. Alt-Einträge ohne owner zählen als eigene (der Server liefert in
+// "Mein Bereich" ohnehin nur die eigenen). Verhindert, dass eigene Einträge
+// durch ein Format-Mismatch unsichtbar werden.
+function isMine(rec) {
+  const o = rec && rec.owner;
+  if (!o) return true;
+  const me = myUserId();
+  return Array.isArray(o) ? o.includes(me) : o === me;
+}
 
 async function loadMe() {
   const mp = myPersonObj();
   document.getElementById('me-greeting').textContent = '✨ ' + (mp ? (mp.emoji||'') + ' ' + mp.name : 'Mein Bereich');
-  try {
-    const [ints, wishes, board] = await Promise.all([
-      pb.collection('interests').getFullList({ sort:'name' }),
-      pb.collection('wishlist').getFullList(),
-      pb.collection('board').getFullList()
-    ]);
-    interestsData = ints; wishData = wishes; boardData = board;
-    renderInterests(); renderWishlist(); renderFamilyWishes(); renderBoard();
-    loadNews();
-  } catch(e) {
-    document.getElementById('me-wishlist').innerHTML = '<p class="loading">Fehler beim Laden</p>';
-  }
+  const [ri, rw, rb] = await Promise.allSettled([
+    pb.collection('interests').getFullList(),
+    pb.collection('wishlist').getFullList(),
+    pb.collection('board').getFullList()
+  ]);
+  if (ri.status === 'fulfilled') interestsData = ri.value;
+  else { interestsData = []; console.warn('Hobbys laden:', ri.reason?.message); toast('Hobbys konnten nicht geladen werden'); }
+  wishData  = rw.status === 'fulfilled' ? rw.value : (console.warn('Wünsche laden:', rw.reason?.message), []);
+  boardData = rb.status === 'fulfilled' ? rb.value : (console.warn('Pinnwand laden:', rb.reason?.message), []);
+  renderInterests(); renderWishlist(); renderFamilyWishes(); renderBoard();
+  loadNews();
 }
 
 async function loadNews() {
   const el = document.getElementById('me-news');
-  const myInts = interestsData.filter(i => i.owner === myUserId());
+  const myInts = interestsData.filter(isMine);
   if (!myInts.length) { el.innerHTML = '<div class="dash-empty">Füge Hobbys hinzu, um passende Neuigkeiten zu sehen 📰</div>'; return; }
   el.innerHTML = '<div class="loading">Lade Neuigkeiten zu deinen Hobbys …</div>';
   try {
@@ -3677,7 +3720,7 @@ function renderNews(items) {
 
 function renderInterests() {
   const el = document.getElementById('me-interests');
-  const mine = interestsData.filter(i => i.owner === myUserId());
+  const mine = interestsData.filter(isMine).sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'));
   el.innerHTML = mine.length
     ? mine.map(i => `<span class="chip chip-active" style="cursor:default">${esc(i.name)} <span style="cursor:pointer;opacity:0.65;margin-left:2px" onclick="removeInterest('${i.id}')">✕</span></span>`).join('')
     : '<span style="font-size:0.82rem;color:var(--text-muted)">Noch keine – füg deine Hobbys hinzu 🎯</span>';
@@ -3686,7 +3729,7 @@ async function addInterest() {
   const inp = document.getElementById('interest-input');
   const name = inp.value.trim();
   if (!name) return;
-  const mine = interestsData.filter(i => i.owner === myUserId());
+  const mine = interestsData.filter(isMine);
   if (mine.some(i => (i.name||'').toLowerCase() === name.toLowerCase())) { toast('Hast du schon 🙂'); inp.value=''; return; }
   try {
     const rec = await pb.collection('interests').create({ name, owner: myUserId(), household: currentHousehold });
@@ -3700,7 +3743,7 @@ async function removeInterest(id) {
 
 function renderWishlist() {
   const el = document.getElementById('me-wishlist');
-  const mine = wishData.filter(w => w.owner === myUserId());
+  const mine = wishData.filter(isMine);
   if (!mine.length) { el.innerHTML = '<div class="dash-empty">Noch keine Wünsche – trag deinen ersten ein 🎁</div>'; return; }
   el.innerHTML = mine.map(w => {
     const prio = w.priority==='high'?'prio-high':w.priority==='low'?'prio-low':'';
@@ -3759,7 +3802,7 @@ async function deleteWish(id) {
 
 function renderFamilyWishes() {
   const el = document.getElementById('me-family-wishes');
-  const others = wishData.filter(w => w.owner !== myUserId() && w.shared);
+  const others = wishData.filter(w => !isMine(w) && w.shared);
   if (!others.length) { el.innerHTML = '<div class="dash-empty">Noch keine geteilten Wünsche der anderen</div>'; return; }
   el.innerHTML = others.map(w => {
     const p = personsData.find(x => x.name===w.person);
@@ -3776,7 +3819,7 @@ function renderFamilyWishes() {
 
 function renderBoard() {
   const el = document.getElementById('me-board');
-  const mine = boardData.filter(b => b.owner === myUserId());
+  const mine = boardData.filter(isMine);
   if (!mine.length) { el.innerHTML = '<div class="dash-empty">Noch nichts gepinnt – füge deine erste Notiz hinzu 📌</div>'; return; }
   el.innerHTML = '<div class="board-grid">' + mine.map(b => `
     <div class="board-note ${BOARD_COLORS[b.color]||'bn-yellow'}">
@@ -4047,13 +4090,15 @@ async function fillFromLowStock() {
 // ══════════════════════════════════════════════
 //  WIEDERKEHRENDE AUFGABEN
 // ══════════════════════════════════════════════
-var RECURRENCE_LABELS = { daily:'Täglich', weekly:'Wöchentlich', monthly:'Monatlich' };
+var RECURRENCE_LABELS = { daily:'Täglich', weekly:'Wöchentlich', monthly:'Monatlich', quarterly:'Vierteljährlich', yearly:'Jährlich' };
 
 function calcNextRecurrence(dateStr, recurrence) {
   var d = dateStr ? new Date(dateStr) : new Date();
-  if (recurrence==='daily')   d.setDate(d.getDate()+1);
-  if (recurrence==='weekly')  d.setDate(d.getDate()+7);
-  if (recurrence==='monthly') d.setMonth(d.getMonth()+1);
+  if (recurrence==='daily')     d.setDate(d.getDate()+1);
+  if (recurrence==='weekly')    d.setDate(d.getDate()+7);
+  if (recurrence==='monthly')   d.setMonth(d.getMonth()+1);
+  if (recurrence==='quarterly') d.setMonth(d.getMonth()+3);
+  if (recurrence==='yearly')    d.setFullYear(d.getFullYear()+1);
   return d.toISOString().slice(0,10);
 }
 
