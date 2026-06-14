@@ -3663,27 +3663,36 @@ function myPersonObj() {
   const e = (pb.authStore.model?.email || '').toLowerCase();
   return personsData.find(p => p.email && p.email.toLowerCase() === e) || null;
 }
+// Robuster Besitzer-Vergleich: owner kann als String oder (Multi-Relation) Array
+// zurückkommen. Alt-Einträge ohne owner zählen als eigene (der Server liefert in
+// "Mein Bereich" ohnehin nur die eigenen). Verhindert, dass eigene Einträge
+// durch ein Format-Mismatch unsichtbar werden.
+function isMine(rec) {
+  const o = rec && rec.owner;
+  if (!o) return true;
+  const me = myUserId();
+  return Array.isArray(o) ? o.includes(me) : o === me;
+}
 
 async function loadMe() {
   const mp = myPersonObj();
   document.getElementById('me-greeting').textContent = '✨ ' + (mp ? (mp.emoji||'') + ' ' + mp.name : 'Mein Bereich');
-  try {
-    const [ints, wishes, board] = await Promise.all([
-      pb.collection('interests').getFullList({ sort:'name' }),
-      pb.collection('wishlist').getFullList(),
-      pb.collection('board').getFullList()
-    ]);
-    interestsData = ints; wishData = wishes; boardData = board;
-    renderInterests(); renderWishlist(); renderFamilyWishes(); renderBoard();
-    loadNews();
-  } catch(e) {
-    document.getElementById('me-wishlist').innerHTML = '<p class="loading">Fehler beim Laden</p>';
-  }
+  const [ri, rw, rb] = await Promise.allSettled([
+    pb.collection('interests').getFullList(),
+    pb.collection('wishlist').getFullList(),
+    pb.collection('board').getFullList()
+  ]);
+  if (ri.status === 'fulfilled') interestsData = ri.value;
+  else { interestsData = []; console.warn('Hobbys laden:', ri.reason?.message); toast('Hobbys konnten nicht geladen werden'); }
+  wishData  = rw.status === 'fulfilled' ? rw.value : (console.warn('Wünsche laden:', rw.reason?.message), []);
+  boardData = rb.status === 'fulfilled' ? rb.value : (console.warn('Pinnwand laden:', rb.reason?.message), []);
+  renderInterests(); renderWishlist(); renderFamilyWishes(); renderBoard();
+  loadNews();
 }
 
 async function loadNews() {
   const el = document.getElementById('me-news');
-  const myInts = interestsData.filter(i => i.owner === myUserId());
+  const myInts = interestsData.filter(isMine);
   if (!myInts.length) { el.innerHTML = '<div class="dash-empty">Füge Hobbys hinzu, um passende Neuigkeiten zu sehen 📰</div>'; return; }
   el.innerHTML = '<div class="loading">Lade Neuigkeiten zu deinen Hobbys …</div>';
   try {
@@ -3711,7 +3720,7 @@ function renderNews(items) {
 
 function renderInterests() {
   const el = document.getElementById('me-interests');
-  const mine = interestsData.filter(i => i.owner === myUserId());
+  const mine = interestsData.filter(isMine).sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'));
   el.innerHTML = mine.length
     ? mine.map(i => `<span class="chip chip-active" style="cursor:default">${esc(i.name)} <span style="cursor:pointer;opacity:0.65;margin-left:2px" onclick="removeInterest('${i.id}')">✕</span></span>`).join('')
     : '<span style="font-size:0.82rem;color:var(--text-muted)">Noch keine – füg deine Hobbys hinzu 🎯</span>';
@@ -3720,7 +3729,7 @@ async function addInterest() {
   const inp = document.getElementById('interest-input');
   const name = inp.value.trim();
   if (!name) return;
-  const mine = interestsData.filter(i => i.owner === myUserId());
+  const mine = interestsData.filter(isMine);
   if (mine.some(i => (i.name||'').toLowerCase() === name.toLowerCase())) { toast('Hast du schon 🙂'); inp.value=''; return; }
   try {
     const rec = await pb.collection('interests').create({ name, owner: myUserId(), household: currentHousehold });
@@ -3734,7 +3743,7 @@ async function removeInterest(id) {
 
 function renderWishlist() {
   const el = document.getElementById('me-wishlist');
-  const mine = wishData.filter(w => w.owner === myUserId());
+  const mine = wishData.filter(isMine);
   if (!mine.length) { el.innerHTML = '<div class="dash-empty">Noch keine Wünsche – trag deinen ersten ein 🎁</div>'; return; }
   el.innerHTML = mine.map(w => {
     const prio = w.priority==='high'?'prio-high':w.priority==='low'?'prio-low':'';
@@ -3793,7 +3802,7 @@ async function deleteWish(id) {
 
 function renderFamilyWishes() {
   const el = document.getElementById('me-family-wishes');
-  const others = wishData.filter(w => w.owner !== myUserId() && w.shared);
+  const others = wishData.filter(w => !isMine(w) && w.shared);
   if (!others.length) { el.innerHTML = '<div class="dash-empty">Noch keine geteilten Wünsche der anderen</div>'; return; }
   el.innerHTML = others.map(w => {
     const p = personsData.find(x => x.name===w.person);
@@ -3810,7 +3819,7 @@ function renderFamilyWishes() {
 
 function renderBoard() {
   const el = document.getElementById('me-board');
-  const mine = boardData.filter(b => b.owner === myUserId());
+  const mine = boardData.filter(isMine);
   if (!mine.length) { el.innerHTML = '<div class="dash-empty">Noch nichts gepinnt – füge deine erste Notiz hinzu 📌</div>'; return; }
   el.innerHTML = '<div class="board-grid">' + mine.map(b => `
     <div class="board-note ${BOARD_COLORS[b.color]||'bn-yellow'}">
