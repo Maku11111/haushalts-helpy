@@ -987,6 +987,7 @@
       </div>
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('bill-form')">+ Hinzufügen</button>
+        <button class="btn btn-ghost" onclick="exportInvoicesCSV()" title="Rechnungen als CSV exportieren">⬇️ CSV</button>
       </div>
       <!-- Kategorie-Filter-Chips -->
       <div class="filter-chips" id="bill-cat-chips"></div>
@@ -1152,6 +1153,7 @@
     <section id="section-allowance" class="section">
       <div class="toolbar">
         <button class="btn btn-primary" onclick="toggleForm('allowance-form')">+ Buchung eintragen</button>
+        <button class="btn btn-ghost" onclick="exportAllowanceCSV()" title="Taschengeld als CSV exportieren">⬇️ CSV</button>
       </div>
       <div class="form-panel" id="allowance-form">
         <div class="form-row">
@@ -3136,10 +3138,10 @@ function renderInvoices() {
     const catTotal = records.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
     const cards = records.map(r => {
       const paid    = r.status==='bezahlt';
-      const fileName = Array.isArray(r.file) ? r.file[0] : r.file;
+      const fileName = firstFileName(r.file);
       const fileUrl  = fileName ? pb.getFileUrl(r, fileName) : null;
       const isImg    = fileUrl && !fileName.endsWith('.pdf');
-      const items   = r.items ? JSON.parse(r.items) : [];
+      const items   = parseItems(r.items);
       const catClass= 'cat-'+CSS.escape(cat);
       return `
       <div class="card">
@@ -3297,7 +3299,7 @@ let importInvoiceId = null;
 function openImportModal(id) {
   importInvoiceId = id;
   const r = billData.find(x=>x.id===id); if(!r) return;
-  const items = r.items ? JSON.parse(r.items) : [];
+  const items = parseItems(r.items);
   if (!items.length) { toast('Keine Positionen hinterlegt'); return; }
 
   const locOpts = '<option value="">– Kein Ort –</option>' +
@@ -3318,8 +3320,9 @@ function closeImportModal() { document.getElementById('import-modal').style.disp
 
 async function doImportToInventory() {
   const r = billData.find(x=>x.id===importInvoiceId); if(!r) return;
-  const items = r.items ? JSON.parse(r.items) : [];
+  const items = parseItems(r.items);
   let count=0;
+  const failed=[];
   for (let i=0;i<items.length;i++) {
     const chk = document.getElementById('imp-chk-'+i);
     if (!chk?.checked) continue;
@@ -3334,10 +3337,17 @@ async function doImportToInventory() {
         household: currentHousehold
       });
       count++;
-    } catch(e) { console.warn('Import failed for',items[i].name,e.message); }
+    } catch(e) {
+      console.warn('Import failed for',items[i].name,e.message);
+      failed.push(items[i].name);
+    }
   }
   closeImportModal();
-  toast(`✅ ${count} Artikel ins Inventar übernommen`);
+  if (failed.length) {
+    toast(`✅ ${count} übernommen · ⚠️ ${failed.length} fehlgeschlagen: ${failed.join(', ')}`, 4000);
+  } else {
+    toast(`✅ ${count} Artikel ins Inventar übernommen`);
+  }
   loadInventory();
 }
 
@@ -3807,6 +3817,69 @@ function toast(msg,dur=2200) {
   setTimeout(()=>el.classList.remove('show'),dur);
 }
 
+// Robustes Parsen von Rechnungs-Positionen (items) – nie crashen bei kaputten Daten.
+function parseItems(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch(e) {
+    console.warn('Konnte Positionen nicht lesen:', e.message);
+    return [];
+  }
+}
+
+// Dateinamen aus einem PocketBase-Feld holen (kann String oder Array sein).
+function firstFileName(file) {
+  return Array.isArray(file) ? (file[0] || null) : (file || null);
+}
+
+// ── CSV-Export ──
+function csvEscape(v) {
+  const s = (v == null ? '' : String(v)).replace(/\r?\n/g, ' ').replace(/"/g, '""');
+  return '"' + s + '"';
+}
+function csvNum(v) { return (parseFloat(v) || 0).toFixed(2).replace('.', ','); } // deutsches Dezimalkomma
+function todayStamp() { return new Date().toISOString().slice(0, 10); }
+function downloadCSV(filename, headers, rows) {
+  const sep = ';'; // deutsches Excel nutzt Semikolon
+  const lines = [headers.map(csvEscape).join(sep)];
+  rows.forEach(r => lines.push(r.map(csvEscape).join(sep)));
+  const content = '﻿' + lines.join('\r\n'); // BOM -> Umlaute in Excel korrekt
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function exportInvoicesCSV() {
+  if (!billData.length) { toast('Keine Rechnungen zum Exportieren'); return; }
+  const rows = billData.slice()
+    .sort((a, b) => (a.date || '') < (b.date || '') ? 1 : -1) // neueste zuerst
+    .map(r => [fmtDate(r.date), r.description || '', r.category || '', csvNum(r.amount), r.status || '', r.note || '']);
+  const total = billData.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  rows.push(['', '', 'SUMME', csvNum(total), '', '']);
+  downloadCSV('rechnungen_' + todayStamp() + '.csv',
+    ['Datum', 'Beschreibung', 'Kategorie', 'Betrag (€)', 'Status', 'Notiz'], rows);
+  toast('📄 Rechnungen als CSV exportiert');
+}
+function exportAllowanceCSV() {
+  if (!allowanceData.length) { toast('Keine Buchungen zum Exportieren'); return; }
+  const typeLabel = { credit: 'Einzahlung', debit: 'Ausgabe', bonus: 'Bonus' };
+  const rows = allowanceData.slice()
+    .sort((a, b) => (a.date || '') < (b.date || '') ? 1 : -1)
+    .map(r => {
+      const amt = parseFloat(r.amount) || 0;
+      const signed = (r.type === 'debit' ? -amt : amt); // Ausgaben negativ
+      return [fmtDate(r.date), r.person || '', (typeLabel[r.type] || r.type || ''), csvNum(signed), r.description || ''];
+    });
+  downloadCSV('taschengeld_' + todayStamp() + '.csv',
+    ['Datum', 'Person', 'Art', 'Betrag (€)', 'Beschreibung'], rows);
+  toast('📄 Taschengeld als CSV exportiert');
+}
+
 function personBadge(name) {
   if (!name) return '';
   const p=personsData.find(x=>x.name===name);
@@ -4113,8 +4186,9 @@ function renderDocuments() {
   var filtered=docData.filter(function(r){return !filterDocCat||r.category===filterDocCat;});
   if(!filtered.length){list.innerHTML='<p class="loading">Keine Dokumente</p>';return;}
   list.innerHTML=filtered.map(function(r){
-    var fileUrl=r.file?pb.getFileUrl(r,r.file):null;
-    var isImg=fileUrl&&!r.file.endsWith('.pdf');
+    var docFile=firstFileName(r.file);
+    var fileUrl=docFile?pb.getFileUrl(r,docFile):null;
+    var isImg=fileUrl&&!docFile.endsWith('.pdf');
     var exp=expiryInfo(r.expiry_date);
     return '<div class="doc-card">'+
       '<div class="doc-icon">'+(DOC_ICONS[r.category]||'📄')+'</div>'+
