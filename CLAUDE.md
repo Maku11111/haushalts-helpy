@@ -140,3 +140,29 @@ testen. GitHub Pages aktualisiert sich ~1-2 Min nach Push.
 
 1. `index.html` bearbeiten → committen → `git push` → GitHub Pages live.
 2. Bei `pb_hooks`-Änderungen zusätzlich die Server-Befehle oben ausführen.
+
+**Vereinfachter Hook-Deploy:** Auf dem VPS soll/liegt `/root/hh-deploy.sh` mit
+eingebauten Secrets. Künftige Deploys dann nur: `sh /root/hh-deploy.sh <COMMIT>`
+(lädt main.pb.js + hh.js vom Commit, ersetzt Platzhalter, `docker restart`).
+**pb_hooks vor jedem Push mit `node --check pb_hooks/*.js` prüfen** – ein gerades
+`"` in einem `"…"`-String (z. B. um „Wort") beendet ihn vorzeitig und der ganze
+Hook lädt nicht (alle `/api/*` → 404). In deutschen Anführungen `„…"` benutzen.
+
+## Aktueller Stand & Roadmap (Juni 2026)
+
+**Gebaut & im Code:** Multi-Tenant (Familien getrennt, Selbst-Registrierung/
+Beitritt, Einladungscode + QR + Deep-Link `?join=`); **Mein Bereich** (Hobbys,
+Wunschliste mit Familien-Freigabe, Familien-Wünsche, Pinnwand, News-Feed via
+Google-News-RSS); **Helpy-Chat** mit Claude **Tool-Use** (Stufe 1: Daten lesen +
+handeln); **Stufe 2** Morgen-Briefing (`cronAdd` 05:00 UTC) + `/api/briefing`
+(📋-Knopf im Chat) + **Telegram pro Familie** (`telegram_links`, Verknüpfung via
+`/start CODE`); Themes (Frisch/Verspielt/Dark) + Bento-Layout (umschaltbar).
+
+**Hook-Stand:** Ziel `v9` (Ping `/api/hh-ping` → `{"hooks":"v9"}`). Falls die
+`/api/*`-Routen 404 liefern, lädt der Hook nicht → `node --check` + neu deployen.
+
+**Offen / Roadmap:** Stufe 3 (Familien-Mail-Postfach → Helpy als
+„Ansprechpartner", IMAP/SMTP, Aktionen mit Bestätigung), Alexa-artige
+Dauer-Sprachsteuerung (Wake-Word), Wunsch-„reserviert"-Markierung; sowie die
+Verkaufsfertig-Bausteine aus der Bewertung (DSGVO-Paket, E-Mail-Verifizierung,
+Bezahl-/Abo-Schicht). Strategie-Prompt: `docs/verkaufstauglichkeit-prompt_*.md`.
