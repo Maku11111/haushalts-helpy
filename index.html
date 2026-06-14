@@ -1021,6 +1021,15 @@
             </select>
           </div>
         </div>
+        <div>
+          <label>🔁 Wiederholung</label>
+          <select id="bill-recurrence">
+            <option value="">– Einmalig –</option>
+            <option value="monthly">Monatlich</option>
+            <option value="quarterly">Vierteljährlich</option>
+            <option value="yearly">Jährlich</option>
+          </select>
+        </div>
         <div><label>Notiz</label><textarea id="bill-note" rows="2"></textarea></div>
         <div>
           <label>Anhang (PDF oder Foto/Scan)</label>
@@ -3154,6 +3163,7 @@ function renderInvoices() {
             <div class="card-meta">
               💶 <strong>${fmtEuro(r.amount)}</strong> &nbsp;📅 ${fmtDate(r.date)}
               ${r.category?`&nbsp;<span class="cat-badge cat-${r.category.replace(/[^a-zA-ZäöüÄÖÜ]/g,'')}">${CAT_ICONS[r.category]||'🏷'} ${esc(r.category)}</span>`:''}
+              ${r.recurrence?`&nbsp;<span class="recur-badge">🔁 ${RECURRENCE_LABELS[r.recurrence]||r.recurrence}</span>`:''}
             </div>
             ${r.note?`<div style="margin-top:0.3rem;font-size:0.82rem;color:var(--text-muted)">${esc(r.note)}</div>`:''}
             ${fileUrl?`<div style="margin-top:0.4rem">${isImg
@@ -3187,8 +3197,26 @@ function renderInvoices() {
 }
 
 async function markPaid(id) {
-  try { await pb.collection('invoices').update(id,{status:'bezahlt'}); toast('✅ Als bezahlt markiert'); loadInvoices(); renderDashboard(); }
-  catch(e) { toast('Fehler: '+e.message); }
+  const r = billData.find(x=>x.id===id);
+  try {
+    await pb.collection('invoices').update(id,{status:'bezahlt'});
+    if (r && r.recurrence) {
+      const nextDate = calcNextRecurrence(r.date, r.recurrence);
+      try {
+        const data = {
+          description: r.description, amount: r.amount, date: nextDate,
+          category: r.category||'', status: 'offen', note: r.note||'',
+          recurrence: r.recurrence, household: r.household||currentHousehold
+        };
+        if (r.items) data.items = r.items; // Positionen übernehmen (JSON-String)
+        await pb.collection('invoices').create(data);
+        toast('✅ Bezahlt — nächste: '+fmtDate(nextDate));
+      } catch(e2) { toast('✅ Als bezahlt markiert'); }
+    } else {
+      toast('✅ Als bezahlt markiert');
+    }
+    loadInvoices(); renderDashboard();
+  } catch(e) { toast('Fehler: '+e.message); }
 }
 
 // ── File preview in form ──
@@ -3246,6 +3274,7 @@ async function saveInvoice() {
   fd.append('category',document.getElementById('bill-category').value);
   fd.append('status',document.getElementById('bill-status').value);
   fd.append('note',document.getElementById('bill-note').value.trim());
+  fd.append('recurrence',document.getElementById('bill-recurrence').value);
   if (items.length) fd.append('items', JSON.stringify(items));
   fd.append('household', currentHousehold);
   const f=document.getElementById('bill-file');
@@ -3259,6 +3288,7 @@ async function saveInvoice() {
     document.getElementById('bill-file-preview').innerHTML='';
     document.getElementById('bill-date').valueAsDate=new Date();
     document.getElementById('bill-status').value='offen';
+    document.getElementById('bill-recurrence').value='';
     document.getElementById('bill-category').value='';
     document.getElementById('bill-items-list').innerHTML='';
     document.getElementById('bill-items-section').style.display='none';
@@ -3282,6 +3312,9 @@ function openEditInvoice(id) {
       <div><label>Kategorie</label><select id="em-category">${catOpts}</select></div>
       <div><label>Status</label><select id="em-status"><option value="offen" ${r.status==='offen'?'selected':''}>Offen</option><option value="bezahlt" ${r.status==='bezahlt'?'selected':''}>Bezahlt</option></select></div>
     </div>
+    <div><label>🔁 Wiederholung</label><select id="em-recurrence">
+      ${['','monthly','quarterly','yearly'].map(v=>`<option value="${v}" ${(r.recurrence||'')===v?'selected':''}>${v?RECURRENCE_LABELS[v]:'– Einmalig –'}</option>`).join('')}
+    </select></div>
     <label>Notiz</label><textarea id="em-note">${esc(r.note||'')}</textarea>`;
   editRecord.getData=()=>({
     description: document.getElementById('em-description').value.trim(),
@@ -3289,6 +3322,7 @@ function openEditInvoice(id) {
     date: document.getElementById('em-date').value,
     category: document.getElementById('em-category').value,
     status: document.getElementById('em-status').value,
+    recurrence: document.getElementById('em-recurrence').value,
     note: document.getElementById('em-note').value.trim()
   });
   openModal();
@@ -4047,13 +4081,15 @@ async function fillFromLowStock() {
 // ══════════════════════════════════════════════
 //  WIEDERKEHRENDE AUFGABEN
 // ══════════════════════════════════════════════
-var RECURRENCE_LABELS = { daily:'Täglich', weekly:'Wöchentlich', monthly:'Monatlich' };
+var RECURRENCE_LABELS = { daily:'Täglich', weekly:'Wöchentlich', monthly:'Monatlich', quarterly:'Vierteljährlich', yearly:'Jährlich' };
 
 function calcNextRecurrence(dateStr, recurrence) {
   var d = dateStr ? new Date(dateStr) : new Date();
-  if (recurrence==='daily')   d.setDate(d.getDate()+1);
-  if (recurrence==='weekly')  d.setDate(d.getDate()+7);
-  if (recurrence==='monthly') d.setMonth(d.getMonth()+1);
+  if (recurrence==='daily')     d.setDate(d.getDate()+1);
+  if (recurrence==='weekly')    d.setDate(d.getDate()+7);
+  if (recurrence==='monthly')   d.setMonth(d.getMonth()+1);
+  if (recurrence==='quarterly') d.setMonth(d.getMonth()+3);
+  if (recurrence==='yearly')    d.setFullYear(d.getFullYear()+1);
   return d.toISOString().slice(0,10);
 }
 
