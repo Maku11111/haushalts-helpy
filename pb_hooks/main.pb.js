@@ -106,10 +106,10 @@ routerAdd("POST", "/api/telegram-webhook", function (e) {
       var param = text.length > 7 ? text.slice(7).trim() : "";
       if (param) {
         try { var r0 = hh.linkChatToCode(chatId, param, fromName); hh.tgReply(chatId, "✅ Verbunden mit „" + r0.householdName + "\"! Ab jetzt landen deine Nachrichten dort – und du bekommst jeden Morgen das Briefing. 🌅"); }
-        catch (le0) { hh.tgReply(chatId, "❌ Dieser Code passt nicht. Den Familien-Code findest du in der App unter „👋 Mitglied einladen"."); }
+        catch (le0) { hh.tgReply(chatId, "❌ Dieser Code passt nicht. Den Familien-Code findest du in der App unter „👋 Mitglied einladen“."); }
         return e.json(200, { ok: true });
       }
-      hh.tgReply(chatId, "👋 Hallo! Verbinde mich zuerst mit deiner Familie: schick mir deinen 6-stelligen Familien-Code (App → „Mitglied einladen") oder oeffne den Einladungslink. Danach kannst du mir Aufgaben/Termine/Einkaeufe diktieren.");
+      hh.tgReply(chatId, "👋 Hallo! Verbinde mich zuerst mit deiner Familie: schick mir deinen 6-stelligen Familien-Code (App → „Mitglied einladen“) oder oeffne den Einladungslink. Danach kannst du mir Aufgaben/Termine/Einkaeufe diktieren.");
       return e.json(200, { ok: true });
     }
     // Reiner 6-Zeichen-Code -> Verknuepfung versuchen
@@ -120,7 +120,7 @@ routerAdd("POST", "/api/telegram-webhook", function (e) {
     // Haushalt dieses Chats ermitteln (pro Familie)
     var hid = hh.householdForChat(chatId);
     if (!hid) {
-      hh.tgReply(chatId, "🔗 Bitte zuerst verbinden: schick mir deinen 6-stelligen Familien-Code aus der App („👋 Mitglied einladen").");
+      hh.tgReply(chatId, "🔗 Bitte zuerst verbinden: schick mir deinen 6-stelligen Familien-Code aus der App („👋 Mitglied einladen“).");
       return e.json(200, { ok: true });
     }
     try {
